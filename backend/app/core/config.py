@@ -20,10 +20,17 @@ class Settings(BaseSettings):
     # LLM & AI Agents (Phase 2+)
     LLM_API_KEY: Optional[str] = None
 
-    # PayPal Integration (Phase 3+)
+    # PayPal Integration (Sandbox)
     PAYPAL_CLIENT_ID: Optional[str] = None
     PAYPAL_CLIENT_SECRET: Optional[str] = None
     PAYPAL_ENVIRONMENT: str = "sandbox"
+
+    @property
+    def paypal_base_url(self) -> str:
+        """Return PayPal API Base URL according to configured environment."""
+        if self.PAYPAL_ENVIRONMENT.lower() == "live":
+            return "https://api-m.paypal.com"
+        return "https://api-m.sandbox.paypal.com"
 
     model_config = SettingsConfigDict(
         env_file=".env",
