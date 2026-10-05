@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Search, Sparkles, CheckCircle2, Star, Truck, ShieldCheck, ArrowRight, Loader2 } from "lucide-react";
 import ProductModal from "@/components/ProductModal";
+import PurchasePlanModal from "@/components/PurchasePlanModal";
 
 interface Product {
   id: string;
@@ -58,6 +59,7 @@ export default function ShoppingWorkspace() {
   const [results, setResults] = useState<RecommendationResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedRankedItem, setSelectedRankedItem] = useState<RankedProduct | null>(null);
   const [chosenMessage, setChosenMessage] = useState<string | null>(null);
 
   // Progressive loading animation
@@ -110,9 +112,7 @@ export default function ShoppingWorkspace() {
   };
 
   const handleChooseProduct = (ranked: RankedProduct) => {
-    setChosenMessage(
-      `Selected "${ranked.product.name}"! In Phase 3, this triggers the Purchase Plan & PayPal Checkout approval flow.`
-    );
+    setSelectedRankedItem(ranked);
   };
 
   return (
@@ -369,6 +369,12 @@ export default function ShoppingWorkspace() {
       <ProductModal
         product={selectedProduct}
         onClose={() => setSelectedProduct(null)}
+      />
+
+      {/* Purchase Plan & PayPal Checkout Modal */}
+      <PurchasePlanModal
+        rankedItem={selectedRankedItem}
+        onClose={() => setSelectedRankedItem(null)}
       />
     </div>
   );
