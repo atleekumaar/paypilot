@@ -15,6 +15,9 @@ from app.schemas.recommendation import (
     ScoreBreakdown,
 )
 
+from app.schemas.order import Order, OrderStatus
+from app.schemas.shipment import OrderDetailResponse, Shipment, ShipmentStatus, ShipmentTimelineEvent
+
 __all__ = [
     "HealthResponse",
     "RootResponse",
@@ -34,4 +37,10 @@ __all__ = [
     "PaymentStatus",
     "PaymentProvider",
     "Payment",
+    "Order",
+    "OrderStatus",
+    "Shipment",
+    "ShipmentStatus",
+    "ShipmentTimelineEvent",
+    "OrderDetailResponse",
 ]
