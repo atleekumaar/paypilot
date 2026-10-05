@@ -22,18 +22,18 @@ class ProductFeatures(BaseModel):
 class ProductBase(BaseModel):
     """Base schema for Product properties."""
 
-    id: str = Field(..., description="Unique product SKU or identifier", example="LAP-001")
-    name: str = Field(..., description="Full product title", example="NovaBook Pro 14")
-    brand: str = Field(..., description="Manufacturer brand", example="Nova")
-    category: str = Field(..., description="Product category", example="laptop")
+    id: str = Field(..., description="Unique product SKU or identifier", json_schema_extra={"example": "LAP-001"})
+    name: str = Field(..., description="Full product title", json_schema_extra={"example": "NovaBook Pro 14"})
+    brand: str = Field(..., description="Manufacturer brand", json_schema_extra={"example": "Nova"})
+    category: str = Field(..., description="Product category", json_schema_extra={"example": "laptop"})
     description: str = Field(..., description="Detailed marketing & technical description")
-    price: float = Field(..., ge=0, description="Selling price", example=1049.00)
-    currency: str = Field(default="USD", description="Currency ISO code", example="USD")
-    rating: float = Field(default=0.0, ge=0.0, le=5.0, description="Customer review rating (0.0 - 5.0)", example=4.7)
-    review_count: int = Field(default=0, ge=0, description="Number of user reviews", example=842)
+    price: float = Field(..., ge=0, description="Selling price", json_schema_extra={"example": 1049.00})
+    currency: str = Field(default="USD", description="Currency ISO code", json_schema_extra={"example": "USD"})
+    rating: float = Field(default=0.0, ge=0.0, le=5.0, description="Customer review rating (0.0 - 5.0)", json_schema_extra={"example": 4.7})
+    review_count: int = Field(default=0, ge=0, description="Number of user reviews", json_schema_extra={"example": 842})
     stock: bool = Field(default=True, description="Inventory availability flag")
-    seller: str = Field(..., description="Merchant or vendor name", example="Nova Direct")
-    delivery_days: int = Field(default=3, ge=1, description="Estimated delivery time in days", example=3)
+    seller: str = Field(..., description="Merchant or vendor name", json_schema_extra={"example": "Nova Direct"})
+    delivery_days: int = Field(default=3, ge=1, description="Estimated delivery time in days", json_schema_extra={"example": 3})
     features: Dict[str, Any] = Field(default_factory=dict, description="Arbitrary feature dictionary")
     image_url: Optional[str] = Field(default=None, description="Public image thumbnail URL")
 

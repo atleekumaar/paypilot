@@ -4,8 +4,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
-from app.schemas.health import HealthResponse, RootResponse
+from app.schemas.health import RootResponse
 from app.api.health import router as health_router
+from app.api.products import router as products_router
+from app.api.discovery import router as discovery_router
 
 settings = get_settings()
 
@@ -17,7 +19,7 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-# CORS configuration
+# CORS configuration allowing local frontend development
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -28,6 +30,8 @@ app.add_middleware(
 
 # Include API routers
 app.include_router(health_router)
+app.include_router(products_router)
+app.include_router(discovery_router)
 
 
 @app.get("/", response_model=RootResponse, tags=["General"])
