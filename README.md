@@ -39,7 +39,7 @@ PayPilot autonomously understands the request, searches product offerings, compa
   - Server-side order capture verification and idempotency protection
   - Verified receipt and payment success screen
 
-- **Phase 4 — Controlled Agentic Commerce** ✅ *(ACTIVE & IMPLEMENTED)*
+- **Phase 4 — Controlled Agentic Commerce** ✅
   - Multi-step tool-augmented AI agent (`UNDERSTAND -> PLAN -> USE TOOLS -> SEARCH -> COMPARE -> RECOMMEND -> CREATE PURCHASE PLAN -> REQUEST APPROVAL -> EXECUTE APPROVED PAYMENT`)
   - Tool Registry with 4 strict permission tiers (`READ`, `WRITE`, `APPROVAL_REQUIRED`, `PAYMENT`)
   - Policy Engine enforcing 6 deterministic safety rules ($0 autonomy threshold, no price tampering, out-of-stock guard, step limit)
@@ -47,17 +47,63 @@ PayPilot autonomously understands the request, searches product offerings, compa
   - Multi-turn conversational memory with pronoun/reference resolution ("buy the first one", "why NovaBook?")
   - 100% verified test suite (41/41 passing tests)
 
-- **Phase 5 — Post-Purchase Agent** ⏳
-  - Real-time shipment tracking, delivery notifications, and returns assistance
+- **Phase 5 — Post-Purchase Agent** ✅ *(ACTIVE & IMPLEMENTED)*
+  - Authoritative Order & Shipment tracking models with strict user isolation (`order.user_id == current_user.id`)
+  - Post-Purchase Agent with multi-turn order inquiry intents (`ORDER_STATUS`, `TRACK_ORDER`, `DELIVERY_ESTIMATE`, `PAYMENT_STATUS`, `DELIVERY_DELAY`)
+  - Deterministic delivery delay detection and carrier telemetry parsing
+  - Consequential action safety gate: drafting support inquiries (`WRITE`) vs. dispatching to merchant (`APPROVAL_REQUIRED`)
+  - Complete frontend Order Tracking Dashboard (`/orders`), Order Detail with milestone timeline (`/orders/[id]`), and Notification Center (`/notifications`)
+  - 100% verified test suite (56/56 passing tests)
 
 - **Phase 6 — Production Polish** ⏳
   - Security hardening, telemetry, and hackathon presentation demo
 
 ---
 
-## Phase 4 Controlled Agentic Commerce Walkthrough
+## Phase 5 Post-Purchase End-to-End Walkthrough
 
 ```text
+1. Post-Purchase Inquiry:
+   User: "Where is my NovaBook?"
+       ↓
+2. Agent Dispatches Tools:
+   - Tool `get_order(order_id="ORD-001")`: Retrieves authoritative order & shipment state
+   - Tool `get_shipment_status`: Retrieves carrier tracking milestones
+       ↓
+3. Grounded Response:
+   "Your NovaBook Pro 14 order is currently in transit.
+    Payment: ✓ Completed
+    Order: ORD-001
+    Shipment: In Transit
+    Estimated delivery: October 18, 2026
+    Last update: Package arrived at the regional facility. Regional logistics delay reported."
+       ↓
+4. Delay Inquiry:
+   User: "Why hasn't it arrived yet?"
+       ↓
+5. Issue Detection Engine:
+   - Evaluates estimated delivery (Oct 18) vs. current date and carrier delay notation
+   - Detects `DELIVERY_DELAY` (Severity: MEDIUM)
+       ↓
+6. Action Recommendation:
+   "The shipment appears to be delayed. The original estimated delivery date was October 18, 2026,
+    but the shipment is still in transit.
+    Carrier note: Regional logistics delay reported.
+    Recommended next step: Check latest carrier update or contact merchant.
+    Would you like me to prepare a support request?"
+       ↓
+7. Draft Preparation:
+   User: "Prepare a support request."
+   - Agent executes `prepare_support_request` (Non-consequential WRITE tool)
+   - Generates structured draft: Subject, Recipient, Message
+   - Halts and prompts: "Send this request? [Cancel] [Approve & Send]"
+       ↓
+8. Explicit Human Approval & Dispatch:
+   User clicks [Approve & Send]
+   - Policy Engine verifies explicit user approval
+   - Executes `send_support_request` (APPROVAL_REQUIRED tool)
+   - Dispatches inquiry and confirms with Ticket Reference: TICK-XXXXXX
+```
 1. Natural Language Intent:
    User: "Find me a laptop under $1200 for AI development with good battery life."
        ↓
@@ -190,12 +236,22 @@ To complete sandbox transactions, use the Sandbox personal buyer account provide
 ## API Endpoints
 
 ### Agentic Commerce API
-- `POST /api/agent/chat` — Conversational interaction with the autonomous commerce agent.
-- `POST /api/agent/{session_id}/approve` — Explicit human-in-the-loop approval resuming agent to create PayPal order.
-- `POST /api/agent/{session_id}/deny` — Graceful user cancellation of the active purchase plan.
-- `GET /api/agent/{session_id}/state` — Full session state snapshot (current step, status, plan, candidates).
+- `POST /api/agent/chat` — Conversational interaction with the autonomous commerce agent (pre- & post-purchase).
+- `POST /api/agent/{session_id}/approve` — Explicit human approval resuming agent for PayPal orders or support ticket dispatch.
+- `POST /api/agent/{session_id}/deny` — Graceful user cancellation of the active plan or draft.
+- `GET /api/agent/{session_id}/state` — Full session state snapshot (current step, status, plan, order).
 - `GET /api/agent/{session_id}/actions` — Real-time operational audit log and activity trace.
 - `GET /api/agent/{session_id}/summary` — Compact execution telemetry (turn count, goal, tool usage).
+
+### Orders & Tracking API
+- `GET /api/orders` — List user's verified orders with shipment status and user isolation.
+- `GET /api/orders/{order_id}` — Complete order detail with carrier milestones and verification status.
+- `GET /api/orders/{order_id}/tracking` — Real-time tracking telemetry and carrier scans.
+- `GET /api/orders/{order_id}/issues` — Deterministic issue detector evaluating delivery delays.
+
+### Notifications API
+- `GET /api/notifications` — List in-app proactive alerts (delays, shipping, payment).
+- `POST /api/notifications/{id}/read` — Mark a notification as read.
 
 ### Purchase Plans API
 - `POST /api/purchase-plans` — Create purchase plan with backend-derived authoritative price.

@@ -247,3 +247,70 @@ Every operational action performed by the agent produces an audit trail entry co
 - `status`: `executing`, `completed`, `denied`, or `failed`
 - `details`: Clear operational explanation (no raw prompts or chain-of-thought)
 - `timestamp`: UTC ISO 8601 timestamp
+
+---
+
+## 6. Phase 5: Post-Purchase Agent Architecture
+
+Phase 5 extends PayPilot's operational lifecycle beyond the checkout confirmation, maintaining a continuous AI commerce companion for order tracking, payment verification, delay anomaly detection, and human-in-the-loop support requests.
+
+### 6.1 Unified Commerce Lifecycle Diagram
+
+```text
+                    PAYPILOT
+                       │
+        ┌──────────────┴──────────────┐
+        │                             │
+   PRE-PURCHASE                  POST-PURCHASE
+        │                             │
+        ▼                             ▼
+   Discovery                      Orders
+   Comparison                     Tracking
+   Planning                       Payment
+   Approval                       Shipment
+   Payment                         Issues
+        │                             │
+        └──────────────┬──────────────┘
+                       ▼
+                 AGENT ORCHESTRATOR
+                       │
+                       ▼
+                  POLICY ENGINE
+                       │
+                       ▼
+                ACTION / APPROVAL
+```
+
+### 6.2 Pre-Purchase vs. Post-Purchase Tool Separation
+
+| Tool Name | Scope | Permission | Behavioral Boundary |
+|:---|:---|:---|:---|
+| `search_products` | Pre-Purchase | `READ` | Queries catalog within hard constraints |
+| `compare_products` | Pre-Purchase | `READ` | Side-by-side trade-off matrix evaluation |
+| `create_purchase_plan` | Pre-Purchase | `WRITE` | Formulates authoritative plan; price from backend |
+| `create_paypal_order` | Pre-Purchase | `PAYMENT` | Requires explicit user approval |
+| `capture_paypal_payment` | Pre-Purchase | `PAYMENT` | Captures funds & automatically creates order/shipment |
+| `get_order` | Post-Purchase | `READ` | Enforces user isolation (`order.user_id == current_user`) |
+| `get_user_orders` | Post-Purchase | `READ` | Fetches user's order history only |
+| `get_payment_status` | Post-Purchase | `READ` | Verifies PayPal capture record directly from backend |
+| `get_shipment_status` | Post-Purchase | `READ` | Retrieves carrier scan milestone status |
+| `get_tracking_details` | Post-Purchase | `READ` | Retrieves facility timeline updates |
+| `get_delivery_estimate` | Post-Purchase | `READ` | Formats authoritative delivery dates without guessing |
+| `detect_order_issue` | Post-Purchase | `READ` | Deterministic anomaly detection (delays, hold status) |
+| `prepare_support_request` | Post-Purchase | `WRITE` | Generates draft message only; does **not** send |
+| `send_support_request` | Post-Purchase | `APPROVAL_REQUIRED` | Dispatches inquiry **strictly upon explicit user approval** |
+
+### 6.3 Security & User Isolation Invariants
+
+1. **Strict User Isolation**:
+   - Order retrieval requires matching `order.user_id == authenticated_user_id`.
+   - Access attempts to other users' orders fail with `HTTP 403 Forbidden` with zero data leakage.
+2. **Deterministic Delay Detection**:
+   - Mathematical date comparisons evaluate `reference_date > estimated_delivery`.
+   - Carrier scan status keywords trigger `DELIVERY_DELAY` flags without probabilistic LLM hallucination.
+3. **Draft vs. Dispatch Approval Gate**:
+   - Preparing a support inquiry is a non-consequential `WRITE` action.
+   - Dispatching to merchant support is an `APPROVAL_REQUIRED` action guarded by the Policy Engine.
+4. **Order Ambiguity Resolution**:
+   - When a user asks "Where is my laptop?" and owns multiple qualifying orders, the agent does **not** guess; it presents a numbered disambiguation list.
+
