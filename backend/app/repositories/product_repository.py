@@ -42,6 +42,11 @@ class ProductRepository(ABC):
         """Perform deterministic filtered search over product collection."""
         pass
 
+    @abstractmethod
+    def update_stock(self, product_id: str, stock: bool) -> bool:
+        """Update inventory stock availability."""
+        pass
+
 
 class DemoProductRepository(ProductRepository):
     """In-memory demo implementation loaded from deterministic JSON catalogue."""
@@ -125,6 +130,15 @@ class DemoProductRepository(ProductRepository):
 
         return candidates
 
+    def update_stock(self, product_id: str, stock: bool) -> bool:
+        normalized_id = product_id.strip().upper()
+        for i, prod in enumerate(self._products):
+            if prod.id.upper() == normalized_id:
+                updated_prod = prod.model_copy(update={"stock": stock})
+                self._products[i] = updated_prod
+                return True
+        return False
+
 
 class SQLAlchemyProductRepository(ProductRepository):
     """PostgreSQL-ready SQLAlchemy repository implementation."""
@@ -176,6 +190,15 @@ class SQLAlchemyProductRepository(ProductRepository):
             query = query.filter(ProductModel.rating >= min_rating)
         results = query.all()
         return [Product.model_validate(r) for r in results]
+
+    def update_stock(self, product_id: str, stock: bool) -> bool:
+        from app.models.product import ProductModel
+        obj = self.session.query(ProductModel).filter(ProductModel.id == product_id).first()
+        if obj:
+            obj.stock = stock
+            self.session.commit()
+            return True
+        return False
 
 
 # Singleton demo repository instance for dependency injection
