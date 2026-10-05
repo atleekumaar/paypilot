@@ -209,6 +209,26 @@ class CheckoutService:
         plan.updated_at = datetime.now(timezone.utc)
         self._plan_repo.update(plan)
 
+        # Seamlessly create Order and Shipment for Post-Purchase Agent
+        try:
+            from app.services.order_service import OrderService
+            order_svc = OrderService()
+            order_svc.create_order_from_purchase(
+                purchase_plan_id=plan.id,
+                user_id=plan.user_id,
+                product_id=plan.product_id,
+                product_name=plan.product_name,
+                brand=plan.brand,
+                quantity=plan.quantity,
+                amount=plan.total_amount,
+                currency=plan.currency,
+                paypal_order_id=paypal_order_id,
+                payment_id=payment.id,
+                delivery_days=plan.delivery_days,
+            )
+        except Exception as e:
+            logger.warning(f"Could not automatically create order on capture: {e}")
+
         logger.info(
             f"Payment capture completed successfully. Plan: {plan.id}, Amount: {plan.total_amount} {plan.currency}"
         )
