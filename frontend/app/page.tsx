@@ -18,7 +18,7 @@ export default function Home() {
         <div className="max-w-4xl mx-auto pt-8 pb-3 text-center">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-cyan-500/20 bg-cyan-500/5 text-cyan-400 text-xs font-medium tracking-wide mb-4">
             <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
-            PayPal AI Hackathon &bull; Phase 4 Agentic Commerce
+            PayPal AI Hackathon &bull; Phase 5 Post-Purchase Agent
           </div>
 
           <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white mb-2">
@@ -26,11 +26,11 @@ export default function Home() {
           </h1>
 
           <h2 className="text-lg sm:text-xl font-medium text-cyan-400 tracking-wide mb-2">
-            Autonomous Commerce Agent
+            End-to-End Autonomous Commerce Agent
           </h2>
 
-          <p className="text-xs sm:text-sm text-slate-400 max-w-lg mx-auto font-normal mb-6">
-            Understand. Plan. Use Tools. Compare. Create Purchase Plan. Approve & Pay with PayPal.
+          <p className="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto font-normal mb-6">
+            Discover &bull; Approve &bull; Pay with PayPal &bull; Track Shipments &bull; Resolve Delivery Delays
           </p>
 
           {/* Mode Switcher Tabs */}
