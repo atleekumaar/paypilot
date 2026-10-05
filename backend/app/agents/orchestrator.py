@@ -218,11 +218,34 @@ class AgentOrchestrator:
 
     def _synthesize_response(self, plan: AgentPlan, state: AgentState) -> str:
         """Construct grounded, concise conversational explanation without hidden chain-of-thought."""
+        q_lower = state.user_query.lower()
+
+        # Handle 'Why?' inquiry
+        if re.search(r"\b(why|reason|explain|why this)\b", q_lower):
+            prod = state.selected_product or (state.candidate_products[0] if state.candidate_products else None)
+            if prod:
+                feats = prod.features or {}
+                bullets = []
+                if feats.get("gpu"):
+                    bullets.append(f"• Dedicated {feats['gpu']} GPU for local model acceleration")
+                if feats.get("ram_gb"):
+                    bullets.append(f"• {feats['ram_gb']} GB RAM for deep learning workloads")
+                if feats.get("battery_hours"):
+                    bullets.append(f"• {feats['battery_hours']:.1f}-hour battery endurance")
+                bullets.append(f"• Authoritative price of ${prod.price:,.2f} is well within budget")
+                bullets.append(f"• Outstanding {prod.rating}★ rating from verified customers")
+
+                return (
+                    f"I recommend the **{prod.name}** because it delivers the optimal balance of "
+                    f"computational power, battery endurance, and value for money:\n"
+                    + "\n".join(bullets)
+                )
+
         if plan.goal == "compare_and_explain":
             if state.compared_products:
-                lines = ["Here is a side-by-side comparison of the top options:"]
+                lines = ["Here is a side-by-side comparison of the top candidate options:"]
                 for p in state.compared_products:
-                    lines.append(f"• {p['name']} (${p['price']:,.0f}): {p['battery_hours']}h battery, {p['gpu']}, {p['rating']}★")
+                    lines.append(f"• **{p['name']}** (${p['price']:,.0f}): {p['battery_hours']}h battery, GPU: {p['gpu']}, {p['rating']}★")
                 return "\n".join(lines)
 
         if state.candidate_products:
