@@ -8,6 +8,8 @@ from app.schemas.health import RootResponse
 from app.api.health import router as health_router
 from app.api.products import router as products_router
 from app.api.discovery import router as discovery_router
+from app.api.purchase_plans import router as purchase_plans_router
+from app.api.payments import router as payments_router
 
 settings = get_settings()
 
@@ -32,6 +34,8 @@ app.add_middleware(
 app.include_router(health_router)
 app.include_router(products_router)
 app.include_router(discovery_router)
+app.include_router(purchase_plans_router)
+app.include_router(payments_router)
 
 
 @app.get("/", response_model=RootResponse, tags=["General"])
