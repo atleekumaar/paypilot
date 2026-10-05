@@ -150,3 +150,100 @@ stateDiagram-v2
 
 6. **Credentials Security**:
    - `PAYPAL_CLIENT_SECRET` is kept exclusively on the backend and is never sent to the client, logged, or exposed in error messages.
+
+---
+
+## 5. Phase 4: Controlled Agentic Commerce Architecture
+
+Phase 4 elevates PayPilot from discrete user-triggered endpoints into a controlled, multi-step **Agentic Commerce System**.
+
+### 5.1 Architecture Diagram
+
+```text
+                    USER
+                      │
+                      ▼
+             NATURAL LANGUAGE REQUEST
+                      │
+                      ▼
+               AGENT ORCHESTRATOR
+                      │
+          ┌───────────┼───────────┐
+          ▼           ▼           ▼
+        PLAN       CONTEXT      TOOLS
+          │           │           │
+          └───────────┼───────────┘
+                      │
+                      ▼
+                TOOL REGISTRY
+                      │
+                      ▼
+                POLICY ENGINE
+                      │
+             ┌────────┴────────┐
+             │                 │
+           ALLOW           REQUIRE APPROVAL
+             │                 │
+             ▼                 ▼
+        SEARCH / RANK     HUMAN APPROVAL
+                               │
+                               ▼
+                          CREATE PLAN
+                               │
+                               ▼
+                         PAYPAL SANDBOX
+                               │
+                               ▼
+                            CAPTURE
+```
+
+### 5.2 Tool Registry & Permission Tiers
+
+Every capability exposed to the agent loop is registered as an explicit tool with a defined permission tier:
+
+| Tool Name | Permission Tier | Purpose | Constraints |
+|:---|:---|:---|:---|
+| `search_products` | `READ` | Query catalog with hard constraints | No mutations allowed |
+| `get_product` | `READ` | Fetch single product specification | Read-only |
+| `compare_products` | `READ` | Evaluate specs, pros/cons, metrics | Up to 4 products |
+| `create_purchase_plan` | `WRITE` | Formulate authoritative purchase plan | Price derived from backend only |
+| `request_purchase_approval` | `APPROVAL_REQUIRED` | Pause execution and prompt user | Pauses agent state |
+| `create_paypal_order` | `PAYMENT` | Initialize PayPal Sandbox order | **Forbidden** without prior approval |
+| `capture_paypal_payment` | `PAYMENT` | Verify and capture PayPal funds | Strictly requires approved order ID |
+
+### 5.3 Policy Engine Security Boundary
+
+The Policy Engine intercepts every tool invocation request before execution and evaluates six deterministic security invariants:
+
+1. **Permission Check**: The tool must be registered with an authorized `ToolPermission`.
+2. **Approval Enforcement**: Tools classified as `PAYMENT` or `APPROVAL_REQUIRED` are rejected immediately if `state.approval_status != 'APPROVED'`.
+3. **Price Integrity**: Tool arguments cannot override or inject item price. All pricing is fetched from authoritative backend product records.
+4. **Availability Verification**: Out-of-stock products cannot be formulated into purchase plans or processed for payment.
+5. **Autonomy Threshold Policy**: Autonomous purchases default to `$0.00` threshold, ensuring 100% human-in-the-loop oversight.
+6. **Execution Step Ceiling**: The agent loop is hard-capped at 12 steps per session to prevent infinite execution loops or resource exhaustion.
+
+### 5.4 Agent State Machine
+
+```mermaid
+stateDiagram-v2
+    [*] --> IDLE
+    IDLE --> PLANNING : User Query
+    PLANNING --> EXECUTING : Formulate Plan
+    EXECUTING --> AWAITING_APPROVAL : Tool Requires Approval
+    AWAITING_APPROVAL --> EXECUTING : User Approves
+    AWAITING_APPROVAL --> IDLE : User Denies
+    EXECUTING --> COMPLETED : Workflow Finished
+    EXECUTING --> FAILED : Error or Policy Rejection
+    COMPLETED --> [*]
+    FAILED --> [*]
+```
+
+### 5.5 Activity Log & Telemetry
+
+Every operational action performed by the agent produces an audit trail entry containing:
+- `step_number`: Monotonically increasing turn index
+- `action_type`: Tool invocation or lifecycle transition
+- `tool_name`: Exact tool executed
+- `status`: `executing`, `completed`, `denied`, or `failed`
+- `details`: Clear operational explanation (no raw prompts or chain-of-thought)
+- `timestamp`: UTC ISO 8601 timestamp

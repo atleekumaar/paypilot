@@ -30,7 +30,7 @@ PayPilot autonomously understands the request, searches product offerings, compa
   - Grounded, hallucination-free recommendation explanations
   - Interactive Next.js Shopping Workspace with progressive loading & product modals
 
-- **Phase 3 — PayPal Checkout & Purchase Flow** ✅ *(ACTIVE & IMPLEMENTED)*
+- **Phase 3 — PayPal Checkout & Purchase Flow** ✅
   - Authoritative Purchase Plan formulation (zero client price manipulation)
   - Explicit Human-in-the-Loop approval gate
   - PayPal Sandbox OAuth 2.0 authentication and token management
@@ -39,8 +39,13 @@ PayPilot autonomously understands the request, searches product offerings, compa
   - Server-side order capture verification and idempotency protection
   - Verified receipt and payment success screen
 
-- **Phase 4 — Agentic Commerce** ⏳ *(UPCOMING)*
-  - Autonomous cart assembly, budget optimization, and dynamic deal ranking
+- **Phase 4 — Controlled Agentic Commerce** ✅ *(ACTIVE & IMPLEMENTED)*
+  - Multi-step tool-augmented AI agent (`UNDERSTAND -> PLAN -> USE TOOLS -> SEARCH -> COMPARE -> RECOMMEND -> CREATE PURCHASE PLAN -> REQUEST APPROVAL -> EXECUTE APPROVED PAYMENT`)
+  - Tool Registry with 4 strict permission tiers (`READ`, `WRITE`, `APPROVAL_REQUIRED`, `PAYMENT`)
+  - Policy Engine enforcing 6 deterministic safety rules ($0 autonomy threshold, no price tampering, out-of-stock guard, step limit)
+  - Conversational Agent UI with real-time operational Activity Log and inline Purchase Approval Cards
+  - Multi-turn conversational memory with pronoun/reference resolution ("buy the first one", "why NovaBook?")
+  - 100% verified test suite (41/41 passing tests)
 
 - **Phase 5 — Post-Purchase Agent** ⏳
   - Real-time shipment tracking, delivery notifications, and returns assistance
@@ -50,9 +55,44 @@ PayPilot autonomously understands the request, searches product offerings, compa
 
 ---
 
-## Phase 3 End-to-End Walkthrough
+## Phase 4 Controlled Agentic Commerce Walkthrough
 
 ```text
+1. Natural Language Intent:
+   User: "Find me a laptop under $1200 for AI development with good battery life."
+       ↓
+2. Agent Planner:
+   Formulates structured workflow: [search_products -> compare_products]
+       ↓
+3. Policy Engine Verification:
+   Evaluates tool permissions (search_products: READ, compare_products: READ) -> ALLOW
+       ↓
+4. Tool Execution & Catalog Grounding:
+   - Discovers candidate models (NovaBook Pro 14, AeroBlade Slim, VisionBook 15)
+   - Evaluates specs, scores, and trade-offs
+       ↓
+5. Grounded Conversational Response & Activity Stream:
+   Presents top pick with pros/cons while logging real-time operational audit entries.
+       ↓
+6. Purchase Intent:
+   User: "I like the NovaBook Pro 14, let's buy it."
+       ↓
+7. Controlled Purchasing Guard:
+   - Agent executes `create_purchase_plan` (Price: $1,049 derived strictly from backend)
+   - Agent attempts `request_purchase_approval` -> Policy Engine halts execution!
+   - State transitions to `AWAITING_APPROVAL`.
+       ↓
+8. Human-in-the-Loop Decision:
+   - Frontend renders interactive Purchase Approval Card.
+   - User reviews exact SKU, quantity, seller, and authoritative total.
+   - User clicks [Approve Purchase].
+       ↓
+9. Approved Payment Execution:
+   - Agent resumes execution.
+   - Policy Engine verifies explicit user approval.
+   - Authoritative PayPal Sandbox order is generated.
+   - User seamlessly completes transaction via PayPal Sandbox Smart Buttons.
+```
 1. Search: "Find me a laptop under $1200 for AI development with good battery life."
       ↓
 2. AI Recommendations: PayPilot recommends NovaBook Pro 14 (#1 Pick, $1,049.00).
@@ -148,6 +188,14 @@ To complete sandbox transactions, use the Sandbox personal buyer account provide
 ---
 
 ## API Endpoints
+
+### Agentic Commerce API
+- `POST /api/agent/chat` — Conversational interaction with the autonomous commerce agent.
+- `POST /api/agent/{session_id}/approve` — Explicit human-in-the-loop approval resuming agent to create PayPal order.
+- `POST /api/agent/{session_id}/deny` — Graceful user cancellation of the active purchase plan.
+- `GET /api/agent/{session_id}/state` — Full session state snapshot (current step, status, plan, candidates).
+- `GET /api/agent/{session_id}/actions` — Real-time operational audit log and activity trace.
+- `GET /api/agent/{session_id}/summary` — Compact execution telemetry (turn count, goal, tool usage).
 
 ### Purchase Plans API
 - `POST /api/purchase-plans` — Create purchase plan with backend-derived authoritative price.
