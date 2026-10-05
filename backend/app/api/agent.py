@@ -107,3 +107,25 @@ async def get_agent_actions(session_id: str) -> List[AgentAction]:
     if not state:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Session '{session_id}' not found.")
     return state.actions
+
+
+@router.get(
+    "/{session_id}/summary",
+    summary="Get Agent Run Summary & Observability Metrics",
+)
+async def get_agent_summary(session_id: str) -> Dict[str, Any]:
+    """Retrieve run summary and tools telemetry for a session."""
+    store = get_session_store()
+    state = store.get(session_id)
+    if not state:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Session '{session_id}' not found.")
+
+    tools_used = list(dict.fromkeys(a.tool for a in state.actions))
+    return {
+        "session_id": state.session_id,
+        "step_count": state.current_step,
+        "tools_used": tools_used,
+        "status": state.status.value,
+        "total_actions": len(state.actions),
+        "created_at": state.created_at,
+    }

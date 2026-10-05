@@ -38,6 +38,17 @@ class AgentAction(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
+class AgentRunSummary(BaseModel):
+    """Observability run summary for developer telemetry and demo auditing."""
+
+    session_id: str
+    step_count: int
+    tools_used: List[str]
+    status: str
+    total_actions: int
+    created_at: datetime
+
+
 class AgentPlan(BaseModel):
     """Structured action plan formulated by the agent."""
 
