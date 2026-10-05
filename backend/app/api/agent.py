@@ -35,6 +35,8 @@ class AgentChatResponse(BaseModel):
     purchase_plan: Optional[Dict[str, Any]] = None
     candidate_products: List[Dict[str, Any]] = Field(default_factory=list)
     actions: List[Dict[str, Any]] = Field(default_factory=list)
+    draft: Optional[Dict[str, Any]] = None
+    active_order: Optional[Dict[str, Any]] = None
 
 
 @router.post(

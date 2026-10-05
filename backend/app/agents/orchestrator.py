@@ -46,6 +46,25 @@ class AgentOrchestrator:
         state.messages.append(ConversationMessage(role="user", content=message))
         state.status = AgentStatus.UNDERSTANDING
 
+        # Step 0: Check for Post-Purchase inquiry
+        from app.agents.post_purchase import PostPurchaseAgent
+        post_purchase_agent = PostPurchaseAgent(tool_registry=self._registry)
+
+        if post_purchase_agent.is_post_purchase_query(message, state):
+            res = post_purchase_agent.process(message, state)
+            self._sessions.save(state)
+            return {
+                "session_id": state.session_id,
+                "status": state.status.value,
+                "message": res["message"],
+                "purchase_plan_id": state.purchase_plan_id,
+                "purchase_plan": state.purchase_plan.model_dump() if state.purchase_plan else None,
+                "candidate_products": [p.model_dump() for p in state.candidate_products[:3]],
+                "actions": [a.model_dump() for a in state.actions],
+                "draft": res.get("draft") or state.support_request_draft,
+                "active_order": res.get("order") or state.active_order,
+            }
+
         # Step 1: Understand request & parse intent
         intent = self._intent_service.extract_intent(message)
         state.log_action("understand_intent", f"Identified category: {intent.category}, budget: ${intent.hard_constraints.max_price}")
@@ -119,10 +138,26 @@ class AgentOrchestrator:
         }
 
     def approve_purchase(self, session_id: str) -> Dict[str, Any]:
-        """User explicitly approves purchase; resumes agent execution to create PayPal order."""
+        """User explicitly approves purchase or pending consequential action."""
         state = self._sessions.get(session_id)
         if not state:
             raise ValueError(f"Session '{session_id}' not found.")
+
+        # Consequential Post-Purchase Action: Support Request Draft Approval
+        if state.support_request_draft:
+            state.approval_status = "APPROVED"
+            state.support_request_approved = True
+            state.approval_required = False
+            from app.agents.post_purchase import PostPurchaseAgent
+            pp_agent = PostPurchaseAgent(tool_registry=self._registry)
+            res = pp_agent.process("approve and send", state)
+            self._sessions.save(state)
+            return {
+                "session_id": state.session_id,
+                "status": state.status.value,
+                "message": res["message"],
+                "actions": [a.model_dump() for a in state.actions],
+            }
 
         if not state.purchase_plan_id or not state.purchase_plan:
             raise ValueError("No active purchase plan found in session to approve.")
@@ -166,10 +201,27 @@ class AgentOrchestrator:
         }
 
     def deny_purchase(self, session_id: str) -> Dict[str, Any]:
-        """User denies purchase; halts purchasing workflow gracefully."""
+        """User denies purchase or pending action; halts workflow gracefully."""
         state = self._sessions.get(session_id)
         if not state:
             raise ValueError(f"Session '{session_id}' not found.")
+
+        # Handle support draft denial
+        if state.support_request_draft:
+            state.support_request_draft = None
+            state.approval_status = "DENIED"
+            state.approval_required = False
+            state.status = AgentStatus.IDLE
+            state.log_action("user_denial", "User declined sending support request.", status="completed")
+            msg = "Support request cancelled. Let me know if you would like to check any other details regarding your order."
+            state.messages.append(ConversationMessage(role="assistant", content=msg))
+            self._sessions.save(state)
+            return {
+                "session_id": state.session_id,
+                "status": state.status.value,
+                "message": msg,
+                "actions": [a.model_dump() for a in state.actions],
+            }
 
         state.approval_status = "DENIED"
         state.approval_required = False
