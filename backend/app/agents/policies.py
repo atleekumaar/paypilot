@@ -79,7 +79,14 @@ class PolicyEngine:
                     return PolicyDecision.DENY, f"Cannot formulate purchase plan for unavailable or out-of-stock product."
             return PolicyDecision.ALLOW, None
 
-        # Rule 5: Approval-required or Payment tools
+        # Rule 5: Consequential Post-Purchase Actions (e.g. send_support_request)
+        if tool_name == "send_support_request":
+            if state.approval_status != "APPROVED" and not state.support_request_approved:
+                logger.info(f"Policy REQUIRE_APPROVAL: Sensitive tool '{tool_name}' requires explicit user confirmation.")
+                return PolicyDecision.REQUIRE_APPROVAL, "Sending a support inquiry to merchant requires explicit user approval."
+            return PolicyDecision.ALLOW, None
+
+        # Rule 6: Approval-required or Payment tools (Purchase & Checkout)
         if tool_defn.permission in (ToolPermission.APPROVAL_REQUIRED, ToolPermission.PAYMENT):
             plan_id = arguments.get("purchase_plan_id") or state.purchase_plan_id
 

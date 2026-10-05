@@ -1,13 +1,16 @@
 """Concrete commerce tool implementations wrapping backend services."""
 
+from datetime import datetime, timezone
 import logging
 from typing import Any, Dict, List, Optional
+import uuid
 
 from app.agents.registry import ToolPermission, ToolRegistry
 from app.agents.state import AgentState, AgentStatus
 from app.repositories.product_repository import get_product_repository
 from app.schemas.purchase_plan import PurchasePlanCreateRequest
 from app.services.checkout_service import CheckoutService
+from app.services.order_service import OrderService
 from app.services.purchase_plan_service import PurchasePlanService
 from app.services.ranking_service import ProductRankingService
 from app.services.search_service import ProductSearchService
@@ -267,6 +270,250 @@ def build_default_tool_registry() -> ToolRegistry:
                 "paypal_order_id": {"type": "string"},
             },
             "required": ["purchase_plan_id", "paypal_order_id"],
+        },
+    )
+
+    # =========================================================================
+    # PHASE 5: POST-PURCHASE TOOLS
+    # =========================================================================
+    order_service = OrderService()
+
+    # 8. TOOL: get_order (READ)
+    def _get_order_handler(arguments: Dict[str, Any], state: AgentState) -> Dict[str, Any]:
+        order_id = arguments.get("order_id") or state.active_order_id
+        if not order_id:
+            raise ValueError("Missing required order_id.")
+        detail = order_service.get_order(order_id, user_id=state.user_id)
+        state.active_order_id = detail.id
+        state.active_order = detail.model_dump()
+        state.active_shipment = detail.shipment.model_dump() if detail.shipment else None
+        state.log_action("get_order", f"Retrieved order {detail.id} ({detail.product_name})")
+        return detail.model_dump()
+
+    registry.register(
+        name="get_order",
+        description="Retrieve complete order detail with product, payment, and shipment status.",
+        permission=ToolPermission.READ,
+        handler=_get_order_handler,
+        parameters={
+            "type": "object",
+            "properties": {"order_id": {"type": "string"}},
+            "required": ["order_id"],
+        },
+    )
+
+    # 9. TOOL: get_user_orders (READ)
+    def _get_user_orders_handler(arguments: Dict[str, Any], state: AgentState) -> List[Dict[str, Any]]:
+        user_id = arguments.get("user_id") or state.user_id
+        orders = order_service.get_user_orders(user_id=user_id)
+        state.log_action("get_user_orders", f"Retrieved {len(orders)} order(s) for user '{user_id}'")
+        return [o.model_dump() for o in orders]
+
+    registry.register(
+        name="get_user_orders",
+        description="Retrieve recent order history for the authenticated user.",
+        permission=ToolPermission.READ,
+        handler=_get_user_orders_handler,
+        parameters={
+            "type": "object",
+            "properties": {"user_id": {"type": "string"}},
+        },
+    )
+
+    # 10. TOOL: get_payment_status (READ)
+    def _get_payment_status_handler(arguments: Dict[str, Any], state: AgentState) -> Dict[str, Any]:
+        order_id = arguments.get("order_id") or state.active_order_id
+        if not order_id:
+            raise ValueError("Missing required order_id.")
+        detail = order_service.get_order(order_id, user_id=state.user_id)
+        result = {
+            "order_id": detail.id,
+            "product_name": detail.product_name,
+            "amount": detail.amount,
+            "currency": detail.currency,
+            "payment_status": detail.status,
+            "paypal_order_id": detail.paypal_order_id,
+            "payment_id": detail.payment_id,
+            "provider": "PayPal",
+        }
+        state.log_action("get_payment_status", f"Verified payment status for {detail.id}: {detail.status}")
+        return result
+
+    registry.register(
+        name="get_payment_status",
+        description="Verify authoritative payment and PayPal capture state for an order.",
+        permission=ToolPermission.READ,
+        handler=_get_payment_status_handler,
+        parameters={
+            "type": "object",
+            "properties": {"order_id": {"type": "string"}},
+            "required": ["order_id"],
+        },
+    )
+
+    # 11. TOOL: get_shipment_status (READ)
+    def _get_shipment_status_handler(arguments: Dict[str, Any], state: AgentState) -> Dict[str, Any]:
+        order_id = arguments.get("order_id") or state.active_order_id
+        if not order_id:
+            raise ValueError("Missing required order_id.")
+        shipment = order_service.get_shipment(order_id, user_id=state.user_id)
+        state.active_shipment = shipment.model_dump()
+        state.log_action("get_shipment_status", f"Retrieved shipment for {order_id}: {shipment.status.value}")
+        return shipment.model_dump()
+
+    registry.register(
+        name="get_shipment_status",
+        description="Fetch current shipment state, carrier, and latest scan update.",
+        permission=ToolPermission.READ,
+        handler=_get_shipment_status_handler,
+        parameters={
+            "type": "object",
+            "properties": {"order_id": {"type": "string"}},
+            "required": ["order_id"],
+        },
+    )
+
+    # 12. TOOL: get_tracking_details (READ)
+    def _get_tracking_details_handler(arguments: Dict[str, Any], state: AgentState) -> Dict[str, Any]:
+        query = arguments.get("query") or arguments.get("order_id") or state.active_order_id
+        if not query:
+            raise ValueError("Missing tracking query or order_id.")
+        tracking = order_service.get_tracking(query, user_id=state.user_id)
+        state.log_action("get_tracking_details", f"Retrieved tracking updates for {query}")
+        return tracking
+
+    registry.register(
+        name="get_tracking_details",
+        description="Lookup carrier tracking milestones and facility scan history.",
+        permission=ToolPermission.READ,
+        handler=_get_tracking_details_handler,
+        parameters={
+            "type": "object",
+            "properties": {"query": {"type": "string"}},
+            "required": ["query"],
+        },
+    )
+
+    # 13. TOOL: get_delivery_estimate (READ)
+    def _get_delivery_estimate_handler(arguments: Dict[str, Any], state: AgentState) -> Dict[str, Any]:
+        order_id = arguments.get("order_id") or state.active_order_id
+        if not order_id:
+            raise ValueError("Missing required order_id.")
+        detail = order_service.get_order(order_id, user_id=state.user_id)
+        shipment = detail.shipment
+        est = {
+            "order_id": detail.id,
+            "product_name": detail.product_name,
+            "estimated_delivery": shipment.estimated_delivery if shipment else "Pending scheduling",
+            "current_status": shipment.status.value if shipment else detail.status,
+            "confidence": "Based on latest carrier scan telemetry",
+            "is_demo": shipment.is_demo if shipment else True,
+        }
+        state.log_action("get_delivery_estimate", f"Delivery estimate for {detail.id}: {est['estimated_delivery']}")
+        return est
+
+    registry.register(
+        name="get_delivery_estimate",
+        description="Retrieve estimated delivery date and carrier delivery window.",
+        permission=ToolPermission.READ,
+        handler=_get_delivery_estimate_handler,
+        parameters={
+            "type": "object",
+            "properties": {"order_id": {"type": "string"}},
+            "required": ["order_id"],
+        },
+    )
+
+    # 14. TOOL: detect_order_issue (READ)
+    def _detect_order_issue_handler(arguments: Dict[str, Any], state: AgentState) -> Dict[str, Any]:
+        order_id = arguments.get("order_id") or state.active_order_id
+        ref_date = arguments.get("reference_date")
+        if not order_id:
+            raise ValueError("Missing required order_id.")
+        issue = order_service.detect_order_issue(order_id, user_id=state.user_id, reference_date_str=ref_date)
+        state.log_action("detect_order_issue", f"Evaluated shipment issues for {order_id}: {issue['issue']}")
+        return issue
+
+    registry.register(
+        name="detect_order_issue",
+        description="Deterministic issue detector evaluating delivery delays, carrier notes, and milestones.",
+        permission=ToolPermission.READ,
+        handler=_detect_order_issue_handler,
+        parameters={
+            "type": "object",
+            "properties": {
+                "order_id": {"type": "string"},
+                "reference_date": {"type": "string"},
+            },
+            "required": ["order_id"],
+        },
+    )
+
+    # 15. TOOL: prepare_support_request (WRITE)
+    def _prepare_support_request_handler(arguments: Dict[str, Any], state: AgentState) -> Dict[str, Any]:
+        order_id = arguments.get("order_id") or state.active_order_id
+        if not order_id:
+            raise ValueError("Missing required order_id.")
+        detail = order_service.get_order(order_id, user_id=state.user_id)
+        shipment = detail.shipment
+        est_date = shipment.estimated_delivery if shipment else "the scheduled date"
+
+        draft = {
+            "order_id": detail.id,
+            "product_name": detail.product_name,
+            "subject": f"Delivery delay inquiry for order {detail.id}",
+            "recipient": "Merchant Support",
+            "message": (
+                f"Hello,\n\n"
+                f"I'm contacting you regarding order {detail.id} ({detail.product_name}). "
+                f"The estimated delivery date was {est_date}, but the shipment has not yet arrived.\n\n"
+                f"Could you please provide an updated delivery estimate?\n\n"
+                f"Thank you."
+            ),
+            "status": "DRAFT_READY",
+        }
+        state.support_request_draft = draft
+        state.log_action("prepare_support_request", f"Prepared draft support inquiry for order {detail.id}")
+        return draft
+
+    registry.register(
+        name="prepare_support_request",
+        description="Draft a merchant support inquiry without sending it.",
+        permission=ToolPermission.WRITE,
+        handler=_prepare_support_request_handler,
+        parameters={
+            "type": "object",
+            "properties": {"order_id": {"type": "string"}},
+            "required": ["order_id"],
+        },
+    )
+
+    # 16. TOOL: send_support_request (APPROVAL_REQUIRED)
+    def _send_support_request_handler(arguments: Dict[str, Any], state: AgentState) -> Dict[str, Any]:
+        order_id = arguments.get("order_id") or state.active_order_id
+        if not order_id:
+            raise ValueError("Missing required order_id.")
+        ticket_id = f"TICK-{uuid.uuid4().hex[:6].upper()}"
+        result = {
+            "status": "SENT",
+            "ticket_id": ticket_id,
+            "order_id": order_id,
+            "message": f"Support request {ticket_id} has been submitted to merchant support.",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        state.support_request_approved = True
+        state.log_action("send_support_request", f"Dispatched merchant support ticket {ticket_id}")
+        return result
+
+    registry.register(
+        name="send_support_request",
+        description="Dispatch prepared support inquiry to merchant after explicit user approval.",
+        permission=ToolPermission.APPROVAL_REQUIRED,
+        handler=_send_support_request_handler,
+        parameters={
+            "type": "object",
+            "properties": {"order_id": {"type": "string"}},
+            "required": ["order_id"],
         },
     )
 

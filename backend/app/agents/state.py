@@ -90,6 +90,14 @@ class AgentState(BaseModel):
     paypal_order_id: Optional[str] = None
     payment_status: Optional[str] = None
 
+    # Post-Purchase context
+    user_id: str = Field(default="guest_user", description="Authenticated user ID")
+    active_order_id: Optional[str] = None
+    active_order: Optional[Dict[str, Any]] = None
+    active_shipment: Optional[Dict[str, Any]] = None
+    support_request_draft: Optional[Dict[str, Any]] = None
+    support_request_approved: bool = False
+
     # Observability & multi-turn memory
     actions: List[AgentAction] = Field(default_factory=list)
     messages: List[ConversationMessage] = Field(default_factory=list)
