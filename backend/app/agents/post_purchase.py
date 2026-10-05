@@ -14,6 +14,17 @@ from app.services.order_service import OrderService
 logger = logging.getLogger(__name__)
 
 
+def format_friendly_date(date_str: Optional[str]) -> str:
+    """Format ISO date YYYY-MM-DD into friendly human representation (e.g. 'October 18, 2026')."""
+    if not date_str:
+        return "Pending scheduling"
+    try:
+        dt = datetime.strptime(date_str, "%Y-%m-%d")
+        return dt.strftime("%B %d, %Y")
+    except Exception:
+        return date_str
+
+
 class PostPurchaseIntent(str, Enum):
     """Categorized user intent for post-purchase inquiries."""
 
@@ -218,7 +229,7 @@ class PostPurchaseAgent:
             if issue_res.get("detected"):
                 response = (
                     f"The shipment appears to be delayed.\n\n"
-                    f"The original estimated delivery date was **{shipment_data.get('estimated_delivery', 'October 18')}**, "
+                    f"The original estimated delivery date was **{format_friendly_date(shipment_data.get('estimated_delivery'))}**, "
                     f"but the shipment is still in transit.\n\n"
                     f"Carrier note: {shipment_data.get('last_update', 'Regional logistics delay reported.')}\n\n"
                     f"Recommended next step:\n"
@@ -228,7 +239,7 @@ class PostPurchaseAgent:
             else:
                 response = (
                     f"Your order is currently progressing on schedule.\n\n"
-                    f"Estimated delivery: **{shipment_data.get('estimated_delivery', 'N/A')}**\n"
+                    f"Estimated delivery: **{format_friendly_date(shipment_data.get('estimated_delivery'))}**\n"
                     f"Latest carrier update: {shipment_data.get('last_update', 'In transit')}"
                 )
             state.messages.append(ConversationMessage(role="assistant", content=response))
@@ -276,7 +287,7 @@ class PostPurchaseAgent:
             est_res = self._registry.execute("get_delivery_estimate", {"order_id": order_id}, state).data
             response = (
                 f"Estimated delivery:\n"
-                f"**{est_res['estimated_delivery']}**\n\n"
+                f"**{format_friendly_date(est_res['estimated_delivery'])}**\n\n"
                 f"Current status:\n"
                 f"{est_res['current_status'].replace('_', ' ').title()}\n\n"
                 f"Confidence:\n"
@@ -288,7 +299,7 @@ class PostPurchaseAgent:
 
         # Default Turn: Order & Tracking Status ("Where is my order?")
         shipment_status_str = shipment_data.get("status", "IN_TRANSIT").replace("_", " ").title()
-        est_delivery_str = shipment_data.get("estimated_delivery", "October 18")
+        est_delivery_str = format_friendly_date(shipment_data.get("estimated_delivery"))
         last_update_str = shipment_data.get("last_update", "Package arrived at the regional facility.")
 
         response = (
