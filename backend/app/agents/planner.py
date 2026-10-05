@@ -26,6 +26,11 @@ class AgentPlanner:
                     goal="create_purchase_plan_and_request_approval",
                     steps=["create_purchase_plan", "request_purchase_approval"],
                 )
+            else:
+                return AgentPlan(
+                    goal="discover_and_request_purchase",
+                    steps=["search_products", "compare_products", "create_purchase_plan", "request_purchase_approval"],
+                )
 
         # Intent: Follow-up comparison or inquiry on previously discovered products
         if state.candidate_products and re.search(r"\b(compare|which|better|difference|why|worth|specs|battery|gpu|ram)\b", msg_lower):

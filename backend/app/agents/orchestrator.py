@@ -1,6 +1,7 @@
 """Agent orchestrator executing controlled, multi-step commerce workflows."""
 
 import logging
+import re
 from typing import Any, Dict, Optional
 
 from app.agents.planner import AgentPlanner
@@ -126,7 +127,10 @@ class AgentOrchestrator:
         if not state.purchase_plan_id or not state.purchase_plan:
             raise ValueError("No active purchase plan found in session to approve.")
 
-        # Update approval status
+        # Update approval status in service and agent state
+        from app.services.purchase_plan_service import PurchasePlanService
+
+        PurchasePlanService().approve_plan(state.purchase_plan_id)
         state.approval_status = "APPROVED"
         state.approval_required = False
         state.status = AgentStatus.EXECUTING
