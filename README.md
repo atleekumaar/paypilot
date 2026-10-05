@@ -16,199 +16,165 @@ PayPilot autonomously understands the request, searches product offerings, compa
 
 ---
 
-## Current Status
+## Current Status & Roadmap
 
-**Phase 1: Foundation (Active)**
-- Core repository structure established
-- FastAPI backend scaffolded with health and metadata endpoints
-- Next.js + TypeScript + Tailwind CSS frontend initialized with fintech landing page
-- Architecture and technical specifications documented
-- Continuous integration and Git workflow active
+- **Phase 1 — Foundation** ✅
+  - FastAPI backend & Next.js frontend scaffolded
+  - Health and root status endpoints
+  - Git repository & clean architecture established
+
+- **Phase 2 — Product Discovery** ✅ *(ACTIVE & IMPLEMENTED)*
+  - Natural-language intent extraction and normalization
+  - Deterministic product search enforcing hard constraints (budget, category, in-stock)
+  - Mathematical ranking engine (0–100 composite scoring)
+  - Grounded, hallucination-free recommendation explanations
+  - Interactive Next.js Shopping Workspace with progressive loading & product modals
+
+- **Phase 3 — PayPal Checkout** ⏳ *(UPCOMING)*
+  - Purchase Plan creation & user confirmation gate
+  - PayPal Orders API v2 sandbox integration
+  - Payment authorization, capture, and instant receipting
+
+- **Phase 4 — Agentic Commerce** ⏳
+  - Autonomous cart assembly, budget optimization, and discount ranking
+
+- **Phase 5 — Post-Purchase Agent** ⏳
+  - Real-time shipment tracking, delivery notifications, and returns assistance
+
+- **Phase 6 — Production Polish** ⏳
+  - Security hardening, telemetry, and hackathon presentation demo
 
 ---
 
-## Architecture
+## Phase 2 Demo: AI Product Discovery Agent
 
+### Conversational Query Example
 ```text
-User
- ↓
-Next.js Frontend (React + TypeScript + Tailwind CSS)
- ↓
-FastAPI Backend (Python 3.11+ / Uvicorn / Pydantic / SQLAlchemy)
- ↓
-[Phase 2+] AI Agent Layer (Intent Parsing, RAG, Spec Comparison)
- ↓
-[Phase 2+] Commerce Services (Product Catalog, Inventory, Search)
- ↓
-[Phase 3+] PayPal Integration (Orders API, Vault, Smart Checkout)
+User Request:
+"Find me a laptop under $1200 for AI development with good battery life."
 ```
 
-For in-depth architectural diagrams, component boundaries, and phase boundaries, see [docs/architecture.md](docs/architecture.md).
+### Pipeline Execution
+1. **Intent Extraction**: Identifies category `laptop`, hard budget cap `$1,200.00`, requirement `good battery life`, use case `AI development`.
+2. **Filtering**: Deterministically removes laptops over $1200 and out-of-stock items.
+3. **Ranking**: Computes composite scores across requirement match (35%), price fit (25%), rating (15%), delivery (10%), seller (10%), and soft preferences (5%).
+4. **Top 3 Recommendations**:
+   - **Rank #1 (Top Pick)**: **NovaBook Pro 14** (Score: 94.4/100, $1,049.00, RTX 4060, 16GB RAM, 9.5h Battery)
+   - **Rank #2**: **ApexBook AI 15** (Score: 92.1/100, $1,149.00, RTX 4050, 16GB RAM, 8.5h Battery)
+   - **Rank #3**: **ZenAir Dev 14** (Score: 89.8/100, $899.00, Radeon 780M, 16GB RAM, 13h Battery)
+5. **Grounded Explanation**:
+   > *"I recommend the NovaBook Pro 14 because it gives you the strongest balance of GPU performance, battery endurance, price-to-value ratio while staying reliably within your specifications.*
+   >
+   > *Why it fits:*
+   > *✓ RTX 4060*
+   > *✓ 16 GB RAM*
+   > *✓ 9.5-hour battery life*
+   > *✓ 512 GB SSD*
+   > *✓ $1,049.00 price*
+   > *✓ 4.7★ rating (842 reviews)*
+   > *✓ Fast 3-day delivery via Nova Direct"*
+
+---
+
+## Architecture Flow
+
+```text
+                    USER
+                      │
+                      ▼
+                 Next.js UI
+                      │
+                      ▼
+              Discovery API (POST /api/discovery/search)
+                      │
+                      ▼
+              Intent Service
+                      │
+                      ▼
+            Structured Intent (ProductSearchIntent)
+                      │
+                      ▼
+          Product Search Service
+                      │
+                      ▼
+            Candidate Products (Enforces budget & stock invariants)
+                      │
+                      ▼
+          Ranking Service (0-100 Mathematical Weighting)
+                      │
+                      ▼
+             Top 3 Products
+                      │
+                      ▼
+       Grounded Explanation Service (Verified product specs)
+                      │
+                      ▼
+                 Frontend (3 Best Matches + Grounded Analysis)
+```
+
+See [docs/architecture.md](docs/architecture.md) for full architectural documentation.
+
+---
+
+## API Endpoints
+
+### Discovery API
+- `POST /api/discovery/search` — Natural language product search and explainable recommendation.
+  ```json
+  // Request
+  {
+    "query": "Find me a laptop under $1200 for AI development with good battery life."
+  }
+  ```
+
+### Products API
+- `GET /api/products` — Retrieve product catalogue with optional category, stock, and pagination query params.
+- `GET /api/products/{id}` — Fetch single product details by SKU (e.g. `/api/products/LAP-001`).
+
+### System API
+- `GET /health` — Health check endpoint (`{"status": "ok", "service": "paypilot-backend"}`).
+- `GET /` — Root service metadata.
+- `GET /docs` — Interactive OpenAPI / Swagger UI.
 
 ---
 
 ## Tech Stack
 
-### Backend
-- **Python 3.11+**
-- **FastAPI** — High-performance modern web framework
-- **Uvicorn** — Lightning-fast ASGI server
-- **Pydantic v2** — Robust data validation and settings management
-- **SQLAlchemy** — PostgreSQL-ready ORM
-- **pytest** & **httpx** — Automated test suite
-
-### Frontend
-- **Next.js 14+** (App Router)
-- **React 18+** & **TypeScript**
-- **Tailwind CSS** — Modern dark-mode AI/fintech aesthetic
-- **Lucide Icons** — Clean iconography
-
-### Development & Security
-- Git & GitHub
-- Strict environment variable segregation via `.env.example`
-- Zero committed secrets policy
-
----
-
-## Project Structure
-
-```text
-paypilot/
-├── backend/
-│   ├── app/
-│   │   ├── api/          # API route definitions
-│   │   ├── core/         # Configuration and security settings
-│   │   ├── models/       # SQLAlchemy database models
-│   │   ├── schemas/      # Pydantic request/response schemas
-│   │   ├── services/     # Business logic & agent workflows
-│   │   └── main.py       # FastAPI application entrypoint
-│   ├── tests/            # Automated test suite (pytest)
-│   ├── requirements.txt  # Python backend dependencies
-│   └── README.md         # Backend setup documentation
-│
-├── frontend/
-│   ├── app/              # Next.js App Router (pages and layouts)
-│   ├── components/       # Reusable React UI components
-│   ├── lib/              # Client utilities and helpers
-│   ├── public/           # Static assets
-│   ├── package.json      # Frontend dependencies and scripts
-│   └── README.md         # Frontend setup documentation
-│
-├── docs/
-│   └── architecture.md   # System architecture & sequence diagrams
-│
-├── .env.example          # Environment variable template
-├── .gitignore            # Git exclusion rules
-├── LICENSE               # MIT License
-└── README.md             # Project documentation
-```
+- **Backend**: Python 3.11+, FastAPI, Uvicorn, Pydantic v2, SQLAlchemy, pytest
+- **Frontend**: Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS, Lucide Icons
+- **Data & Testing**: Deterministic 134-item multi-category catalogue, comprehensive automated test coverage
 
 ---
 
 ## Local Development
 
-### Prerequisites
-- Python 3.11+
-- Node.js 18+ & npm
-- Git
-
-### Backend Setup
-
-1. Navigate to the backend directory:
-   ```bash
-   cd backend
-   ```
-
-2. Create and activate a virtual environment:
-   ```bash
-   python -m venv .venv
-   # Windows PowerShell
-   .venv\Scripts\Activate.ps1
-   # macOS/Linux
-   source .venv/bin/activate
-   ```
-
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. Run the development server:
-   ```bash
-   uvicorn app.main:app --reload --port 8000
-   ```
-
-5. Verify endpoints:
-   - Root: http://127.0.0.1:8000/
-   - Health check: http://127.0.0.1:8000/health
-   - Interactive OpenAPI docs: http://127.0.0.1:8000/docs
-
-6. Run tests:
-   ```bash
-   pytest
-   ```
-
----
-
-### Frontend Setup
-
-1. Navigate to the frontend directory:
-   ```bash
-   cd frontend
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Run the development server:
-   ```bash
-   npm run dev
-   ```
-
-4. Open [http://localhost:3000](http://localhost:3000) in your browser.
-
----
-
-## Environment Variables
-
-Copy the example environment configuration:
-
+### 1. Backend Setup
 ```bash
-cp .env.example .env
+cd backend
+python -m venv .venv
+# Activate:
+.venv\Scripts\Activate.ps1   # Windows PowerShell
+source .venv/bin/activate      # macOS/Linux
+
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
 ```
+- Swagger Docs: http://127.0.0.1:8000/docs
+- Health check: http://127.0.0.1:8000/health
 
-| Variable | Description | Default / Example |
-| :--- | :--- | :--- |
-| `APP_NAME` | Name of the application | `PayPilot` |
-| `ENVIRONMENT` | Running environment (`development`, `production`) | `development` |
-| `DATABASE_URL` | PostgreSQL connection string | `sqlite+aiosqlite:///./paypilot.db` (dev) |
-| `LLM_API_KEY` | LLM Provider API Key (Phase 2+) | Placeholder |
-| `PAYPAL_CLIENT_ID` | PayPal Developer App Client ID (Phase 3+) | Placeholder |
-| `PAYPAL_CLIENT_SECRET` | PayPal Developer App Secret (Phase 3+) | Placeholder |
-| `PAYPAL_ENVIRONMENT` | PayPal sandbox or live environment | `sandbox` |
+### 2. Frontend Setup
+```bash
+cd frontend
+npm install
+npm run dev
+```
+- App UI: http://localhost:3000
 
-> **IMPORTANT:** Never commit `.env` or real API keys to version control.
-
----
-
-## Roadmap
-
-- [x] **Phase 1 — Foundation** *(CURRENT)*: Scaffold backend and frontend, establish architecture, setup testing and documentation.
-- [ ] **Phase 2 — AI Product Agent**: Conversational intent extraction, mock product catalog, LLM-driven comparison engine.
-- [ ] **Phase 3 — PayPal Checkout**: PayPal REST API integration, sandbox order creation, capture workflows, and user approval gate.
-- [ ] **Phase 4 — Agentic Commerce**: Autonomous cart assembly, budget constraints enforcement, dynamic deal ranking.
-- [ ] **Phase 5 — Post-Purchase Agent**: Order confirmation, real-time shipment tracking, simulated returns and customer support.
-- [ ] **Phase 6 — Production Polish**: End-to-end security auditing, telemetry, polished animations, and hackathon presentation demo.
-
----
-
-## Contributing
-
-1. Fork or branch from `main`.
-2. Follow commit message conventions (`feat:`, `chore:`, `docs:`, `test:`).
-3. Ensure all tests pass prior to submitting PRs.
+### 3. Run Backend Tests
+```bash
+cd backend
+pytest
+```
 
 ---
 
