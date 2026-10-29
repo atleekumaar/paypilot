@@ -1,10 +1,14 @@
-"""Thread-safe in-memory repository for Orders."""
+"""Database-backed repository for Orders."""
 
 from datetime import datetime, timezone
-import threading
+import logging
 from typing import Dict, List, Optional
 
+from app.db.session import get_db_context, init_db
+from app.models.order import OrderModel
 from app.schemas.order import Order, OrderStatus
+
+logger = logging.getLogger(__name__)
 
 
 def _build_default_demo_orders() -> Dict[str, Order]:
@@ -77,58 +81,143 @@ def _build_default_demo_orders() -> Dict[str, Order]:
     }
 
 
+def _model_to_schema(m: OrderModel) -> Order:
+    return Order(
+        id=m.id,
+        user_id=m.user_id,
+        purchase_plan_id=m.purchase_plan_id,
+        paypal_order_id=m.paypal_order_id,
+        payment_id=m.payment_id,
+        product_id=m.product_id,
+        product_name=m.product_name,
+        brand=m.brand,
+        quantity=m.quantity,
+        amount=m.amount,
+        currency=m.currency,
+        status=OrderStatus(m.status),
+        created_at=m.created_at,
+        updated_at=m.updated_at,
+    )
+
+
 class OrderRepository:
-    """In-memory thread-safe order data store."""
+    """Database-backed order data store."""
 
     def __init__(self, populate_defaults: bool = True):
-        self._lock = threading.Lock()
-        self._orders: Dict[str, Order] = _build_default_demo_orders() if populate_defaults else {}
+        init_db()
+        if populate_defaults:
+            with get_db_context() as db:
+                if db.query(OrderModel).count() == 0:
+                    for order in _build_default_demo_orders().values():
+                        db.merge(OrderModel(
+                            id=order.id,
+                            user_id=order.user_id,
+                            purchase_plan_id=order.purchase_plan_id,
+                            paypal_order_id=order.paypal_order_id,
+                            payment_id=order.payment_id,
+                            product_id=order.product_id,
+                            product_name=order.product_name,
+                            brand=order.brand,
+                            quantity=order.quantity,
+                            amount=order.amount,
+                            currency=order.currency,
+                            status=order.status.value if hasattr(order.status, "value") else str(order.status),
+                            created_at=order.created_at,
+                            updated_at=order.updated_at,
+                        ))
 
     def create(self, order: Order) -> Order:
-        with self._lock:
-            self._orders[order.id] = order
+        with get_db_context() as db:
+            m = OrderModel(
+                id=order.id,
+                user_id=order.user_id,
+                purchase_plan_id=order.purchase_plan_id,
+                paypal_order_id=order.paypal_order_id,
+                payment_id=order.payment_id,
+                product_id=order.product_id,
+                product_name=order.product_name,
+                brand=order.brand,
+                quantity=order.quantity,
+                amount=order.amount,
+                currency=order.currency,
+                status=order.status.value if hasattr(order.status, "value") else str(order.status),
+                created_at=order.created_at,
+                updated_at=order.updated_at,
+            )
+            db.merge(m)
             return order
 
     def get_by_id(self, order_id: str) -> Optional[Order]:
-        with self._lock:
-            return self._orders.get(order_id)
+        with get_db_context() as db:
+            m = db.query(OrderModel).filter(OrderModel.id == order_id).first()
+            if m:
+                return _model_to_schema(m)
+            return None
 
     def get_by_purchase_plan_id(self, plan_id: str) -> Optional[Order]:
-        with self._lock:
-            for order in self._orders.values():
-                if order.purchase_plan_id == plan_id:
-                    return order
+        with get_db_context() as db:
+            m = db.query(OrderModel).filter(OrderModel.purchase_plan_id == plan_id).first()
+            if m:
+                return _model_to_schema(m)
             return None
 
     def list_by_user(self, user_id: str) -> List[Order]:
-        with self._lock:
-            return [
-                order for order in sorted(
-                    self._orders.values(),
-                    key=lambda o: o.created_at,
-                    reverse=True
-                )
-                if order.user_id == user_id
-            ]
+        with get_db_context() as db:
+            records = (
+                db.query(OrderModel)
+                .filter(OrderModel.user_id == user_id)
+                .order_by(OrderModel.created_at.desc())
+                .all()
+            )
+            return [_model_to_schema(m) for m in records]
 
     def list_all(self) -> List[Order]:
-        with self._lock:
-            return list(self._orders.values())
+        with get_db_context() as db:
+            records = db.query(OrderModel).order_by(OrderModel.created_at.desc()).all()
+            return [_model_to_schema(m) for m in records]
 
     def update(self, order: Order) -> Order:
-        with self._lock:
-            self._orders[order.id] = order
+        with get_db_context() as db:
+            m = db.query(OrderModel).filter(OrderModel.id == order.id).first()
+            if m:
+                m.status = order.status.value if hasattr(order.status, "value") else str(order.status)
+                m.paypal_order_id = order.paypal_order_id
+                m.payment_id = order.payment_id
+                m.quantity = order.quantity
+                m.amount = order.amount
+                m.currency = order.currency
+                m.updated_at = datetime.now(timezone.utc)
+                order.updated_at = m.updated_at
+            else:
+                self.create(order)
             return order
 
     def reset_defaults(self) -> None:
         """Reset repository to initial synthetic demo state."""
-        with self._lock:
-            self._orders = _build_default_demo_orders()
+        with get_db_context() as db:
+            db.query(OrderModel).delete()
+            for order in _build_default_demo_orders().values():
+                db.merge(OrderModel(
+                    id=order.id,
+                    user_id=order.user_id,
+                    purchase_plan_id=order.purchase_plan_id,
+                    paypal_order_id=order.paypal_order_id,
+                    payment_id=order.payment_id,
+                    product_id=order.product_id,
+                    product_name=order.product_name,
+                    brand=order.brand,
+                    quantity=order.quantity,
+                    amount=order.amount,
+                    currency=order.currency,
+                    status=order.status.value if hasattr(order.status, "value") else str(order.status),
+                    created_at=order.created_at,
+                    updated_at=order.updated_at,
+                ))
 
     def clear(self) -> None:
         """Clear all stored orders."""
-        with self._lock:
-            self._orders.clear()
+        with get_db_context() as db:
+            db.query(OrderModel).delete()
 
 
 _order_repo_instance: Optional[OrderRepository] = None

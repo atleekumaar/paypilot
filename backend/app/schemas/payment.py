@@ -30,6 +30,7 @@ class Payment(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: str = Field(..., description="Unique internal payment ID (e.g. PAY-...)")
+    user_id: Optional[str] = Field(default="guest_user", description="Authenticated user ID")
     purchase_plan_id: str = Field(..., description="Associated Purchase Plan ID")
     provider: PaymentProvider = Field(default=PaymentProvider.PAYPAL, description="Payment processor")
     provider_order_id: str = Field(..., description="PayPal Order ID (e.g. 7AB12345XYZ)")

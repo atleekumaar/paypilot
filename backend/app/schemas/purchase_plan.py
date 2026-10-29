@@ -32,7 +32,7 @@ class PurchasePlanCreateRequest(BaseModel):
 
     product_id: str = Field(..., description="Unique product identifier (e.g. LAP-001)")
     quantity: int = Field(default=1, ge=1, le=10, description="Quantity to purchase")
-    user_id: Optional[str] = Field(default="guest_user", description="Identifier of the buyer")
+    user_id: Optional[str] = Field(default=None, description="Identifier of the buyer")
     recommendation_reason: Optional[str] = Field(
         default=None, description="Contextual explanation for why this product was chosen"
     )
@@ -61,6 +61,9 @@ class PurchasePlan(BaseModel):
     )
     paypal_order_id: Optional[str] = Field(
         default=None, description="Associated PayPal Order ID once created"
+    )
+    approval_url: Optional[str] = Field(
+        default=None, description="PayPal buyer-approval URL for redirect"
     )
     recommendation_reason: Optional[str] = Field(
         default=None, description="AI grounded reason for this item"

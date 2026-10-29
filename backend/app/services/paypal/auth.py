@@ -37,6 +37,8 @@ class PayPalAuthService:
     def _fetch_token(self) -> tuple[str, int]:
         """Request OAuth token from PayPal /v1/oauth2/token."""
         if not self._config.is_configured:
+            if not self._config.is_mock_allowed:
+                raise RuntimeError("PayPal credentials are not configured and mock transactions are disabled.")
             # Safe mock fallback for local testing without credentials
             logger.info("PayPal credentials not configured in environment; issuing local test token.")
             return "MOCK_PAYPAL_ACCESS_TOKEN_FOR_TESTS", 3600

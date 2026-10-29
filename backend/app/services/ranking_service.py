@@ -77,7 +77,7 @@ class ProductRankingService:
 
         # Battery requirement check
         if "battery_hours_min" in norm_feats:
-            bat = features.get("battery_hours", 0.0)
+            bat = features.get("battery_hours") or 0.0
             target = norm_feats["battery_hours_min"]
             if bat >= target:
                 req_score += 10.0
@@ -87,7 +87,7 @@ class ProductRankingService:
 
         # GPU / AI requirement check
         if norm_feats.get("gpu_preference") or norm_feats.get("gpu_required"):
-            gpu = str(features.get("gpu", "")).lower()
+            gpu = str(features.get("gpu") or "").lower()
             if "rtx" in gpu or "tensor" in gpu:
                 req_score += 10.0
                 match_reasons.append(f"Dedicated {features.get('gpu')} for GPU-accelerated AI models")
@@ -99,7 +99,7 @@ class ProductRankingService:
 
         # RAM requirement check
         if "ram_gb_min" in norm_feats:
-            ram = features.get("ram_gb", 0)
+            ram = features.get("ram_gb") or 0
             target_ram = norm_feats["ram_gb_min"]
             if ram >= target_ram:
                 req_score = min(100.0, req_score + 5.0)

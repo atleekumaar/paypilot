@@ -1,11 +1,12 @@
 """Agent API endpoints for conversational commerce and human-in-the-loop approvals."""
 
 from typing import Any, Dict, List, Optional
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from app.agents.orchestrator import AgentOrchestrator
 from app.agents.state import AgentAction, AgentState, get_session_store
+from app.core.auth import AuthenticatedUser, get_current_user
 
 router = APIRouter(prefix="/api/agent", tags=["Agent"])
 
@@ -46,11 +47,21 @@ class AgentChatResponse(BaseModel):
     summary="Chat with Autonomous Commerce Agent",
     description="Processes user intent, plans workflow, executes registered tools, enforces policy rules, and returns conversational response with activity tracking.",
 )
-async def agent_chat(request: AgentChatRequest) -> AgentChatResponse:
+async def agent_chat(
+    request: AgentChatRequest,
+    current_user: AuthenticatedUser = Depends(get_current_user),
+) -> AgentChatResponse:
     """Send a message to the PayPilot agent."""
     orchestrator = AgentOrchestrator()
-    result = orchestrator.process_message(request.message, request.session_id)
-    return AgentChatResponse(**result)
+    try:
+        result = orchestrator.process_message(
+            request.message,
+            session_id=request.session_id,
+            user_id=current_user.id,
+        )
+        return AgentChatResponse(**result)
+    except PermissionError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
 
 
 @router.post(
@@ -59,11 +70,16 @@ async def agent_chat(request: AgentChatRequest) -> AgentChatResponse:
     summary="Approve Purchase Plan within Agent Session",
     description="Resumes paused agent execution upon explicit human approval, creating a PayPal Sandbox order.",
 )
-async def agent_approve_purchase(session_id: str) -> Dict[str, Any]:
+async def agent_approve_purchase(
+    session_id: str,
+    current_user: AuthenticatedUser = Depends(get_current_user),
+) -> Dict[str, Any]:
     """Approve a purchase plan in the active agent session."""
     orchestrator = AgentOrchestrator()
     try:
-        return orchestrator.approve_purchase(session_id)
+        return orchestrator.approve_purchase(session_id, user_id=current_user.id)
+    except PermissionError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
@@ -74,11 +90,16 @@ async def agent_approve_purchase(session_id: str) -> Dict[str, Any]:
     summary="Deny Purchase Plan within Agent Session",
     description="Halts purchasing workflow when user denies purchase approval.",
 )
-async def agent_deny_purchase(session_id: str) -> Dict[str, Any]:
+async def agent_deny_purchase(
+    session_id: str,
+    current_user: AuthenticatedUser = Depends(get_current_user),
+) -> Dict[str, Any]:
     """Deny a purchase plan in the active agent session."""
     orchestrator = AgentOrchestrator()
     try:
-        return orchestrator.deny_purchase(session_id)
+        return orchestrator.deny_purchase(session_id, user_id=current_user.id)
+    except PermissionError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
@@ -88,10 +109,16 @@ async def agent_deny_purchase(session_id: str) -> Dict[str, Any]:
     response_model=AgentState,
     summary="Get Agent Session State",
 )
-async def get_agent_state(session_id: str) -> AgentState:
+async def get_agent_state(
+    session_id: str,
+    current_user: AuthenticatedUser = Depends(get_current_user),
+) -> AgentState:
     """Retrieve operational state for an agent session."""
     store = get_session_store()
-    state = store.get(session_id)
+    try:
+        state = store.get(session_id, user_id=current_user.id)
+    except PermissionError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
     if not state:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Session '{session_id}' not found.")
     return state
@@ -102,10 +129,16 @@ async def get_agent_state(session_id: str) -> AgentState:
     response_model=List[AgentAction],
     summary="Get Agent Operational Activity Log",
 )
-async def get_agent_actions(session_id: str) -> List[AgentAction]:
+async def get_agent_actions(
+    session_id: str,
+    current_user: AuthenticatedUser = Depends(get_current_user),
+) -> List[AgentAction]:
     """Retrieve logged tool actions and execution steps for an agent session."""
     store = get_session_store()
-    state = store.get(session_id)
+    try:
+        state = store.get(session_id, user_id=current_user.id)
+    except PermissionError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
     if not state:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Session '{session_id}' not found.")
     return state.actions
@@ -115,10 +148,16 @@ async def get_agent_actions(session_id: str) -> List[AgentAction]:
     "/{session_id}/summary",
     summary="Get Agent Run Summary & Observability Metrics",
 )
-async def get_agent_summary(session_id: str) -> Dict[str, Any]:
+async def get_agent_summary(
+    session_id: str,
+    current_user: AuthenticatedUser = Depends(get_current_user),
+) -> Dict[str, Any]:
     """Retrieve run summary and tools telemetry for a session."""
     store = get_session_store()
-    state = store.get(session_id)
+    try:
+        state = store.get(session_id, user_id=current_user.id)
+    except PermissionError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
     if not state:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Session '{session_id}' not found.")
 

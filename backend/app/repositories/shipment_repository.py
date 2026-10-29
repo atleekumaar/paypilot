@@ -1,10 +1,14 @@
-"""Thread-safe in-memory repository for Shipments and Tracking."""
+"""Database-backed repository for Shipments and Tracking."""
 
 from datetime import datetime, timezone
-import threading
+import logging
 from typing import Dict, List, Optional
 
+from app.db.session import get_db_context, init_db
+from app.models.shipment import ShipmentModel
 from app.schemas.shipment import Shipment, ShipmentStatus, ShipmentTimelineEvent
+
+logger = logging.getLogger(__name__)
 
 
 def _build_default_demo_shipments() -> Dict[str, Shipment]:
@@ -153,47 +157,133 @@ def _build_default_demo_shipments() -> Dict[str, Shipment]:
     }
 
 
+def _model_to_schema(m: ShipmentModel) -> Shipment:
+    timeline_events = [
+        ShipmentTimelineEvent(**item) if isinstance(item, dict) else item
+        for item in (m.timeline or [])
+    ]
+    return Shipment(
+        id=m.id,
+        order_id=m.order_id,
+        tracking_number=m.tracking_number,
+        carrier=m.carrier,
+        status=ShipmentStatus(m.status),
+        estimated_delivery=m.estimated_delivery or "",
+        actual_delivery=m.actual_delivery,
+        last_location=m.last_location or "",
+        last_update=m.last_update or "",
+        timeline=timeline_events,
+        is_demo=m.is_demo,
+        created_at=m.created_at,
+        updated_at=m.updated_at,
+    )
+
+
 class ShipmentRepository:
-    """In-memory thread-safe shipment tracking store."""
+    """Database-backed shipment tracking store."""
 
     def __init__(self, populate_defaults: bool = True):
-        self._lock = threading.Lock()
-        self._shipments: Dict[str, Shipment] = _build_default_demo_shipments() if populate_defaults else {}
+        init_db()
+        if populate_defaults:
+            with get_db_context() as db:
+                if db.query(ShipmentModel).count() == 0:
+                    for shp in _build_default_demo_shipments().values():
+                        db.merge(ShipmentModel(
+                            id=shp.id,
+                            order_id=shp.order_id,
+                            tracking_number=shp.tracking_number,
+                            carrier=shp.carrier,
+                            status=shp.status.value if hasattr(shp.status, "value") else str(shp.status),
+                            estimated_delivery=shp.estimated_delivery,
+                            actual_delivery=shp.actual_delivery,
+                            last_location=shp.last_location,
+                            last_update=shp.last_update,
+                            timeline=[e.model_dump() if hasattr(e, "model_dump") else dict(e) for e in shp.timeline],
+                            is_demo=shp.is_demo,
+                            created_at=shp.created_at,
+                            updated_at=shp.updated_at,
+                        ))
 
     def create(self, shipment: Shipment) -> Shipment:
-        with self._lock:
-            self._shipments[shipment.id] = shipment
+        with get_db_context() as db:
+            m = ShipmentModel(
+                id=shipment.id,
+                order_id=shipment.order_id,
+                tracking_number=shipment.tracking_number,
+                carrier=shipment.carrier,
+                status=shipment.status.value if hasattr(shipment.status, "value") else str(shipment.status),
+                estimated_delivery=shipment.estimated_delivery,
+                actual_delivery=shipment.actual_delivery,
+                last_location=shipment.last_location,
+                last_update=shipment.last_update,
+                timeline=[e.model_dump() if hasattr(e, "model_dump") else dict(e) for e in shipment.timeline],
+                is_demo=shipment.is_demo,
+                created_at=shipment.created_at,
+                updated_at=shipment.updated_at,
+            )
+            db.merge(m)
             return shipment
 
     def get_by_id(self, shipment_id: str) -> Optional[Shipment]:
-        with self._lock:
-            return self._shipments.get(shipment_id)
+        with get_db_context() as db:
+            m = db.query(ShipmentModel).filter(ShipmentModel.id == shipment_id).first()
+            if m:
+                return _model_to_schema(m)
+            return None
 
     def get_by_order_id(self, order_id: str) -> Optional[Shipment]:
-        with self._lock:
-            for shipment in self._shipments.values():
-                if shipment.order_id == order_id:
-                    return shipment
+        with get_db_context() as db:
+            m = db.query(ShipmentModel).filter(ShipmentModel.order_id == order_id).first()
+            if m:
+                return _model_to_schema(m)
             return None
 
     def list_all(self) -> List[Shipment]:
-        with self._lock:
-            return list(self._shipments.values())
+        with get_db_context() as db:
+            records = db.query(ShipmentModel).all()
+            return [_model_to_schema(m) for m in records]
 
     def update(self, shipment: Shipment) -> Shipment:
-        with self._lock:
-            self._shipments[shipment.id] = shipment
+        with get_db_context() as db:
+            m = db.query(ShipmentModel).filter(ShipmentModel.id == shipment.id).first()
+            if m:
+                m.status = shipment.status.value if hasattr(shipment.status, "value") else str(shipment.status)
+                m.estimated_delivery = shipment.estimated_delivery
+                m.actual_delivery = shipment.actual_delivery
+                m.last_location = shipment.last_location
+                m.last_update = shipment.last_update
+                m.timeline = [e.model_dump() if hasattr(e, "model_dump") else dict(e) for e in shipment.timeline]
+                m.updated_at = datetime.now(timezone.utc)
+                shipment.updated_at = m.updated_at
+            else:
+                self.create(shipment)
             return shipment
 
     def reset_defaults(self) -> None:
         """Reset repository to initial synthetic demo state."""
-        with self._lock:
-            self._shipments = _build_default_demo_shipments()
+        with get_db_context() as db:
+            db.query(ShipmentModel).delete()
+            for shp in _build_default_demo_shipments().values():
+                db.merge(ShipmentModel(
+                    id=shp.id,
+                    order_id=shp.order_id,
+                    tracking_number=shp.tracking_number,
+                    carrier=shp.carrier,
+                    status=shp.status.value if hasattr(shp.status, "value") else str(shp.status),
+                    estimated_delivery=shp.estimated_delivery,
+                    actual_delivery=shp.actual_delivery,
+                    last_location=shp.last_location,
+                    last_update=shp.last_update,
+                    timeline=[e.model_dump() if hasattr(e, "model_dump") else dict(e) for e in shp.timeline],
+                    is_demo=shp.is_demo,
+                    created_at=shp.created_at,
+                    updated_at=shp.updated_at,
+                ))
 
     def clear(self) -> None:
         """Clear all stored shipments."""
-        with self._lock:
-            self._shipments.clear()
+        with get_db_context() as db:
+            db.query(ShipmentModel).delete()
 
 
 _shipment_repo_instance: Optional[ShipmentRepository] = None

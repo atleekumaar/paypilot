@@ -7,6 +7,24 @@ import uuid
 
 from app.agents.registry import ToolPermission, ToolRegistry
 from app.agents.state import AgentState, AgentStatus
+from app.agents.tool_schemas import (
+    CapturePayPalPaymentArgs,
+    CompareProductsArgs,
+    CreatePayPalOrderArgs,
+    CreatePurchasePlanArgs,
+    DetectOrderIssueArgs,
+    GetDeliveryEstimateArgs,
+    GetOrderArgs,
+    GetPaymentStatusArgs,
+    GetProductArgs,
+    GetShipmentStatusArgs,
+    GetTrackingDetailsArgs,
+    GetUserOrdersArgs,
+    PrepareSupportRequestArgs,
+    RequestPurchaseApprovalArgs,
+    SearchProductsArgs,
+    SendSupportRequestArgs,
+)
 from app.repositories.product_repository import get_product_repository
 from app.schemas.purchase_plan import PurchasePlanCreateRequest
 from app.services.checkout_service import CheckoutService
@@ -64,6 +82,7 @@ def build_default_tool_registry() -> ToolRegistry:
         description="Search PayPilot product catalogue with strict budget, category, and inventory filters.",
         permission=ToolPermission.READ,
         handler=_search_products_handler,
+        schema_model=SearchProductsArgs,
         parameters={
             "type": "object",
             "properties": {
@@ -89,6 +108,7 @@ def build_default_tool_registry() -> ToolRegistry:
         description="Retrieve comprehensive details and specifications for a single product SKU.",
         permission=ToolPermission.READ,
         handler=_get_product_handler,
+        schema_model=GetProductArgs,
         parameters={
             "type": "object",
             "properties": {"product_id": {"type": "string"}},
@@ -100,7 +120,6 @@ def build_default_tool_registry() -> ToolRegistry:
     def _compare_products_handler(arguments: Dict[str, Any], state: AgentState) -> Dict[str, Any]:
         product_ids = arguments.get("product_ids", [])
         if not product_ids and state.candidate_products:
-            # Default to top candidates already in state
             product_ids = [p.id for p in state.candidate_products[:3]]
 
         items = []
@@ -131,6 +150,7 @@ def build_default_tool_registry() -> ToolRegistry:
         description="Compare specifications, price-to-performance, and ratings across candidate products.",
         permission=ToolPermission.READ,
         handler=_compare_products_handler,
+        schema_model=CompareProductsArgs,
         parameters={
             "type": "object",
             "properties": {
@@ -151,13 +171,14 @@ def build_default_tool_registry() -> ToolRegistry:
         if not product_id:
             raise ValueError("No product_id provided for purchase plan formulation.")
 
-        # Create authoritative plan
+        # Create authoritative plan bound strictly to authenticated user
         plan = plan_service.create_plan(
             PurchasePlanCreateRequest(
                 product_id=product_id,
                 quantity=arguments.get("quantity", 1),
                 recommendation_reason=arguments.get("recommendation_reason"),
-            )
+            ),
+            user_id=state.user_id,
         )
 
         state.purchase_plan_id = plan.id
@@ -176,6 +197,7 @@ def build_default_tool_registry() -> ToolRegistry:
         description="Formulate an authoritative purchase plan derived strictly from catalog pricing. Requires user approval.",
         permission=ToolPermission.WRITE,
         handler=_create_purchase_plan_handler,
+        schema_model=CreatePurchasePlanArgs,
         parameters={
             "type": "object",
             "properties": {
@@ -193,7 +215,7 @@ def build_default_tool_registry() -> ToolRegistry:
         if not plan_id:
             raise ValueError("No purchase plan available to request approval for.")
 
-        plan = plan_service.get_plan(plan_id)
+        plan = plan_service.get_plan(plan_id, user_id=state.user_id)
         state.status = AgentStatus.WAITING_FOR_APPROVAL
         state.approval_required = True
         state.approval_status = "PENDING"
@@ -213,6 +235,7 @@ def build_default_tool_registry() -> ToolRegistry:
         description="Pause agent execution to prompt user for explicit purchase approval.",
         permission=ToolPermission.APPROVAL_REQUIRED,
         handler=_request_purchase_approval_handler,
+        schema_model=RequestPurchaseApprovalArgs,
         parameters={
             "type": "object",
             "properties": {"purchase_plan_id": {"type": "string"}},
@@ -225,7 +248,7 @@ def build_default_tool_registry() -> ToolRegistry:
         if not plan_id:
             raise ValueError("Cannot create PayPal order: Missing purchase plan ID.")
 
-        order_data = checkout_service.create_paypal_order_for_plan(plan_id)
+        order_data = checkout_service.create_paypal_order_for_plan(plan_id, user_id=state.user_id)
         state.paypal_order_id = order_data["paypal_order_id"]
         state.log_action("create_paypal_order", f"Created PayPal Sandbox order {state.paypal_order_id}")
         return order_data
@@ -235,6 +258,7 @@ def build_default_tool_registry() -> ToolRegistry:
         description="Initialize PayPal Sandbox order for an approved purchase plan.",
         permission=ToolPermission.APPROVAL_REQUIRED,
         handler=_create_paypal_order_handler,
+        schema_model=CreatePayPalOrderArgs,
         parameters={
             "type": "object",
             "properties": {"purchase_plan_id": {"type": "string"}},
@@ -250,7 +274,7 @@ def build_default_tool_registry() -> ToolRegistry:
         if not plan_id or not order_id:
             raise ValueError("Missing purchase plan ID or PayPal Order ID.")
 
-        payment = checkout_service.capture_paypal_payment(plan_id, order_id)
+        payment = checkout_service.capture_paypal_payment(plan_id, order_id, user_id=state.user_id)
         state.payment_status = payment.status.value
         state.status = AgentStatus.COMPLETED
 
@@ -263,6 +287,7 @@ def build_default_tool_registry() -> ToolRegistry:
         description="Execute authoritative server-side capture of approved PayPal order.",
         permission=ToolPermission.PAYMENT,
         handler=_capture_paypal_payment_handler,
+        schema_model=CapturePayPalPaymentArgs,
         parameters={
             "type": "object",
             "properties": {
@@ -274,7 +299,7 @@ def build_default_tool_registry() -> ToolRegistry:
     )
 
     # =========================================================================
-    # PHASE 5: POST-PURCHASE TOOLS
+    # POST-PURCHASE TOOLS
     # =========================================================================
     order_service = OrderService()
 
@@ -295,6 +320,7 @@ def build_default_tool_registry() -> ToolRegistry:
         description="Retrieve complete order detail with product, payment, and shipment status.",
         permission=ToolPermission.READ,
         handler=_get_order_handler,
+        schema_model=GetOrderArgs,
         parameters={
             "type": "object",
             "properties": {"order_id": {"type": "string"}},
@@ -314,6 +340,7 @@ def build_default_tool_registry() -> ToolRegistry:
         description="Retrieve recent order history for the authenticated user.",
         permission=ToolPermission.READ,
         handler=_get_user_orders_handler,
+        schema_model=GetUserOrdersArgs,
         parameters={
             "type": "object",
             "properties": {"user_id": {"type": "string"}},
@@ -344,6 +371,7 @@ def build_default_tool_registry() -> ToolRegistry:
         description="Verify authoritative payment and PayPal capture state for an order.",
         permission=ToolPermission.READ,
         handler=_get_payment_status_handler,
+        schema_model=GetPaymentStatusArgs,
         parameters={
             "type": "object",
             "properties": {"order_id": {"type": "string"}},
@@ -366,6 +394,7 @@ def build_default_tool_registry() -> ToolRegistry:
         description="Fetch current shipment state, carrier, and latest scan update.",
         permission=ToolPermission.READ,
         handler=_get_shipment_status_handler,
+        schema_model=GetShipmentStatusArgs,
         parameters={
             "type": "object",
             "properties": {"order_id": {"type": "string"}},
@@ -387,6 +416,7 @@ def build_default_tool_registry() -> ToolRegistry:
         description="Lookup carrier tracking milestones and facility scan history.",
         permission=ToolPermission.READ,
         handler=_get_tracking_details_handler,
+        schema_model=GetTrackingDetailsArgs,
         parameters={
             "type": "object",
             "properties": {"query": {"type": "string"}},
@@ -417,6 +447,7 @@ def build_default_tool_registry() -> ToolRegistry:
         description="Retrieve estimated delivery date and carrier delivery window.",
         permission=ToolPermission.READ,
         handler=_get_delivery_estimate_handler,
+        schema_model=GetDeliveryEstimateArgs,
         parameters={
             "type": "object",
             "properties": {"order_id": {"type": "string"}},
@@ -439,6 +470,7 @@ def build_default_tool_registry() -> ToolRegistry:
         description="Deterministic issue detector evaluating delivery delays, carrier notes, and milestones.",
         permission=ToolPermission.READ,
         handler=_detect_order_issue_handler,
+        schema_model=DetectOrderIssueArgs,
         parameters={
             "type": "object",
             "properties": {
@@ -481,6 +513,7 @@ def build_default_tool_registry() -> ToolRegistry:
         description="Draft a merchant support inquiry without sending it.",
         permission=ToolPermission.WRITE,
         handler=_prepare_support_request_handler,
+        schema_model=PrepareSupportRequestArgs,
         parameters={
             "type": "object",
             "properties": {"order_id": {"type": "string"}},
@@ -510,6 +543,7 @@ def build_default_tool_registry() -> ToolRegistry:
         description="Dispatch prepared support inquiry to merchant after explicit user approval.",
         permission=ToolPermission.APPROVAL_REQUIRED,
         handler=_send_support_request_handler,
+        schema_model=SendSupportRequestArgs,
         parameters={
             "type": "object",
             "properties": {"order_id": {"type": "string"}},

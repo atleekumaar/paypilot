@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  postgres_test:
+    image: postgres:16-alpine
+    container_name: paypilot_postgres_test
+    environment:
+      POSTGRES_USER: paypilot_test
+      POSTGRES_PASSWORD: test_password_secure_123
+      POSTGRES_DB: paypilot_test
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U paypilot_test -d paypilot_test"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres_test_data:
+

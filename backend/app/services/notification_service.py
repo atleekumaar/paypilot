@@ -2,12 +2,13 @@
 
 from datetime import datetime, timezone
 import logging
-import threading
 from typing import Dict, List, Optional
 import uuid
 
 from fastapi import HTTPException, status
 
+from app.db.session import get_db_context, init_db
+from app.models.notification import NotificationModel
 from app.schemas.notification import Notification, NotificationType
 
 logger = logging.getLogger(__name__)
@@ -49,12 +50,38 @@ def _build_default_demo_notifications() -> Dict[str, Notification]:
     }
 
 
+def _model_to_schema(m: NotificationModel) -> Notification:
+    return Notification(
+        id=m.id,
+        user_id=m.user_id,
+        order_id=m.order_id,
+        type=NotificationType(m.type),
+        title=m.title,
+        message=m.message,
+        read=m.read,
+        created_at=m.created_at,
+    )
+
+
 class NotificationService:
-    """Thread-safe notification store and dispatcher."""
+    """Database-backed notification store and dispatcher."""
 
     def __init__(self, populate_defaults: bool = True):
-        self._lock = threading.Lock()
-        self._notifications: Dict[str, Notification] = _build_default_demo_notifications() if populate_defaults else {}
+        init_db()
+        if populate_defaults:
+            with get_db_context() as db:
+                if db.query(NotificationModel).count() == 0:
+                    for notif in _build_default_demo_notifications().values():
+                        db.merge(NotificationModel(
+                            id=notif.id,
+                            user_id=notif.user_id,
+                            order_id=notif.order_id,
+                            type=notif.type.value if hasattr(notif.type, "value") else str(notif.type),
+                            title=notif.title,
+                            message=notif.message,
+                            read=notif.read,
+                            created_at=notif.created_at,
+                        ))
 
     def notify(
         self,
@@ -76,44 +103,68 @@ class NotificationService:
             read=False,
             created_at=datetime.now(timezone.utc),
         )
-        with self._lock:
-            self._notifications[notif.id] = notif
+        with get_db_context() as db:
+            m = NotificationModel(
+                id=notif.id,
+                user_id=notif.user_id,
+                order_id=notif.order_id,
+                type=notif.type.value if hasattr(notif.type, "value") else str(notif.type),
+                title=notif.title,
+                message=notif.message,
+                read=notif.read,
+                created_at=notif.created_at,
+            )
+            db.merge(m)
         logger.info(f"Notification created: [{notif.type}] {notif.title} for user {user_id}")
         return notif
 
     def list_user_notifications(self, user_id: str) -> List[Notification]:
         """Fetch all notifications for the given user ordered newest first."""
-        with self._lock:
-            return sorted(
-                [n for n in self._notifications.values() if n.user_id == user_id],
-                key=lambda n: n.created_at,
-                reverse=True,
+        with get_db_context() as db:
+            records = (
+                db.query(NotificationModel)
+                .filter(NotificationModel.user_id == user_id)
+                .order_by(NotificationModel.created_at.desc())
+                .all()
             )
+            return [_model_to_schema(m) for m in records]
 
     def mark_as_read(self, notification_id: str, user_id: str) -> Notification:
         """Mark a notification as read with user verification."""
-        with self._lock:
-            notif = self._notifications.get(notification_id)
-            if not notif:
+        with get_db_context() as db:
+            m = db.query(NotificationModel).filter(NotificationModel.id == notification_id).first()
+            if not m:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail=f"Notification '{notification_id}' not found.",
                 )
-            if notif.user_id != user_id:
+            if m.user_id != user_id:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Access denied to this notification.",
                 )
-            notif.read = True
-            return notif
+            m.read = True
+            return _model_to_schema(m)
 
     def reset_defaults(self) -> None:
-        with self._lock:
-            self._notifications = _build_default_demo_notifications()
+        """Reset notifications to default demo set."""
+        with get_db_context() as db:
+            db.query(NotificationModel).delete()
+            for notif in _build_default_demo_notifications().values():
+                db.merge(NotificationModel(
+                    id=notif.id,
+                    user_id=notif.user_id,
+                    order_id=notif.order_id,
+                    type=notif.type.value if hasattr(notif.type, "value") else str(notif.type),
+                    title=notif.title,
+                    message=notif.message,
+                    read=notif.read,
+                    created_at=notif.created_at,
+                ))
 
     def clear(self) -> None:
-        with self._lock:
-            self._notifications.clear()
+        with get_db_context() as db:
+            db.query(NotificationModel).delete()
 
 
 _notification_service_instance: Optional[NotificationService] = None

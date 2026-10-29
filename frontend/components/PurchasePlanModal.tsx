@@ -52,6 +52,7 @@ interface PurchasePlan {
   total_amount: number;
   status: string;
   paypal_order_id?: string;
+  approval_url?: string;
   recommendation_reason?: string;
   score?: number;
 }
@@ -86,6 +87,7 @@ export default function PurchasePlanModal({
   const [plan, setPlan] = useState<PurchasePlan | null>(null);
   const [payment, setPayment] = useState<PaymentRecord | null>(null);
   const [paypalOrderId, setPaypalOrderId] = useState<string | null>(null);
+  const [approvalUrl, setApprovalUrl] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Initialize Purchase Plan on backend
@@ -160,6 +162,7 @@ export default function PurchasePlanModal({
 
       const orderData = await orderRes.json();
       setPaypalOrderId(orderData.paypal_order_id);
+      setApprovalUrl(orderData.approval_url || null);
       setStep("PAYPAL_CHECKOUT");
     } catch (err: any) {
       console.error("Approval error:", err);
@@ -363,8 +366,19 @@ export default function PurchasePlanModal({
                 Verified PayPal Sandbox Integration
               </div>
               <p className="text-xs text-slate-300 max-w-sm mx-auto">
-                Click below to complete authorization in PayPal Sandbox and capture the payment.
+                Authorize payment in PayPal Sandbox and capture the transaction.
               </p>
+
+              {approvalUrl && !approvalUrl.includes("MOCK-") && (
+                <a
+                  href={approvalUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 underline font-mono py-1"
+                >
+                  <span>Launch PayPal Sandbox Approval Window &rarr;</span>
+                </a>
+              )}
 
               {/* PayPal Primary Action Button */}
               <button

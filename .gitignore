@@ -36,6 +36,12 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.tsbuildinfo
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
 
 # Environment files - NEVER commit secrets
 .env

@@ -1,5 +1,6 @@
 """Agent orchestrator executing controlled, multi-step commerce workflows."""
 
+from datetime import datetime, timezone
 import logging
 import re
 from typing import Any, Dict, Optional
@@ -7,7 +8,9 @@ from typing import Any, Dict, Optional
 from app.agents.planner import AgentPlanner
 from app.agents.policies import PolicyDecision, PolicyEngine
 from app.agents.registry import ToolRegistry
+from app.agents.security import detect_prompt_injection, sanitize_text
 from app.agents.state import (
+    AgentPlan,
     AgentState,
     AgentStatus,
     ConversationMessage,
@@ -39,9 +42,53 @@ class AgentOrchestrator:
         self._ranking_service = ranking_service or ProductRankingService()
         self._planner = AgentPlanner()
 
-    def process_message(self, message: str, session_id: Optional[str] = None) -> Dict[str, Any]:
+    def process_message(
+        self,
+        message: str,
+        session_id: Optional[str] = None,
+        user_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """Execute a conversational commerce turn with the autonomous agent."""
-        state = self._sessions.get_or_create(session_id)
+        state = self._sessions.get_or_create(session_id, user_id=user_id)
+        if user_id and state.user_id != user_id:
+            state.user_id = user_id
+
+        # Security check: Session expiry (24h)
+        if state.updated_at:
+            now_utc = datetime.now(timezone.utc)
+            updated_at = state.updated_at if state.updated_at.tzinfo else state.updated_at.replace(tzinfo=timezone.utc)
+            if (now_utc - updated_at).total_seconds() > 86400:
+                state.status = AgentStatus.FAILED
+                err_msg = "Session has expired due to inactivity. Please initiate a new shopping session."
+                self._sessions.save(state)
+                return {
+                    "session_id": state.session_id,
+                    "status": state.status.value,
+                    "message": err_msg,
+                    "purchase_plan_id": None,
+                    "purchase_plan": None,
+                    "candidate_products": [],
+                    "actions": [a.model_dump() for a in state.actions],
+                }
+
+        # Security check: Prompt injection defense
+        is_injection, injection_reason = detect_prompt_injection(message)
+        if is_injection:
+            logger.warning(f"Session {state.session_id}: Prompt injection blocked: {injection_reason}")
+            state.status = AgentStatus.FAILED
+            err_msg = f"Security Violation: Adversarial prompt instruction detected ({injection_reason}). Request rejected."
+            state.messages.append(ConversationMessage(role="assistant", content=err_msg))
+            self._sessions.save(state)
+            return {
+                "session_id": state.session_id,
+                "status": state.status.value,
+                "message": err_msg,
+                "purchase_plan_id": state.purchase_plan_id,
+                "purchase_plan": state.purchase_plan.model_dump() if state.purchase_plan else None,
+                "candidate_products": [],
+                "actions": [a.model_dump() for a in state.actions],
+            }
+
         state.user_query = message
         state.messages.append(ConversationMessage(role="user", content=message))
         state.status = AgentStatus.UNDERSTANDING
@@ -74,8 +121,9 @@ class AgentOrchestrator:
         state.plan = plan
         state.status = AgentStatus.PLANNING
 
-        # Step 3: Execute step-by-step tool actions
+        # Step 3: Execute step-by-step tool actions with execution loop & budget guards
         response_text = ""
+        executed_calls = set()
 
         for step_tool in plan.steps:
             if state.current_step >= state.max_steps:
@@ -86,6 +134,15 @@ class AgentOrchestrator:
 
             # Build tool arguments based on intent & state
             arguments = self._build_tool_arguments(step_tool, intent, state)
+
+            # Cycle & execution loop detection
+            call_sig = (step_tool, tuple(sorted((k, str(v)) for k, v in arguments.items())))
+            if call_sig in executed_calls:
+                logger.warning(f"Session {state.session_id}: Detected execution loop calling '{step_tool}'")
+                state.status = AgentStatus.FAILED
+                response_text = "Agent execution halted: Detected infinite tool execution loop."
+                break
+            executed_calls.add(call_sig)
 
             # Policy Check (Rule & Permission Boundary)
             decision, reason = self._policy.evaluate(step_tool, arguments, state)
@@ -137,11 +194,25 @@ class AgentOrchestrator:
             "actions": [a.model_dump() for a in state.actions],
         }
 
-    def approve_purchase(self, session_id: str) -> Dict[str, Any]:
+    def approve_purchase(self, session_id: str, user_id: Optional[str] = None) -> Dict[str, Any]:
         """User explicitly approves purchase or pending consequential action."""
-        state = self._sessions.get(session_id)
+        state = self._sessions.get(session_id, user_id=user_id)
         if not state:
             raise ValueError(f"Session '{session_id}' not found.")
+
+        # Check session expiry (24h)
+        if state.updated_at:
+            now_utc = datetime.now(timezone.utc)
+            updated_at = state.updated_at if state.updated_at.tzinfo else state.updated_at.replace(tzinfo=timezone.utc)
+            if (now_utc - updated_at).total_seconds() > 86400:
+                raise ValueError("Session has expired. Please initiate a new shopping session.")
+
+        # Purchase plan consistency & ownership check
+        if state.purchase_plan:
+            if state.purchase_plan.id != state.purchase_plan_id:
+                raise ValueError("Security violation: Session purchase plan ID mismatch.")
+            if user_id and state.purchase_plan.user_id and state.purchase_plan.user_id != user_id:
+                raise PermissionError(f"Access denied: Purchase plan belongs to another user.")
 
         # Consequential Post-Purchase Action: Support Request Draft Approval
         if state.support_request_draft:
@@ -165,7 +236,7 @@ class AgentOrchestrator:
         # Update approval status in service and agent state
         from app.services.purchase_plan_service import PurchasePlanService
 
-        PurchasePlanService().approve_plan(state.purchase_plan_id)
+        PurchasePlanService().approve_plan(state.purchase_plan_id, user_id=state.user_id)
         state.approval_status = "APPROVED"
         state.approval_required = False
         state.status = AgentStatus.EXECUTING
@@ -200,9 +271,9 @@ class AgentOrchestrator:
             "actions": [a.model_dump() for a in state.actions],
         }
 
-    def deny_purchase(self, session_id: str) -> Dict[str, Any]:
+    def deny_purchase(self, session_id: str, user_id: Optional[str] = None) -> Dict[str, Any]:
         """User denies purchase or pending action; halts workflow gracefully."""
-        state = self._sessions.get(session_id)
+        state = self._sessions.get(session_id, user_id=user_id)
         if not state:
             raise ValueError(f"Session '{session_id}' not found.")
 

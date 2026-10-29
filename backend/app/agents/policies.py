@@ -102,6 +102,20 @@ class PolicyEngine:
             if not prod or not prod.stock:
                 return PolicyDecision.DENY, f"Payment denied: Product '{plan.product_name}' is out of stock."
 
+            # Verify price integrity before checkout
+            if prod.price != plan.unit_price:
+                old_p = plan.unit_price
+                plan.unit_price = prod.price
+                plan.total_amount = round(prod.price * plan.quantity, 2)
+                plan.status = PurchasePlanStatus.AWAITING_APPROVAL
+                self._plan_repo.update(plan)
+                state.approval_status = "PENDING"
+                state.approval_required = True
+                return (
+                    PolicyDecision.REQUIRE_APPROVAL,
+                    f"Product price has changed from ${old_p:.2f} to ${prod.price:.2f}. Renewed user approval is required.",
+                )
+
             # Verify plan not already completed or cancelled
             if plan.status in (PurchasePlanStatus.COMPLETED, PurchasePlanStatus.CANCELLED, PurchasePlanStatus.FAILED):
                 return PolicyDecision.DENY, f"Payment denied: Plan is already {plan.status.value}."
