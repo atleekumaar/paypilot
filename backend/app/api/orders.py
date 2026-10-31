@@ -21,12 +21,14 @@ def get_order_service() -> OrderService:
 @router.get("", response_model=List[OrderDetailResponse])
 def list_orders(
     user_id: Optional[str] = Query(default=None, description="Identifier of the current user"),
+    limit: int = Query(default=50, ge=1, le=100, description="Max records to return"),
+    offset: int = Query(default=0, ge=0, description="Records offset"),
     current_user: AuthenticatedUser = Depends(get_current_user),
     order_service: OrderService = Depends(get_order_service),
 ):
-    """Retrieve complete order history for the authenticated user with strict user isolation."""
+    """Retrieve complete order history for the authenticated user with strict user isolation and pagination."""
     verify_user_ownership(current_user, user_id)
-    return order_service.get_user_orders(user_id=current_user.id)
+    return order_service.get_user_orders(user_id=current_user.id, limit=limit, offset=offset)
 
 
 @router.get("/{order_id}", response_model=OrderDetailResponse)

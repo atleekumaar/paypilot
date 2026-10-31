@@ -1,7 +1,7 @@
 """PayPal Payments and Checkout API endpoints."""
 
-from typing import Any, Dict, Optional
-from fastapi import APIRouter, Depends, status
+from typing import Any, Dict, List, Optional
+from fastapi import APIRouter, Depends, Header, Request, status
 from pydantic import BaseModel, Field
 
 from app.core.auth import AuthenticatedUser, get_current_user
@@ -114,3 +114,60 @@ async def get_payment_by_plan(
     """Retrieve payment record for a given purchase plan."""
     service = CheckoutService()
     return service.get_payment_by_plan(plan_id, user_id=current_user.id)
+
+
+class PaymentRefundRequest(BaseModel):
+    """Request payload to initiate a full or partial refund."""
+
+    amount: Optional[float] = Field(
+        default=None,
+        description="Optional partial refund amount in USD. If omitted, full amount is refunded.",
+        json_schema_extra={"example": 50.0},
+    )
+
+
+@router.post(
+    "/{payment_id}/refund",
+    response_model=Payment,
+    summary="Refund Completed Payment",
+    description="Processes a full or partial refund for a completed payment with authenticated ownership validation.",
+)
+async def refund_payment(
+    payment_id: str,
+    request: Optional[PaymentRefundRequest] = None,
+    current_user: AuthenticatedUser = Depends(get_current_user),
+) -> Payment:
+    """Refund payment."""
+    service = CheckoutService()
+    amt = request.amount if request else None
+    return service.refund_payment(payment_id, amount=amt, user_id=current_user.id)
+
+
+@router.get(
+    "/reconciliation/report",
+    response_model=List[Dict[str, Any]],
+    summary="Reconcile In-Flight or Pending Payments",
+    description="Scans for payments stuck in CAPTURE_PENDING or RECONCILIATION_REQUIRED and syncs with provider status.",
+)
+async def reconcile_payments(
+    current_user: AuthenticatedUser = Depends(get_current_user),
+) -> List[Dict[str, Any]]:
+    """Reconcile payments."""
+    service = CheckoutService()
+    return service.reconcile_payments()
+
+
+@router.post(
+    "/paypal/webhook",
+    status_code=status.HTTP_200_OK,
+    summary="PayPal Webhook Event Receiver",
+    description="Idempotent receiver with replay prevention for incoming asynchronous PayPal notifications.",
+)
+async def paypal_webhook(
+    request: Request,
+) -> Dict[str, Any]:
+    """Process PayPal webhook event with replay protection."""
+    payload = await request.json()
+    headers = dict(request.headers)
+    service = CheckoutService()
+    return service.process_paypal_webhook(headers=headers, payload=payload)

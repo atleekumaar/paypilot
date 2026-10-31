@@ -50,8 +50,26 @@ class AgentOrchestrator:
     ) -> Dict[str, Any]:
         """Execute a conversational commerce turn with the autonomous agent."""
         state = self._sessions.get_or_create(session_id, user_id=user_id)
-        if user_id and state.user_id != user_id:
+        if user_id and state.user_id and state.user_id != user_id and state.user_id != "guest_user":
+            raise PermissionError(f"Access denied: Session '{state.session_id}' belongs to another user.")
+        if user_id and (not state.user_id or state.user_id == "guest_user"):
             state.user_id = user_id
+
+        # Security check: Step / budget limit
+        if state.current_step >= state.max_steps:
+            state.status = AgentStatus.FAILED
+            err_msg = f"Session execution limit reached ({state.max_steps} steps). Please start a new session."
+            state.messages.append(ConversationMessage(role="assistant", content=err_msg))
+            self._sessions.save(state)
+            return {
+                "session_id": state.session_id,
+                "status": state.status.value,
+                "message": err_msg,
+                "purchase_plan_id": state.purchase_plan_id,
+                "purchase_plan": state.purchase_plan.model_dump() if state.purchase_plan else None,
+                "candidate_products": [],
+                "actions": [a.model_dump() for a in state.actions],
+            }
 
         # Security check: Session expiry (24h)
         if state.updated_at:

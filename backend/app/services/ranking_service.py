@@ -107,14 +107,22 @@ class ProductRankingService:
             else:
                 req_score -= 15.0
 
+        # Category-specific attribute checks
+        cat = (intent.category or product.category or "").lower()
+        if "audio" in cat or "headphone" in cat:
+            if features.get("anc"):
+                req_score += 5.0
+                match_reasons.append("Active Noise Cancellation (ANC) enabled")
+        elif "monitor" in cat or "display" in cat:
+            if features.get("resolution"):
+                match_reasons.append(f"{features.get('resolution')} high-resolution display")
+
         req_score = max(0.0, min(100.0, req_score))
 
         # 2. Price Fit (0 - 100)
         max_budget = intent.hard_constraints.max_price
         if max_budget is not None and max_budget > 0:
             if product.price <= max_budget:
-                # Sweet spot: reasonably priced within budget
-                # Saving money without sacrificing quality gives higher score
                 under_budget_ratio = (max_budget - product.price) / max_budget
                 price_fit = 85.0 + (under_budget_ratio * 15.0)
                 match_reasons.append(f"${product.price:,.2f} price is within ${max_budget:,.2f} budget")
@@ -124,10 +132,16 @@ class ProductRankingService:
             price_fit = 90.0
         price_fit = max(0.0, min(100.0, price_fit))
 
-        # 3. Rating Score (0 - 100)
-        rating_score = (product.rating / 5.0) * 100.0
+        # 3. Rating Score (0 - 100) with Bayesian Shrinkage
+        # Formula: (v * R + m * C) / (v + m)
+        prior_weight = 25.0
+        prior_mean = 4.2
+        v = float(product.review_count or 0)
+        r = float(product.rating or 0.0)
+        bayesian_rating = ((v * r) + (prior_weight * prior_mean)) / (v + prior_weight)
+        rating_score = (bayesian_rating / 5.0) * 100.0
         if product.rating >= 4.5:
-            match_reasons.append(f"{product.rating}★ customer rating across {product.review_count:,} reviews")
+            match_reasons.append(f"{product.rating}★ rating ({product.review_count:,} reviews)")
         rating_score = max(0.0, min(100.0, rating_score))
 
         # 4. Delivery Score (0 - 100)

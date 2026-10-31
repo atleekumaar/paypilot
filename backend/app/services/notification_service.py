@@ -118,13 +118,15 @@ class NotificationService:
         logger.info(f"Notification created: [{notif.type}] {notif.title} for user {user_id}")
         return notif
 
-    def list_user_notifications(self, user_id: str) -> List[Notification]:
-        """Fetch all notifications for the given user ordered newest first."""
+    def list_user_notifications(self, user_id: str, limit: int = 50, offset: int = 0) -> List[Notification]:
+        """Fetch all notifications for the given user ordered newest first with pagination."""
         with get_db_context() as db:
             records = (
                 db.query(NotificationModel)
                 .filter(NotificationModel.user_id == user_id)
                 .order_by(NotificationModel.created_at.desc())
+                .offset(offset)
+                .limit(limit)
                 .all()
             )
             return [_model_to_schema(m) for m in records]

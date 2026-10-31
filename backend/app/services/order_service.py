@@ -74,11 +74,12 @@ class OrderService:
             shipment=shipment,
         )
 
-    def get_user_orders(self, user_id: str) -> List[OrderDetailResponse]:
-        """Fetch all orders belonging strictly to the specified user."""
+    def get_user_orders(self, user_id: str, limit: int = 50, offset: int = 0) -> List[OrderDetailResponse]:
+        """Fetch all orders belonging strictly to the specified user with pagination."""
         orders = self._order_repo.list_by_user(user_id)
+        paged_orders = orders[offset : offset + limit]
         results = []
-        for o in orders:
+        for o in paged_orders:
             shipment = self._shipment_repo.get_by_order_id(o.id)
             results.append(
                 OrderDetailResponse(

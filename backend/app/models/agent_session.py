@@ -23,6 +23,7 @@ class AgentSessionModel(Base):
     payment_status = Column(String, nullable=True)
     active_order_id = Column(String, nullable=True)
     support_request_approved = Column(Boolean, default=False, nullable=False)
+    version = Column(Integer, default=1, nullable=False)
     state_data = Column(JSON, default=dict)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = Column(

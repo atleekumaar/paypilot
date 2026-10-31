@@ -97,6 +97,7 @@ class AgentState(BaseModel):
     active_shipment: Optional[Dict[str, Any]] = None
     support_request_draft: Optional[Dict[str, Any]] = None
     support_request_approved: bool = False
+    version: int = Field(default=1, description="Optimistic locking version")
 
     # Observability & multi-turn memory
     actions: List[AgentAction] = Field(default_factory=list)
@@ -164,9 +165,11 @@ class SessionStore:
                         payment_status=record.payment_status,
                         active_order_id=record.active_order_id,
                         support_request_approved=record.support_request_approved,
+                        version=getattr(record, "version", 1),
                         created_at=record.created_at,
                         updated_at=record.updated_at,
                     )
+                    state.version = getattr(record, "version", 1)
                     self._sessions[s_id] = state
                     return state
 
@@ -189,6 +192,7 @@ class SessionStore:
                     payment_status=new_state.payment_status,
                     active_order_id=new_state.active_order_id,
                     support_request_approved=new_state.support_request_approved,
+                    version=new_state.version,
                     state_data=new_state.model_dump(mode="json"),
                     created_at=new_state.created_at,
                     updated_at=new_state.updated_at,
@@ -220,9 +224,11 @@ class SessionStore:
                             payment_status=record.payment_status,
                             active_order_id=record.active_order_id,
                             support_request_approved=record.support_request_approved,
+                            version=getattr(record, "version", 1),
                             created_at=record.created_at,
                             updated_at=record.updated_at,
                         )
+                        state.version = getattr(record, "version", 1)
                         self._sessions[session_id] = state
 
             if state and user_id and state.user_id != user_id:
@@ -239,6 +245,9 @@ class SessionStore:
             from app.db.session import get_db_context
             from app.models.agent_session import AgentSessionModel
             with get_db_context() as db:
+                existing = db.query(AgentSessionModel).filter(AgentSessionModel.session_id == state.session_id).first()
+                if existing:
+                    state.version = getattr(existing, "version", 1) + 1
                 db_model = AgentSessionModel(
                     session_id=state.session_id,
                     user_id=state.user_id,
@@ -253,6 +262,7 @@ class SessionStore:
                     payment_status=state.payment_status,
                     active_order_id=state.active_order_id,
                     support_request_approved=state.support_request_approved,
+                    version=state.version,
                     state_data=state.model_dump(mode="json"),
                     created_at=state.created_at,
                     updated_at=state.updated_at,

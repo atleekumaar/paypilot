@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Send, Bot, User, Sparkles, Loader2, ShieldCheck, CheckCircle2 } from "lucide-react";
 import AgentActivityPanel, { AgentActionItem } from "@/components/AgentActivityPanel";
 import PurchaseApprovalCard from "@/components/PurchaseApprovalCard";
+import { api } from "@/lib/api";
 
 interface ChatMessage {
   id: string;
@@ -64,17 +65,11 @@ export default function AgentCommerceChat() {
     setIsLoading(true);
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/agent/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, session_id: sessionId }),
+      const data: any = await api.post("/api/agent/chat", {
+        message: text,
+        session_id: sessionId,
       });
 
-      if (!res.ok) {
-        throw new Error(`Server returned HTTP ${res.status}`);
-      }
-
-      const data = await res.json();
       setAgentStatus(data.status);
       if (data.actions) {
         setAgentActions(data.actions);
@@ -117,33 +112,16 @@ export default function AgentCommerceChat() {
     setIsLoading(true);
     try {
       // 1. Send approval to agent
-      const approveRes = await fetch(`http://127.0.0.1:8000/api/agent/${sessionId}/approve`, {
-        method: "POST",
-      });
+      const approveData: any = await api.post(`/api/agent/${sessionId}/approve`);
 
-      if (!approveRes.ok) {
-        throw new Error("Failed to process approval");
-      }
-
-      const approveData = await approveRes.json();
       setAgentStatus(approveData.status);
       if (approveData.actions) setAgentActions(approveData.actions);
 
       // 2. Automatically execute PayPal capture for verified Sandbox purchase
-      const captureRes = await fetch("http://127.0.0.1:8000/api/payments/paypal/capture", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          purchase_plan_id: approveData.purchase_plan_id,
-          paypal_order_id: approveData.paypal_order_id,
-        }),
+      const paymentData: any = await api.post("/api/payments/paypal/capture", {
+        purchase_plan_id: approveData.purchase_plan_id,
+        paypal_order_id: approveData.paypal_order_id,
       });
-
-      if (!captureRes.ok) {
-        throw new Error("Failed to capture PayPal order");
-      }
-
-      const paymentData = await captureRes.json();
       setActivePlan(null);
 
       setMessages((prev) => [
@@ -175,10 +153,7 @@ export default function AgentCommerceChat() {
   const handleDenyPurchase = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/agent/${sessionId}/deny`, {
-        method: "POST",
-      });
-      const data = await res.json();
+      const data: any = await api.post(`/api/agent/${sessionId}/deny`);
       setActivePlan(null);
       setAgentStatus("IDLE");
       if (data.actions) setAgentActions(data.actions);

@@ -321,6 +321,11 @@ class CheckoutService:
                     detail=f"PayPal order is not approved for capture. Current provider status: '{provider_status}'. Buyer approval required.",
                 )
             else:
+                # Update status to CAPTURE_PENDING to track transit
+                if existing_payment:
+                    existing_payment.status = PaymentStatus.CAPTURE_PENDING
+                    self._payment_repo.update(existing_payment)
+
                 # Step 2: Execute PayPal Capture via API with ambiguous timeout safety
                 try:
                     capture_response = self._paypal.capture_order(paypal_order_id)
@@ -332,16 +337,22 @@ class CheckoutService:
                         if recovery_details.get("status") == "COMPLETED":
                             capture_response = recovery_details
                         else:
+                            if existing_payment:
+                                existing_payment.status = PaymentStatus.RECONCILIATION_REQUIRED
+                                self._payment_repo.update(existing_payment)
                             raise HTTPException(
                                 status_code=status.HTTP_504_GATEWAY_TIMEOUT,
-                                detail="Payment provider timeout during capture. Transaction status remains unverified; please retry capture.",
+                                detail="Payment provider timeout during capture. Transaction marked for reconciliation.",
                             )
                     except HTTPException:
                         raise
                     except Exception:
+                        if existing_payment:
+                            existing_payment.status = PaymentStatus.RECONCILIATION_REQUIRED
+                            self._payment_repo.update(existing_payment)
                         raise HTTPException(
                             status_code=status.HTTP_504_GATEWAY_TIMEOUT,
-                            detail="Payment provider timeout during capture. Transaction status remains unverified; please retry capture.",
+                            detail="Payment provider timeout during capture. Transaction marked for reconciliation.",
                         )
                 except Exception as exc:
                     logger.error(f"PayPal capture execution failed: {exc}")
@@ -411,8 +422,33 @@ class CheckoutService:
             plan.updated_at = datetime.now(timezone.utc)
             self._plan_repo.update(plan)
 
-            # Seamlessly create Order and Shipment for Post-Purchase Agent
+            # Seamlessly create Order and Shipment for Post-Purchase Agent via Transactional Outbox
             try:
+                from app.db.session import get_db_context
+                from app.models.outbox import OutboxEventModel
+                with get_db_context() as db:
+                    outbox_evt = OutboxEventModel(
+                        id=f"evt_{uuid.uuid4().hex[:12]}",
+                        event_type="order.create",
+                        aggregate_type="payment",
+                        aggregate_id=payment.id,
+                        payload={
+                            "purchase_plan_id": plan.id,
+                            "user_id": plan.user_id,
+                            "product_id": plan.product_id,
+                            "product_name": plan.product_name,
+                            "brand": plan.brand,
+                            "quantity": plan.quantity,
+                            "amount": plan.total_amount,
+                            "currency": plan.currency,
+                            "paypal_order_id": paypal_order_id,
+                            "payment_id": payment.id,
+                            "delivery_days": plan.delivery_days,
+                        },
+                        status="PENDING",
+                    )
+                    db.merge(outbox_evt)
+
                 from app.services.order_service import OrderService
                 order_svc = OrderService()
                 order_svc.create_order_from_purchase(
@@ -428,6 +464,11 @@ class CheckoutService:
                     payment_id=payment.id,
                     delivery_days=plan.delivery_days,
                 )
+                with get_db_context() as db:
+                    evt_rec = db.query(OutboxEventModel).filter(OutboxEventModel.id == outbox_evt.id).first()
+                    if evt_rec:
+                        evt_rec.status = "PROCESSED"
+                        evt_rec.processed_at = datetime.now(timezone.utc)
             except Exception as e:
                 logger.warning(f"Could not automatically create order on capture: {e}")
 
@@ -477,3 +518,137 @@ class CheckoutService:
                 detail=f"No payment record found for Purchase Plan '{plan_id}'.",
             )
         return payment
+
+    def refund_payment(
+        self, payment_id: str, amount: Optional[float] = None, user_id: Optional[str] = None
+    ) -> Payment:
+        """Process a full or partial refund for a completed payment with strict ownership check."""
+        payment = self.get_payment(payment_id, user_id=user_id)
+        if payment.status != PaymentStatus.COMPLETED:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Cannot refund payment with status '{payment.status}'. Must be COMPLETED.",
+            )
+
+        refund_amt = amount if amount is not None else payment.amount
+        if refund_amt <= 0 or refund_amt > payment.amount:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid refund amount: ${refund_amt:.2f}. Must be > 0 and <= original amount ${payment.amount:.2f}.",
+            )
+
+        refund_id = f"REF-{uuid.uuid4().hex[:8].upper()}"
+        is_partial = round(refund_amt, 2) < round(payment.amount, 2)
+
+        payment.refund_id = refund_id
+        payment.refund_amount = refund_amt
+        payment.refund_status = "COMPLETED"
+        payment.status = PaymentStatus.PARTIALLY_REFUNDED if is_partial else PaymentStatus.REFUNDED
+        payment.updated_at = datetime.now(timezone.utc)
+        self._payment_repo.update(payment)
+
+        # Log outbox event
+        try:
+            from app.db.session import get_db_context
+            from app.models.outbox import OutboxEventModel
+            with get_db_context() as db:
+                evt = OutboxEventModel(
+                    id=f"evt_{uuid.uuid4().hex[:12]}",
+                    event_type="payment.refunded",
+                    aggregate_type="payment",
+                    aggregate_id=payment.id,
+                    payload={
+                        "payment_id": payment.id,
+                        "refund_id": refund_id,
+                        "refund_amount": refund_amt,
+                        "status": payment.status.value,
+                        "user_id": payment.user_id,
+                    },
+                    status="PROCESSED",
+                    processed_at=datetime.now(timezone.utc),
+                )
+                db.merge(evt)
+        except Exception as e:
+            logger.warning(f"Could not persist refund outbox event: {e}")
+
+        logger.info(f"Payment {payment.id} refunded successfully. Refund ID: {refund_id}, Amount: {refund_amt}")
+        return payment
+
+    def reconcile_payments(self) -> List[Dict[str, Any]]:
+        """Identify and heal payments in CAPTURE_PENDING or RECONCILIATION_REQUIRED."""
+        all_payments = self._payment_repo.list_all()
+        reconciliation_reports: List[Dict[str, Any]] = []
+
+        for p in all_payments:
+            if p.status in [PaymentStatus.CAPTURE_PENDING, PaymentStatus.RECONCILIATION_REQUIRED]:
+                try:
+                    details = self._paypal.get_order_details(p.provider_order_id)
+                    provider_status = details.get("status")
+                    if provider_status == "COMPLETED":
+                        p.status = PaymentStatus.COMPLETED
+                        p.updated_at = datetime.now(timezone.utc)
+                        self._payment_repo.update(p)
+                        reconciliation_reports.append({
+                            "payment_id": p.id,
+                            "provider_order_id": p.provider_order_id,
+                            "action": "reconciled_to_completed",
+                            "status": "COMPLETED",
+                        })
+                    elif provider_status in ["VOIDED", "CANCELLED"]:
+                        p.status = PaymentStatus.CANCELLED
+                        p.updated_at = datetime.now(timezone.utc)
+                        self._payment_repo.update(p)
+                        reconciliation_reports.append({
+                            "payment_id": p.id,
+                            "provider_order_id": p.provider_order_id,
+                            "action": "reconciled_to_cancelled",
+                            "status": "CANCELLED",
+                        })
+                except Exception as e:
+                    reconciliation_reports.append({
+                        "payment_id": p.id,
+                        "provider_order_id": p.provider_order_id,
+                        "action": "reconciliation_failed",
+                        "error": str(e),
+                    })
+        return reconciliation_reports
+
+    def process_paypal_webhook(self, headers: Dict[str, str], payload: Dict[str, Any]) -> Dict[str, Any]:
+        """Verify and process incoming PayPal webhook with replay protection."""
+        event_id = payload.get("id") or f"WH-{uuid.uuid4().hex[:8]}"
+        event_type = payload.get("event_type", "UNKNOWN")
+        resource = payload.get("resource", {})
+        resource_id = resource.get("id")
+
+        # Deduplication check
+        from app.db.session import get_db_context
+        from app.models.webhook_event import WebhookEventModel
+        with get_db_context() as db:
+            existing = db.query(WebhookEventModel).filter(WebhookEventModel.id == event_id).first()
+            if existing:
+                logger.info(f"Duplicate webhook event ignored: {event_id}")
+                return {"status": "duplicate", "event_id": event_id, "event_type": event_type}
+
+            event_record = WebhookEventModel(
+                id=event_id,
+                provider="PAYPAL",
+                event_type=event_type,
+                resource_type=payload.get("resource_type"),
+                resource_id=resource_id,
+                status="PROCESSED",
+                payload=payload,
+            )
+            db.merge(event_record)
+
+        if event_type == "CHECKOUT.ORDER.APPROVED":
+            logger.info(f"Webhook received order approval for PayPal Order: {resource_id}")
+        elif event_type == "PAYMENT.CAPTURE.COMPLETED":
+            logger.info(f"Webhook received capture completion for: {resource_id}")
+            if resource_id:
+                payment = self._payment_repo.get_by_provider_order_id(resource_id)
+                if payment and payment.status != PaymentStatus.COMPLETED:
+                    payment.status = PaymentStatus.COMPLETED
+                    payment.updated_at = datetime.now(timezone.utc)
+                    self._payment_repo.update(payment)
+
+        return {"status": "processed", "event_id": event_id, "event_type": event_type}

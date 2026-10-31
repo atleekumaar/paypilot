@@ -22,6 +22,9 @@ def _model_to_schema(m: PaymentModel) -> Payment:
         currency=m.currency,
         status=PaymentStatus(m.status),
         capture_id=m.capture_id,
+        refund_id=getattr(m, "refund_id", None),
+        refund_status=getattr(m, "refund_status", None),
+        refund_amount=getattr(m, "refund_amount", None),
         payer_email=m.payer_email,
         payer_id=m.payer_id,
         metadata=m.metadata_json or {},
@@ -48,6 +51,9 @@ class PaymentRepository:
                 currency=payment.currency,
                 status=payment.status.value if hasattr(payment.status, "value") else str(payment.status),
                 capture_id=payment.capture_id,
+                refund_id=payment.refund_id,
+                refund_status=payment.refund_status,
+                refund_amount=payment.refund_amount,
                 payer_email=payment.payer_email,
                 payer_id=payment.payer_id,
                 metadata_json=payment.metadata,
@@ -84,6 +90,9 @@ class PaymentRepository:
             if m:
                 m.status = payment.status.value if hasattr(payment.status, "value") else str(payment.status)
                 m.capture_id = payment.capture_id
+                m.refund_id = payment.refund_id
+                m.refund_status = payment.refund_status
+                m.refund_amount = payment.refund_amount
                 m.payer_email = payment.payer_email
                 m.payer_id = payment.payer_id
                 m.metadata_json = payment.metadata

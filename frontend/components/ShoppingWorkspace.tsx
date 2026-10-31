@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Search, Sparkles, CheckCircle2, Star, Truck, ShieldCheck, ArrowRight, Loader2 } from "lucide-react";
 import ProductModal from "@/components/ProductModal";
 import PurchasePlanModal from "@/components/PurchasePlanModal";
+import { api } from "@/lib/api";
 
 interface Product {
   id: string;
@@ -87,17 +88,10 @@ export default function ShoppingWorkspace() {
     setChosenMessage(null);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/discovery/search", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: textToSearch }),
+      const data: RecommendationResponse = await api.post("/api/discovery/search", {
+        query: textToSearch,
       });
 
-      if (!response.ok) {
-        throw new Error(`Server returned status ${response.status}`);
-      }
-
-      const data: RecommendationResponse = await response.json();
       setResults(data);
 
       if (data.recommendations.length === 0) {

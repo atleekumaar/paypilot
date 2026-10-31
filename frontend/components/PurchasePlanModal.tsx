@@ -13,6 +13,7 @@ import {
   Receipt,
   ExternalLink,
 } from "lucide-react";
+import { api } from "@/lib/api";
 
 interface Product {
   id: string;
@@ -98,23 +99,12 @@ export default function PurchasePlanModal({
       setStep("FORMULATING");
       setErrorMessage(null);
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/purchase-plans", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            product_id: rankedItem.product.id,
-            quantity: 1,
-            score: rankedItem.score,
-            recommendation_reason: rankedItem.match_reasons.join("; "),
-          }),
+        const data: PurchasePlan = await api.post("/api/purchase-plans", {
+          product_id: rankedItem.product.id,
+          quantity: 1,
+          score: rankedItem.score,
+          recommendation_reason: rankedItem.match_reasons.join("; "),
         });
-
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.detail || "Failed to create purchase plan");
-        }
-
-        const data: PurchasePlan = await res.json();
         setPlan(data);
         setStep("AWAITING_APPROVAL");
       } catch (err: any) {
@@ -135,32 +125,17 @@ export default function PurchasePlanModal({
 
     try {
       // 1. Approve plan
-      const approveRes = await fetch(
-        `http://127.0.0.1:8000/api/purchase-plans/${plan.id}/approve`,
-        { method: "POST" }
+      const updatedPlan: PurchasePlan = await api.post(
+        `/api/purchase-plans/${plan.id}/approve`
       );
-      if (!approveRes.ok) {
-        const err = await approveRes.json();
-        throw new Error(err.detail || "Failed to approve purchase plan");
-      }
-      const updatedPlan: PurchasePlan = await approveRes.json();
       setPlan(updatedPlan);
 
       // 2. Create PayPal Sandbox Order
-      const orderRes = await fetch(
-        "http://127.0.0.1:8000/api/payments/paypal/create-order",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ purchase_plan_id: updatedPlan.id }),
-        }
+      const orderData: any = await api.post(
+        "/api/payments/paypal/create-order",
+        { purchase_plan_id: updatedPlan.id }
       );
-      if (!orderRes.ok) {
-        const err = await orderRes.json();
-        throw new Error(err.detail || "Failed to create PayPal Order");
-      }
 
-      const orderData = await orderRes.json();
       setPaypalOrderId(orderData.paypal_order_id);
       setApprovalUrl(orderData.approval_url || null);
       setStep("PAYPAL_CHECKOUT");
@@ -178,24 +153,13 @@ export default function PurchasePlanModal({
     setErrorMessage(null);
 
     try {
-      const captureRes = await fetch(
-        "http://127.0.0.1:8000/api/payments/paypal/capture",
+      const paymentData: PaymentRecord = await api.post(
+        "/api/payments/paypal/capture",
         {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            purchase_plan_id: plan.id,
-            paypal_order_id: paypalOrderId,
-          }),
+          purchase_plan_id: plan.id,
+          paypal_order_id: paypalOrderId,
         }
       );
-
-      if (!captureRes.ok) {
-        const err = await captureRes.json();
-        throw new Error(err.detail || "Payment capture failed");
-      }
-
-      const paymentData: PaymentRecord = await captureRes.json();
       setPayment(paymentData);
       setStep("SUCCESS");
     } catch (err: any) {

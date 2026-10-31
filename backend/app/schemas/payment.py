@@ -12,10 +12,14 @@ class PaymentStatus(str, Enum):
     CREATED = "CREATED"
     APPROVAL_PENDING = "APPROVAL_PENDING"
     APPROVED = "APPROVED"
+    CAPTURE_PENDING = "CAPTURE_PENDING"
     CAPTURED = "CAPTURED"
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
     CANCELLED = "CANCELLED"
+    RECONCILIATION_REQUIRED = "RECONCILIATION_REQUIRED"
+    REFUNDED = "REFUNDED"
+    PARTIALLY_REFUNDED = "PARTIALLY_REFUNDED"
 
 
 class PaymentProvider(str, Enum):
@@ -38,6 +42,9 @@ class Payment(BaseModel):
     currency: str = Field(default="USD", description="Currency ISO code")
     status: PaymentStatus = Field(default=PaymentStatus.CREATED, description="Payment lifecycle status")
     capture_id: Optional[str] = Field(default=None, description="PayPal Capture transaction ID")
+    refund_id: Optional[str] = Field(default=None, description="PayPal Refund transaction ID")
+    refund_status: Optional[str] = Field(default=None, description="Status of refund")
+    refund_amount: Optional[float] = Field(default=None, description="Refunded amount")
     payer_email: Optional[str] = Field(default=None, description="Buyer PayPal account email")
     payer_id: Optional[str] = Field(default=None, description="Buyer PayPal account ID")
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Raw provider metadata")

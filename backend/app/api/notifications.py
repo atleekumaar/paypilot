@@ -14,12 +14,14 @@ router = APIRouter(prefix="/api/notifications", tags=["Notifications"])
 @router.get("", response_model=List[Notification])
 def list_notifications(
     user_id: Optional[str] = Query(default=None, description="Identifier of the user"),
+    limit: int = Query(default=50, ge=1, le=100, description="Max notifications to return"),
+    offset: int = Query(default=0, ge=0, description="Notifications offset"),
     current_user: AuthenticatedUser = Depends(get_current_user),
     service: NotificationService = Depends(get_notification_service),
 ):
-    """Retrieve all notifications for the user."""
+    """Retrieve all notifications for the user with pagination."""
     verify_user_ownership(current_user, user_id)
-    return service.list_user_notifications(user_id=current_user.id)
+    return service.list_user_notifications(user_id=current_user.id, limit=limit, offset=offset)
 
 
 @router.post("/{notification_id}/read", response_model=Notification)
