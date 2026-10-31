@@ -1,4 +1,4 @@
-"""Comprehensive test suite for Phase 5 Post-Purchase Agent, Order Tracking, and Issue Detection."""
+"""Comprehensive test suite for Post-Purchase Agent, Order Tracking, and Issue Detection."""
 
 from datetime import date
 import pytest

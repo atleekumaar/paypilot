@@ -205,7 +205,7 @@ export default function ShoppingWorkspace() {
         </div>
       )}
 
-      {/* Success Notification for Phase 3 teaser */}
+      {/* Success Notification */}
       {chosenMessage && (
         <div className="p-4 rounded-xl bg-cyan-950/60 border border-cyan-500/40 text-cyan-200 text-xs sm:text-sm font-medium flex items-center justify-between mb-8 animate-in fade-in">
           <span>{chosenMessage}</span>

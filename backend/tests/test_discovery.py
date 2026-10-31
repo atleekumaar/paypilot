@@ -1,4 +1,4 @@
-"""Comprehensive test suite for Phase 2 Product Discovery Agent."""
+"""Comprehensive test suite for Product Discovery Agent."""
 
 import pytest
 from fastapi.testclient import TestClient

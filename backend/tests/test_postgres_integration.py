@@ -1,4 +1,4 @@
-"""PostgreSQL integration test suite for Phase 4A.
+"""PostgreSQL integration test suite.
 
 Validates:
 1. Alembic schema migrations on PostgreSQL (upgrade head, downgrade, re-upgrade)

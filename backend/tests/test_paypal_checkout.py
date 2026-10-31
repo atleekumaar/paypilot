@@ -1,4 +1,4 @@
-"""Comprehensive test suite for Phase 3 PayPal Checkout & Purchase Flow."""
+"""Comprehensive test suite for PayPal Checkout & Purchase Flow."""
 
 import pytest
 from fastapi.testclient import TestClient

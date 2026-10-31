@@ -18,7 +18,7 @@ export default function Home() {
         <div className="max-w-4xl mx-auto pt-8 pb-3 text-center">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-cyan-500/20 bg-cyan-500/5 text-cyan-400 text-xs font-medium tracking-wide mb-4">
             <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
-            PayPal AI Hackathon &bull; Phase 5 Post-Purchase Agent
+            PayPal AI Hackathon &bull; Autonomous Commerce Agent
           </div>
 
           <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white mb-2">
@@ -65,7 +65,7 @@ export default function Home() {
       </main>
 
       <footer className="border-t border-slate-800/80 py-6 text-center text-xs text-slate-500 mt-12">
-        <p>PayPilot &copy; 2026 &bull; PayPal AI Hackathon Phase 4: Agentic Commerce</p>
+        <p>PayPilot &copy; 2026 &bull; PayPal AI Hackathon: Autonomous Agentic Commerce</p>
       </footer>
     </div>
   );

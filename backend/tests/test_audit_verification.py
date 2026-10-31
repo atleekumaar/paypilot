@@ -1,4 +1,4 @@
-"""Independent verification and security audit regression suite for PayPilot Phase 2 + Phase 3."""
+"""Independent verification and security audit regression suite for PayPilot."""
 
 from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch

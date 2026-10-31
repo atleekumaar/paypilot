@@ -1,4 +1,4 @@
-"""Comprehensive regression test suite for Phase 1 Payment Security and Checkout Reliability."""
+"""Comprehensive regression test suite for payment security, checkout reliability, and tamper protection."""
 
 import concurrent.futures
 from datetime import datetime, timezone

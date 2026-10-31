@@ -1,4 +1,4 @@
-"""Tests for Phase 2: Database architecture, persistence, transactions, and models."""
+"""Tests for database architecture, persistence, transactions, and models."""
 
 import pytest
 from datetime import datetime, timezone

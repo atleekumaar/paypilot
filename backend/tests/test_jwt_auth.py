@@ -1,4 +1,4 @@
-"""Comprehensive security test suite for Phase 4A JWT/JWKS Authentication.
+"""Comprehensive security test suite for JWT/JWKS Authentication.
 
 Covers all 20 required security scenarios:
 1. Valid asymmetric RS256 token authentication with claims extraction

@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     # Database (PostgreSQL-ready)
     DATABASE_URL: Optional[str] = None
 
-    # Authentication (Phase 4A)
+    # Authentication
     # AUTH_MODE: "demo" (local testing / dev only) or "jwt" (production JWKS / OIDC)
     AUTH_MODE: str = "demo"
     AUTH_ISSUER: Optional[str] = None
@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     AUTH_REQUIRED_CLAIMS: List[str] = ["sub"]
     AUTH_CLOCK_SKEW_SECONDS: int = 60
 
-    # LLM & AI Agents (Phase 2+)
+    # LLM & AI Agents
     LLM_API_KEY: Optional[str] = None
 
     # PayPal Integration (Sandbox)

@@ -1,4 +1,4 @@
-"""Tests for Phase 3: Agent reliability, tool safety, prompt injection defenses, and execution bounds."""
+"""Tests for agent reliability, tool safety, prompt injection defenses, and execution bounds."""
 
 from datetime import datetime, timedelta, timezone
 import pytest

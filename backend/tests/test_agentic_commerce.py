@@ -1,4 +1,4 @@
-"""Comprehensive test suite for Phase 4 Agentic Commerce, Policy Engine, and Tools."""
+"""Comprehensive test suite for Agentic Commerce, Policy Engine, and Tools."""
 
 import pytest
 from fastapi.testclient import TestClient

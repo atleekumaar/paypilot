@@ -23,7 +23,7 @@ export default function Navbar() {
           </div>
           <span className="font-bold text-lg tracking-wider text-white">PAYPILOT</span>
           <span className="hidden sm:inline-block ml-2 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-cyan-400 bg-cyan-950/60 border border-cyan-800/40 rounded-full">
-            Phase 5 Post-Purchase
+            Autonomous Commerce
           </span>
         </Link>
 
