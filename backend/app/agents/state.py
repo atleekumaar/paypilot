@@ -26,6 +26,12 @@ class AgentStatus(str, Enum):
     FAILED = "FAILED"
 
 
+class SessionConcurrencyError(Exception):
+    """Raised when an optimistic concurrency version conflict occurs during atomic session persistence."""
+
+    pass
+
+
 class AgentAction(BaseModel):
     """Operational action logged during agent workflow execution."""
 
@@ -200,9 +206,9 @@ class SessionStore:
                 db.merge(db_model)
                 return new_state
 
-    def get(self, session_id: str, user_id: Optional[str] = None) -> Optional[AgentState]:
+    def get(self, session_id: str, user_id: Optional[str] = None, force_reload: bool = False) -> Optional[AgentState]:
         with self._lock:
-            state = self._sessions.get(session_id)
+            state = None if force_reload else self._sessions.get(session_id)
             if not state:
                 from app.db.session import get_db_context
                 from app.models.agent_session import AgentSessionModel
@@ -235,40 +241,107 @@ class SessionStore:
                 raise PermissionError(
                     f"Access denied: Session '{session_id}' belongs to another user."
                 )
-            return state
+            return state.model_copy(deep=True) if state else None
 
     def save(self, state: AgentState, touch: bool = True) -> AgentState:
+        """Atomically persist agent state using version-based optimistic conditional updates."""
         with self._lock:
             if touch:
                 state.updated_at = datetime.now(timezone.utc)
-            self._sessions[state.session_id] = state
+
             from app.db.session import get_db_context
             from app.models.agent_session import AgentSessionModel
+            from sqlalchemy import update
+
             with get_db_context() as db:
                 existing = db.query(AgentSessionModel).filter(AgentSessionModel.session_id == state.session_id).first()
-                if existing:
-                    state.version = getattr(existing, "version", 1) + 1
-                db_model = AgentSessionModel(
-                    session_id=state.session_id,
-                    user_id=state.user_id,
-                    status=state.status.value if hasattr(state.status, "value") else str(state.status),
-                    user_query=state.user_query,
-                    current_step=state.current_step,
-                    max_steps=state.max_steps,
-                    approval_status=state.approval_status,
-                    approval_required=state.approval_required,
-                    purchase_plan_id=state.purchase_plan_id,
-                    paypal_order_id=state.paypal_order_id,
-                    payment_status=state.payment_status,
-                    active_order_id=state.active_order_id,
-                    support_request_approved=state.support_request_approved,
-                    version=state.version,
-                    state_data=state.model_dump(mode="json"),
-                    created_at=state.created_at,
-                    updated_at=state.updated_at,
+                if not existing:
+                    # Initial insert for new session
+                    db_model = AgentSessionModel(
+                        session_id=state.session_id,
+                        user_id=state.user_id,
+                        status=state.status.value if hasattr(state.status, "value") else str(state.status),
+                        user_query=state.user_query,
+                        current_step=state.current_step,
+                        max_steps=state.max_steps,
+                        approval_status=state.approval_status,
+                        approval_required=state.approval_required,
+                        purchase_plan_id=state.purchase_plan_id,
+                        paypal_order_id=state.paypal_order_id,
+                        payment_status=state.payment_status,
+                        active_order_id=state.active_order_id,
+                        support_request_approved=state.support_request_approved,
+                        version=1,
+                        state_data=state.model_dump(mode="json"),
+                        created_at=state.created_at,
+                        updated_at=state.updated_at,
+                    )
+                    db.add(db_model)
+                    state.version = 1
+                    self._sessions[state.session_id] = state
+                    return state
+
+                # Enforce immutable ownership check against database authoritative record
+                if existing.user_id and existing.user_id != "guest_user":
+                    if state.user_id and state.user_id != existing.user_id and state.user_id != "guest_user":
+                        raise PermissionError(
+                            f"Access denied: Session ownership is immutable. Belongs to '{existing.user_id}', cannot be claimed by '{state.user_id}'."
+                        )
+
+                expected_version = state.version
+                new_version = expected_version + 1
+
+                # True atomic conditional SQL update
+                stmt = (
+                    update(AgentSessionModel)
+                    .where(
+                        AgentSessionModel.session_id == state.session_id,
+                        AgentSessionModel.version == expected_version,
+                    )
+                    .values(
+                        user_id=state.user_id,
+                        status=state.status.value if hasattr(state.status, "value") else str(state.status),
+                        user_query=state.user_query,
+                        current_step=state.current_step,
+                        max_steps=state.max_steps,
+                        approval_status=state.approval_status,
+                        approval_required=state.approval_required,
+                        purchase_plan_id=state.purchase_plan_id,
+                        paypal_order_id=state.paypal_order_id,
+                        payment_status=state.payment_status,
+                        active_order_id=state.active_order_id,
+                        support_request_approved=state.support_request_approved,
+                        version=new_version,
+                        state_data=state.model_dump(mode="json"),
+                        updated_at=state.updated_at,
+                    )
                 )
-                db.merge(db_model)
+                res = db.execute(stmt)
+                if res.rowcount == 0:
+                    raise SessionConcurrencyError(
+                        f"Concurrency conflict updating session '{state.session_id}' (expected version {expected_version})."
+                    )
+
+                state.version = new_version
+                self._sessions[state.session_id] = state
             return state
+
+    def save_with_retry(self, state: AgentState, max_retries: int = 3, touch: bool = True) -> AgentState:
+        """Atomically persist state with bounded exponential-backoff retry on optimistic locking conflict."""
+        import random
+        import time
+
+        for attempt in range(max_retries):
+            try:
+                return self.save(state, touch=touch)
+            except SessionConcurrencyError:
+                if attempt == max_retries - 1:
+                    raise
+                time.sleep(0.02 * (2 ** attempt) + random.uniform(0.005, 0.015))
+                latest = self.get(state.session_id, force_reload=True)
+                if latest:
+                    state.version = latest.version
+        return state
 
     def clear(self) -> None:
         with self._lock:

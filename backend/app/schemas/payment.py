@@ -45,6 +45,7 @@ class Payment(BaseModel):
     refund_id: Optional[str] = Field(default=None, description="PayPal Refund transaction ID")
     refund_status: Optional[str] = Field(default=None, description="Status of refund")
     refund_amount: Optional[float] = Field(default=None, description="Refunded amount")
+    total_refunded: Optional[float] = Field(default=0.0, description="Cumulative refunded amount")
     payer_email: Optional[str] = Field(default=None, description="Buyer PayPal account email")
     payer_id: Optional[str] = Field(default=None, description="Buyer PayPal account ID")
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Raw provider metadata")

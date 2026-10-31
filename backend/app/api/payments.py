@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, Header, Request, status
 from pydantic import BaseModel, Field
 
-from app.core.auth import AuthenticatedUser, get_current_user
+from app.core.auth import AuthenticatedUser, get_current_user, require_admin
 from app.schemas.payment import Payment
 from app.services.checkout_service import CheckoutService
 
@@ -146,11 +146,11 @@ async def refund_payment(
 @router.get(
     "/reconciliation/report",
     response_model=List[Dict[str, Any]],
-    summary="Reconcile In-Flight or Pending Payments",
-    description="Scans for payments stuck in CAPTURE_PENDING or RECONCILIATION_REQUIRED and syncs with provider status.",
+    summary="Reconcile In-Flight or Pending Payments (Admin Only)",
+    description="Administrative endpoint scanning for payments stuck in CAPTURE_PENDING or RECONCILIATION_REQUIRED.",
 )
 async def reconcile_payments(
-    current_user: AuthenticatedUser = Depends(get_current_user),
+    admin_user: AuthenticatedUser = Depends(require_admin),
 ) -> List[Dict[str, Any]]:
     """Reconcile payments."""
     service = CheckoutService()

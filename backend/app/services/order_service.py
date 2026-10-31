@@ -259,7 +259,11 @@ class OrderService:
         payment_id: Optional[str],
         delivery_days: int = 3,
     ) -> OrderDetailResponse:
-        """Automatically create Order and Shipment records when a checkout succeeds."""
+        """Automatically create Order and Shipment records when a checkout succeeds (idempotent)."""
+        existing = self._order_repo.get_by_purchase_plan_id(purchase_plan_id)
+        if existing:
+            return self.get_order(existing.id, user_id=user_id)
+
         order_id = f"ORD-{uuid.uuid4().hex[:6].upper()}"
         now = datetime.now(timezone.utc)
 

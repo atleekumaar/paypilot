@@ -14,6 +14,7 @@ class PayPalConfig:
     environment: str
     base_url: str
     mock_enabled: Optional[bool] = None
+    webhook_id: Optional[str] = None
 
     @property
     def is_configured(self) -> bool:
@@ -54,4 +55,5 @@ def get_paypal_config() -> PayPalConfig:
         environment=settings.PAYPAL_ENVIRONMENT,
         base_url=settings.paypal_base_url,
         mock_enabled=settings.PAYPAL_MOCK_ENABLED,
+        webhook_id=settings.PAYPAL_WEBHOOK_ID,
     )

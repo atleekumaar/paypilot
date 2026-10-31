@@ -44,6 +44,7 @@ class Settings(BaseSettings):
     PAYPAL_CLIENT_SECRET: Optional[str] = None
     PAYPAL_ENVIRONMENT: str = "sandbox"
     PAYPAL_MOCK_ENABLED: Optional[bool] = None  # None: auto (mock allowed in sandbox/dev only if credentials not configured)
+    PAYPAL_WEBHOOK_ID: Optional[str] = None
 
     @model_validator(mode="after")
     def validate_production_security(self) -> "Settings":

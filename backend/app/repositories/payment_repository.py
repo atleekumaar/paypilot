@@ -25,6 +25,7 @@ def _model_to_schema(m: PaymentModel) -> Payment:
         refund_id=getattr(m, "refund_id", None),
         refund_status=getattr(m, "refund_status", None),
         refund_amount=getattr(m, "refund_amount", None),
+        total_refunded=getattr(m, "total_refunded", 0.0) or 0.0,
         payer_email=m.payer_email,
         payer_id=m.payer_id,
         metadata=m.metadata_json or {},
@@ -54,6 +55,7 @@ class PaymentRepository:
                 refund_id=payment.refund_id,
                 refund_status=payment.refund_status,
                 refund_amount=payment.refund_amount,
+                total_refunded=payment.total_refunded or 0.0,
                 payer_email=payment.payer_email,
                 payer_id=payment.payer_id,
                 metadata_json=payment.metadata,
@@ -93,6 +95,7 @@ class PaymentRepository:
                 m.refund_id = payment.refund_id
                 m.refund_status = payment.refund_status
                 m.refund_amount = payment.refund_amount
+                m.total_refunded = payment.total_refunded or 0.0
                 m.payer_email = payment.payer_email
                 m.payer_id = payment.payer_id
                 m.metadata_json = payment.metadata

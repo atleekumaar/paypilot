@@ -14,7 +14,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+/lib/
 lib64/
 parts/
 sdist/
@@ -26,6 +26,7 @@ wheels/
 .pytest_cache/
 .coverage
 htmlcov/
+!frontend/lib/
 
 # Node / Next.js
 node_modules/

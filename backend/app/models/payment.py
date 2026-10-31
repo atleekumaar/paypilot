@@ -22,6 +22,7 @@ class PaymentModel(Base):
     refund_id = Column(String, nullable=True, index=True)
     refund_status = Column(String, nullable=True)
     refund_amount = Column(Numeric(10, 2, asdecimal=False), nullable=True)
+    total_refunded = Column(Numeric(10, 2, asdecimal=False), default=0.0, nullable=True)
     payer_email = Column(String, nullable=True)
     payer_id = Column(String, nullable=True)
     metadata_json = Column(JSON, default=dict)

@@ -2,7 +2,7 @@
 
 import logging
 from typing import Any, Dict, Optional
-from fastapi import Header, HTTPException, Request, status
+from fastapi import Depends, Header, HTTPException, Request, status
 from pydantic import BaseModel, Field
 
 from app.core.config import get_settings
@@ -41,6 +41,7 @@ class AuthenticatedUser(BaseModel):
 
     id: str = Field(..., description="Unique authenticated user ID")
     username: Optional[str] = Field(default=None, description="Display name")
+    role: str = Field(default="user", description="User role: user | admin")
     is_authenticated: bool = Field(default=True, description="Whether identity has been verified")
     email: Optional[str] = Field(default=None, description="User email if available in claims")
     claims: Optional[Dict[str, Any]] = Field(default=None, description="Verified claims payload")
@@ -107,10 +108,12 @@ def get_current_user(
             or f"User {user_id[:8] if len(user_id) > 8 else user_id}"
         )
         email = claims.get("email")
+        role = claims.get("role") or (claims.get("roles", ["user"])[0] if isinstance(claims.get("roles"), list) else "user")
 
         return AuthenticatedUser(
             id=user_id,
             username=username,
+            role=role,
             email=email,
             is_authenticated=True,
             claims=claims,
@@ -137,11 +140,29 @@ def get_current_user(
     if not user_id:
         user_id = "guest_user"
 
+    role = request.headers.get("X-User-Role") or ("admin" if user_id in ("admin", "admin_user") else "user")
+
     return AuthenticatedUser(
         id=user_id,
         username=f"User {user_id}",
+        role=role,
         is_authenticated=True,
     )
+
+
+def require_admin(
+    current_user: AuthenticatedUser = Depends(get_current_user),
+) -> AuthenticatedUser:
+    """Ensure authenticated user possesses administrative role."""
+    if current_user.role != "admin":
+        logger.warning(
+            f"Unauthorized administrative access attempt by '{current_user.id}' with role '{current_user.role}'"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: Administrative privileges required to access this resource.",
+        )
+    return current_user
 
 
 def verify_user_ownership(authenticated_user: AuthenticatedUser, client_user_id: Optional[str]) -> None:

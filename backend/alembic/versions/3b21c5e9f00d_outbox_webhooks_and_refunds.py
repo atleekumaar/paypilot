@@ -28,7 +28,9 @@ def upgrade() -> None:
         sa.Column('payload', sa.JSON(), nullable=False),
         sa.Column('status', sa.String(), server_default='PENDING', nullable=False),
         sa.Column('retry_count', sa.Integer(), server_default='0', nullable=False),
+        sa.Column('max_retries', sa.Integer(), server_default='5', nullable=False),
         sa.Column('error_message', sa.String(), nullable=True),
+        sa.Column('leased_until', sa.DateTime(), nullable=True),
         sa.Column('created_at', sa.DateTime(), nullable=False),
         sa.Column('processed_at', sa.DateTime(), nullable=True),
     )
@@ -36,6 +38,7 @@ def upgrade() -> None:
     op.create_index('ix_outbox_events_aggregate_type', 'outbox_events', ['aggregate_type'])
     op.create_index('ix_outbox_events_aggregate_id', 'outbox_events', ['aggregate_id'])
     op.create_index('ix_outbox_events_status', 'outbox_events', ['status'])
+    op.create_index('ix_outbox_events_leased_until', 'outbox_events', ['leased_until'])
 
     # 2. Create webhook_events table
     op.create_table(
@@ -57,7 +60,8 @@ def upgrade() -> None:
         batch_op.add_column(sa.Column('refund_id', sa.String(), nullable=True))
         batch_op.add_column(sa.Column('refund_status', sa.String(), nullable=True))
         batch_op.add_column(sa.Column('refund_amount', sa.Numeric(precision=10, scale=2), nullable=True))
-        batch_op.create_index('ix_payments_refund_id', ['refund_id'])
+        batch_op.add_column(sa.Column('total_refunded', sa.Numeric(precision=10, scale=2), server_default='0.0', nullable=True))
+    op.create_index('ix_payments_refund_id', 'payments', ['refund_id'])
 
     # 4. Add version column to agent_sessions
     with op.batch_alter_table('agent_sessions') as batch_op:
@@ -68,8 +72,9 @@ def downgrade() -> None:
     with op.batch_alter_table('agent_sessions') as batch_op:
         batch_op.drop_column('version')
 
+    op.drop_index('ix_payments_refund_id', table_name='payments')
     with op.batch_alter_table('payments') as batch_op:
-        batch_op.drop_index('ix_payments_refund_id')
+        batch_op.drop_column('total_refunded')
         batch_op.drop_column('refund_amount')
         batch_op.drop_column('refund_status')
         batch_op.drop_column('refund_id')
@@ -78,6 +83,7 @@ def downgrade() -> None:
     op.drop_index('ix_webhook_events_event_type', table_name='webhook_events')
     op.drop_table('webhook_events')
 
+    op.drop_index('ix_outbox_events_leased_until', table_name='outbox_events')
     op.drop_index('ix_outbox_events_status', table_name='outbox_events')
     op.drop_index('ix_outbox_events_aggregate_id', table_name='outbox_events')
     op.drop_index('ix_outbox_events_aggregate_type', table_name='outbox_events')
