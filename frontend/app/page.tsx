@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import ShoppingWorkspace from "@/components/ShoppingWorkspace";
 import AgentCommerceChat from "@/components/AgentCommerceChat";
@@ -15,10 +15,8 @@ import {
   Play,
   ArrowRight,
   Bot,
-  CheckCircle2,
   Clock,
   Sparkles,
-  ExternalLink,
   Lock,
   X,
 } from "lucide-react";
@@ -26,6 +24,30 @@ import {
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"agent" | "catalogue">("agent");
   const [demoModalOpen, setDemoModalOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOpenDemo = () => setDemoModalOpen(true);
+    window.addEventListener("open-paypilot-demo", handleOpenDemo);
+
+    if (window.location.hash) {
+      const id = window.location.hash.replace("#", "");
+      if (id === "demo") {
+        setDemoModalOpen(true);
+      }
+      const el = document.getElementById(id);
+      if (el) {
+        setTimeout(() => el.scrollIntoView({ behavior: "smooth" }), 150);
+      }
+    }
+
+    if (window.location.search.includes("demo=true")) {
+      setDemoModalOpen(true);
+    }
+
+    return () => {
+      window.removeEventListener("open-paypilot-demo", handleOpenDemo);
+    };
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen bg-white text-[#14213D] selection:bg-[#EAF3FF] selection:text-[#003087]">
@@ -167,7 +189,7 @@ export default function Home() {
           )}
 
           {/* How PayPilot Works Section (From Screenshot) */}
-          <section id="how-it-works" className="pt-16 pb-20 border-t border-slate-100 text-center">
+          <section id="how-it-works" className="pt-16 pb-20 border-t border-slate-100 text-center scroll-mt-24">
             <div className="max-w-2xl mx-auto mb-14">
               <h2 className="text-3xl sm:text-4xl font-black text-[#14213D] tracking-tight mb-2">
                 How PayPilot Works
@@ -234,7 +256,7 @@ export default function Home() {
           </section>
 
           {/* Features Section */}
-          <section id="features" className="pt-16 pb-20 border-t border-slate-100">
+          <section id="features" className="pt-16 pb-20 border-t border-slate-100 scroll-mt-24">
             <div className="max-w-3xl mx-auto text-center mb-14">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EAF3FF] text-[#0070E0] text-xs font-bold uppercase tracking-wider mb-3">
                 <ShieldCheck className="w-3.5 h-3.5" />
@@ -357,7 +379,7 @@ export default function Home() {
           </section>
 
           {/* Interactive Demo Section */}
-          <section id="demo" className="pt-16 pb-20 border-t border-slate-100">
+          <section id="demo" className="pt-16 pb-20 border-t border-slate-100 scroll-mt-24">
             <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-[#003087] via-[#005bb5] to-[#0070E0] text-white flex flex-col lg:flex-row items-center justify-between gap-8 shadow-card">
               <div className="max-w-xl text-left">
                 <span className="inline-block px-3 py-1 rounded-full bg-white/10 text-white text-xs font-semibold uppercase tracking-wider mb-3">
@@ -413,69 +435,6 @@ export default function Home() {
               </div>
             </div>
           </section>
-
-          {/* Documentation Section */}
-          <section id="docs" className="pt-16 pb-20 border-t border-slate-100 text-left">
-            <div className="max-w-4xl mx-auto">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-                <div>
-                  <h2 className="text-2xl sm:text-3xl font-black text-[#14213D] tracking-tight">
-                    Technical Architecture &amp; Integration
-                  </h2>
-                  <p className="text-slate-600 text-xs sm:text-sm mt-1">
-                    Everything you need to know about PayPilot&apos;s agent orchestration and PayPal security.
-                  </p>
-                </div>
-                <a
-                  href="https://github.com/atleekumaar/paypilot"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 transition-colors shrink-0"
-                >
-                  <span>View Repository</span>
-                  <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
-                </a>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-subtle">
-                  <div className="w-8 h-8 rounded-lg bg-[#EAF3FF] text-[#0070E0] flex items-center justify-center mb-3 font-mono font-bold text-xs">
-                    01
-                  </div>
-                  <h3 className="text-sm font-bold text-[#14213D] mb-1">
-                    FastAPI + Next.js Stack
-                  </h3>
-                  <p className="text-xs text-slate-600 leading-relaxed">
-                    Stateless Next.js 14 frontend paired with a modular FastAPI backend featuring SQLite/PostgreSQL persistence.
-                  </p>
-                </div>
-
-                <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-subtle">
-                  <div className="w-8 h-8 rounded-lg bg-[#EAF3FF] text-[#0070E0] flex items-center justify-center mb-3 font-mono font-bold text-xs">
-                    02
-                  </div>
-                  <h3 className="text-sm font-bold text-[#14213D] mb-1">
-                    Policy Safety Layer
-                  </h3>
-                  <p className="text-xs text-slate-600 leading-relaxed">
-                    Hard safety limits on maximum purchase amounts ($2,500 limit), required approvals, and idempotency keys.
-                  </p>
-                </div>
-
-                <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-subtle">
-                  <div className="w-8 h-8 rounded-lg bg-[#EAF3FF] text-[#0070E0] flex items-center justify-center mb-3 font-mono font-bold text-xs">
-                    03
-                  </div>
-                  <h3 className="text-sm font-bold text-[#14213D] mb-1">
-                    Authoritative Telemetry
-                  </h3>
-                  <p className="text-xs text-slate-600 leading-relaxed">
-                    Order state and shipment tracking driven by real databases, preventing hallucinations in post-purchase support.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </section>
         </main>
       </div>
 
@@ -485,7 +444,7 @@ export default function Home() {
           <div className="relative w-full max-w-2xl bg-white border border-slate-200 rounded-3xl shadow-modal p-6 sm:p-8 overflow-hidden text-left">
             <button
               onClick={() => setDemoModalOpen(false)}
-              className="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              className="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -557,6 +516,8 @@ export default function Home() {
                 setDemoModalOpen(false);
                 const el = document.getElementById("assistant");
                 el?.scrollIntoView({ behavior: "smooth" });
+                const input = el?.querySelector("input");
+                input?.focus();
               }}
               className="w-full py-3.5 rounded-2xl bg-[#0070E0] hover:bg-[#005bb5] text-white font-bold text-xs sm:text-sm transition-all shadow-sm cursor-pointer"
             >
