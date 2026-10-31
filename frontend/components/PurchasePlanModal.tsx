@@ -10,7 +10,6 @@ import {
   ArrowRight,
   AlertCircle,
   Loader2,
-  Receipt,
   ExternalLink,
 } from "lucide-react";
 import { api } from "@/lib/api";
@@ -124,13 +123,11 @@ export default function PurchasePlanModal({
     setErrorMessage(null);
 
     try {
-      // 1. Approve plan
       const updatedPlan: PurchasePlan = await api.post(
         `/api/purchase-plans/${plan.id}/approve`
       );
       setPlan(updatedPlan);
 
-      // 2. Create PayPal Sandbox Order
       const orderData: any = await api.post(
         "/api/payments/paypal/create-order",
         { purchase_plan_id: updatedPlan.id }
@@ -146,7 +143,7 @@ export default function PurchasePlanModal({
     }
   };
 
-  // Step 2: Capture PayPal Order after buyer approval
+  // Step 2: Capture PayPal Order
   const handleCapturePayment = async () => {
     if (!plan || !paypalOrderId) return;
     setStep("CAPTURING");
@@ -175,12 +172,13 @@ export default function PurchasePlanModal({
   if (!rankedItem) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl bg-[#0b101d] border border-cyan-500/30 rounded-2xl shadow-2xl p-6 sm:p-8 overflow-hidden text-left">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200 text-left">
+      <div className="relative w-full max-w-xl bg-white border border-slate-200 rounded-3xl shadow-modal p-6 sm:p-8 overflow-hidden">
         {/* Top Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+          className="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+          aria-label="Close dialog"
         >
           <X className="w-5 h-5" />
         </button>
@@ -188,38 +186,50 @@ export default function PurchasePlanModal({
         {/* State: Formulating */}
         {step === "FORMULATING" && (
           <div className="py-16 text-center space-y-3">
-            <Loader2 className="w-8 h-8 text-cyan-400 animate-spin mx-auto" />
-            <h3 className="text-base font-semibold text-white">Formulating Purchase Plan...</h3>
-            <p className="text-xs text-slate-400">Verifying live inventory and authoritative catalog pricing.</p>
+            <Loader2 className="w-8 h-8 text-[#0070E0] animate-spin mx-auto" />
+            <h3 className="text-base font-bold text-[#14213D]">
+              Formulating Purchase Plan...
+            </h3>
+            <p className="text-xs text-slate-500">
+              Verifying real-time inventory, pricing, and authorization policies.
+            </p>
           </div>
         )}
 
-        {/* State: Awaiting Approval (Section 5) */}
+        {/* State: Awaiting Approval */}
         {step === "AWAITING_APPROVAL" && plan && (
           <div>
-            <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+            <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
               <div>
-                <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-400">
-                  Plan #{plan.id}
+                <span className="text-[10px] font-mono uppercase tracking-wider text-[#0070E0] font-bold">
+                  Plan #{plan.id.substring(0, 12)}
                 </span>
-                <h3 className="text-xl font-extrabold text-white tracking-wide">PURCHASE PLAN</h3>
+                <h3 className="text-xl font-extrabold text-[#14213D] tracking-tight">
+                  Purchase Plan
+                </h3>
               </div>
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-cyan-400 text-xs font-semibold">
-                <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EAF3FF] border border-[#0070E0]/20 text-[#0070E0] text-xs font-semibold">
+                <span className="w-2 h-2 rounded-full bg-[#0070E0]"></span>
                 <span>PayPal Sandbox</span>
               </div>
             </div>
 
             {/* Product Card Snippet */}
-            <div className="p-4 rounded-xl bg-slate-900/70 border border-slate-800 mb-5">
+            <div className="p-4 rounded-2xl bg-[#F5F8FC] border border-slate-200/80 mb-5">
               <div className="flex items-start justify-between">
                 <div>
-                  <span className="text-xs text-slate-400 uppercase tracking-wider">{plan.brand}</span>
-                  <h4 className="text-base font-bold text-white mt-0.5">{plan.product_name}</h4>
-                  <p className="text-xs text-slate-400 mt-1">Sold by {plan.seller}</p>
+                  <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">
+                    {plan.brand}
+                  </span>
+                  <h4 className="text-base font-bold text-[#14213D] mt-0.5">
+                    {plan.product_name}
+                  </h4>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Fulfilled by <span className="font-medium text-slate-700">{plan.seller}</span>
+                  </p>
                 </div>
                 {plan.score && (
-                  <span className="text-xs font-mono font-bold text-cyan-400 bg-cyan-950/80 border border-cyan-800/40 px-2 py-0.5 rounded-md">
+                  <span className="text-xs font-mono font-bold text-[#0070E0] bg-[#EAF3FF] border border-[#0070E0]/30 px-2 py-0.5 rounded-md">
                     {plan.score}/100 Match
                   </span>
                 )}
@@ -227,60 +237,63 @@ export default function PurchasePlanModal({
             </div>
 
             {/* Breakdown Table */}
-            <div className="space-y-2.5 text-xs border-b border-slate-800 pb-4 mb-4 text-slate-300">
+            <div className="space-y-2.5 text-xs border-b border-slate-100 pb-4 mb-4 text-slate-600">
               <div className="flex justify-between">
-                <span className="text-slate-400">Unit Price</span>
-                <span className="font-mono text-white">
+                <span>Unit Price</span>
+                <span className="font-mono text-slate-900 font-semibold">
                   ${plan.unit_price.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Quantity</span>
-                <span className="font-mono text-white">{plan.quantity}</span>
+                <span>Quantity</span>
+                <span className="font-mono text-slate-900 font-semibold">{plan.quantity}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Estimated Delivery</span>
-                <span className="text-white flex items-center gap-1">
-                  <Truck className="w-3 h-3 text-cyan-400" />
+                <span>Estimated Delivery</span>
+                <span className="text-slate-900 font-semibold flex items-center gap-1">
+                  <Truck className="w-3.5 h-3.5 text-[#0070E0]" />
                   {plan.delivery_days} business days
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Payment Method</span>
-                <span className="font-semibold text-cyan-400">PayPal (Sandbox Mode)</span>
+                <span>Payment Method</span>
+                <span className="font-bold text-[#003087]">PayPal (Sandbox Mode)</span>
               </div>
             </div>
 
             {/* Why This Product */}
-            <div className="p-3 rounded-lg bg-cyan-950/30 border border-cyan-800/30 text-xs mb-5">
-              <div className="flex items-center gap-1.5 text-cyan-400 font-semibold mb-1">
+            <div className="p-3.5 rounded-xl bg-[#EAF3FF]/60 border border-[#0070E0]/20 text-xs mb-5">
+              <div className="flex items-center gap-1.5 text-[#0070E0] font-bold mb-1">
                 <Sparkles className="w-3.5 h-3.5" />
                 Why this product?
               </div>
-              <p className="text-slate-300 leading-relaxed">
-                {plan.recommendation_reason || "Ranked top choice for your requirements and budget constraints."}
+              <p className="text-slate-700 leading-relaxed">
+                {plan.recommendation_reason ||
+                  "Ranked top choice matching your requested budget and specifications."}
               </p>
             </div>
 
             {/* Total Row */}
             <div className="flex items-baseline justify-between mb-6">
-              <span className="text-sm font-semibold text-slate-300">Total Purchase Amount</span>
-              <div className="text-2xl font-black text-cyan-400 font-mono">
+              <span className="text-sm font-bold text-slate-700">Total Purchase Amount</span>
+              <div className="text-2xl font-black text-[#003087] font-mono">
                 ${plan.total_amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                <span className="text-xs text-slate-400 font-normal ml-1">{plan.currency}</span>
+                <span className="text-xs text-slate-500 font-sans font-medium ml-1">
+                  {plan.currency}
+                </span>
               </div>
             </div>
 
             {/* Explicit Approval Button */}
             <button
               onClick={handleApprovePlan}
-              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold text-sm tracking-wide shadow-lg shadow-cyan-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-3.5 rounded-2xl bg-[#0070E0] hover:bg-[#005bb5] text-white font-bold text-sm tracking-wide shadow-sm hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>Approve Purchase</span>
               <ArrowRight className="w-4 h-4" />
             </button>
-            <p className="text-[11px] text-center text-slate-500 mt-2.5">
-              Explicit user approval is required before initiating PayPal payment.
+            <p className="text-[11px] text-center text-slate-400 mt-2.5">
+              Explicit human approval is required before initiating PayPal checkout.
             </p>
           </div>
         )}
@@ -288,48 +301,54 @@ export default function PurchasePlanModal({
         {/* State: Creating Secure Order */}
         {step === "CREATING_ORDER" && (
           <div className="py-16 text-center space-y-3">
-            <Loader2 className="w-8 h-8 text-cyan-400 animate-spin mx-auto" />
-            <h3 className="text-base font-semibold text-white">Creating Secure PayPal Order...</h3>
-            <p className="text-xs text-slate-400">Communicating with PayPal Sandbox v2 API.</p>
+            <Loader2 className="w-8 h-8 text-[#0070E0] animate-spin mx-auto" />
+            <h3 className="text-base font-bold text-[#14213D]">
+              Creating Secure PayPal Order...
+            </h3>
+            <p className="text-xs text-slate-500">
+              Communicating with PayPal Sandbox v2 API.
+            </p>
           </div>
         )}
 
-        {/* State: PayPal Checkout (Section 15, 16) */}
+        {/* State: PayPal Checkout */}
         {step === "PAYPAL_CHECKOUT" && plan && (
           <div>
-            <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+            <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
               <div>
-                <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-400">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-[#0070E0] font-bold">
                   Step 2 &bull; PayPal Checkout
                 </span>
-                <h3 className="text-xl font-extrabold text-white">PAYPAL SANDBOX</h3>
+                <h3 className="text-xl font-black text-[#003087]">
+                  PayPal <span className="font-normal text-slate-500 text-sm">Sandbox</span>
+                </h3>
               </div>
-              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-cyan-400 text-xs font-semibold">
-                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                 <span>Sandbox Ready</span>
               </div>
             </div>
 
             {/* Order Confirmation Banner */}
-            <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 mb-5">
-              <div className="flex justify-between items-baseline mb-2">
-                <span className="text-xs text-slate-400">Total Authorized</span>
-                <span className="text-xl font-bold font-mono text-cyan-400">
+            <div className="p-4 rounded-2xl bg-[#F5F8FC] border border-slate-200 mb-5">
+              <div className="flex justify-between items-baseline mb-1">
+                <span className="text-xs font-medium text-slate-500">Authorized Total</span>
+                <span className="text-xl font-black font-mono text-[#003087]">
                   ${plan.total_amount.toLocaleString("en-US", { minimumFractionDigits: 2 })} {plan.currency}
                 </span>
               </div>
-              <div className="text-xs text-slate-400 font-mono">
-                PayPal Order ID: <span className="text-slate-200">{paypalOrderId}</span>
+              <div className="text-xs text-slate-500 font-mono">
+                Order ID: <span className="text-slate-800 font-semibold">{paypalOrderId}</span>
               </div>
             </div>
 
             {/* PayPal Checkout Execution Box */}
-            <div className="p-6 rounded-xl bg-[#070b14] border border-cyan-500/20 text-center space-y-4 mb-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 text-xs font-medium">
-                <ShieldCheck className="w-4 h-4 text-cyan-400" />
-                Verified PayPal Sandbox Integration
+            <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 text-center space-y-4 mb-4">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-slate-200 text-[#0070E0] text-xs font-semibold">
+                <ShieldCheck className="w-4 h-4 text-[#0070E0]" />
+                <span>Verified PayPal Sandbox Integration</span>
               </div>
-              <p className="text-xs text-slate-300 max-w-sm mx-auto">
+              <p className="text-xs text-slate-600 max-w-sm mx-auto">
                 Authorize payment in PayPal Sandbox and capture the transaction.
               </p>
 
@@ -338,16 +357,17 @@ export default function PurchasePlanModal({
                   href={approvalUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 underline font-mono py-1"
+                  className="inline-flex items-center gap-1 text-xs text-[#0070E0] hover:underline font-mono py-1"
                 >
-                  <span>Launch PayPal Sandbox Approval Window &rarr;</span>
+                  <span>Launch Sandbox Approval Window</span>
+                  <ExternalLink className="w-3 h-3" />
                 </a>
               )}
 
               {/* PayPal Primary Action Button */}
               <button
                 onClick={handleCapturePayment}
-                className="w-full py-3.5 rounded-xl bg-[#ffc439] hover:bg-[#f4bb34] text-[#003087] font-extrabold text-sm tracking-wide shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-3.5 rounded-full bg-[#FFC439] hover:bg-[#F4BB34] text-[#003087] font-extrabold text-sm tracking-wide shadow-sm hover:shadow transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <span>Pay with</span>
                 <span className="italic font-black text-base">PayPal</span>
@@ -357,7 +377,7 @@ export default function PurchasePlanModal({
 
             <button
               onClick={() => setStep("AWAITING_APPROVAL")}
-              className="w-full text-center text-xs text-slate-500 hover:text-slate-300 py-1"
+              className="w-full text-center text-xs text-slate-500 hover:text-slate-800 py-1 cursor-pointer"
             >
               Cancel and return to Purchase Plan
             </button>
@@ -367,57 +387,61 @@ export default function PurchasePlanModal({
         {/* State: Capturing Payment */}
         {step === "CAPTURING" && (
           <div className="py-16 text-center space-y-3">
-            <Loader2 className="w-8 h-8 text-cyan-400 animate-spin mx-auto" />
-            <h3 className="text-base font-semibold text-white">Verifying Payment with PayPal...</h3>
-            <p className="text-xs text-slate-400">Executing authoritative server-side order capture.</p>
+            <Loader2 className="w-8 h-8 text-[#0070E0] animate-spin mx-auto" />
+            <h3 className="text-base font-bold text-[#14213D]">
+              Verifying Payment with PayPal...
+            </h3>
+            <p className="text-xs text-slate-500">
+              Executing authoritative server-side order capture.
+            </p>
           </div>
         )}
 
-        {/* State: Payment Successful (Section 20) */}
+        {/* State: Payment Successful */}
         {step === "SUCCESS" && plan && payment && (
           <div className="py-4 text-center">
             {/* Green Check Icon */}
-            <div className="w-16 h-16 rounded-full bg-emerald-500/10 border-2 border-emerald-400 flex items-center justify-center mx-auto mb-4 text-emerald-400 shadow-xl shadow-emerald-500/20">
+            <div className="w-16 h-16 rounded-full bg-emerald-50 border-2 border-emerald-400 flex items-center justify-center mx-auto mb-4 text-emerald-600 shadow-sm">
               <CheckCircle2 className="w-9 h-9" />
             </div>
 
-            <h3 className="text-2xl font-extrabold text-white tracking-wide mb-1">
-              PAYMENT SUCCESSFUL
+            <h3 className="text-2xl font-black text-[#14213D] tracking-tight mb-1">
+              Payment Successful
             </h3>
-            <p className="text-xs text-emerald-400 font-medium mb-6">
+            <p className="text-xs text-emerald-700 font-semibold mb-6">
               Verified by PayPal Sandbox &bull; Status: {payment.status}
             </p>
 
             {/* Receipt Card */}
-            <div className="rounded-xl bg-slate-900/80 border border-slate-800 p-4 text-left space-y-2.5 text-xs text-slate-300 mb-6 font-mono">
-              <div className="flex justify-between border-b border-slate-800 pb-2">
-                <span className="text-slate-500">Item</span>
-                <span className="font-semibold text-white">{plan.product_name}</span>
+            <div className="rounded-2xl bg-[#F5F8FC] border border-slate-200 p-4 text-left space-y-2.5 text-xs text-slate-700 mb-6 font-mono">
+              <div className="flex justify-between border-b border-slate-200/80 pb-2">
+                <span className="text-slate-500 font-sans">Item</span>
+                <span className="font-bold text-slate-900 font-sans">{plan.product_name}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Amount Paid</span>
-                <span className="text-cyan-400 font-bold">
+                <span className="text-slate-500 font-sans">Amount Paid</span>
+                <span className="text-[#003087] font-black text-sm">
                   ${payment.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })} {payment.currency}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Payment Provider</span>
-                <span className="text-white">PayPal Sandbox</span>
+                <span className="text-slate-500 font-sans">Provider</span>
+                <span className="text-slate-900 font-semibold font-sans">PayPal Sandbox</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">PayPal Order ID</span>
-                <span className="text-slate-200 truncate max-w-[200px]">{payment.provider_order_id}</span>
+                <span className="text-slate-500 font-sans">PayPal Order ID</span>
+                <span className="text-slate-800 font-medium truncate max-w-[200px]">{payment.provider_order_id}</span>
               </div>
               {payment.capture_id && (
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Capture ID</span>
-                  <span className="text-slate-200">{payment.capture_id}</span>
+                  <span className="text-slate-500 font-sans">Capture ID</span>
+                  <span className="text-slate-800 font-medium">{payment.capture_id}</span>
                 </div>
               )}
               {payment.payer_email && (
-                <div className="flex justify-between border-t border-slate-800 pt-2">
-                  <span className="text-slate-500">Buyer Account</span>
-                  <span className="text-slate-300 truncate max-w-[200px]">{payment.payer_email}</span>
+                <div className="flex justify-between border-t border-slate-200/80 pt-2">
+                  <span className="text-slate-500 font-sans">Buyer Account</span>
+                  <span className="text-slate-800 truncate max-w-[200px]">{payment.payer_email}</span>
                 </div>
               )}
             </div>
@@ -425,33 +449,33 @@ export default function PurchasePlanModal({
             {/* Finish Action */}
             <button
               onClick={onClose}
-              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold text-sm transition-all shadow-lg shadow-cyan-500/20"
+              className="w-full py-3.5 rounded-2xl bg-[#0070E0] hover:bg-[#005bb5] text-white font-bold text-sm transition-all shadow-sm cursor-pointer"
             >
               Back to Shopping
             </button>
           </div>
         )}
 
-        {/* State: Failure (Section 21) */}
+        {/* State: Failure */}
         {step === "FAILED" && (
           <div className="py-6 text-center space-y-4">
-            <div className="w-14 h-14 rounded-full bg-rose-500/10 border border-rose-500/30 flex items-center justify-center mx-auto text-rose-400">
-              <AlertCircle className="w-8 h-8" />
+            <div className="w-14 h-14 rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center mx-auto text-rose-600">
+              <AlertCircle className="w-7 h-7" />
             </div>
-            <h3 className="text-lg font-bold text-white">Payment Incomplete</h3>
-            <p className="text-xs text-slate-300 max-w-sm mx-auto leading-relaxed">
+            <h3 className="text-lg font-bold text-[#14213D]">Payment Incomplete</h3>
+            <p className="text-xs text-slate-600 max-w-sm mx-auto leading-relaxed">
               {errorMessage || "Payment wasn't completed. Your Purchase Plan has not been marked as paid."}
             </p>
             <div className="flex gap-3 justify-center pt-2">
               <button
                 onClick={onClose}
-                className="px-5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs font-semibold text-slate-300 hover:bg-slate-800"
+                className="px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
               >
                 Close
               </button>
               <button
                 onClick={() => setStep("AWAITING_APPROVAL")}
-                className="px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-semibold"
+                className="px-5 py-2.5 rounded-xl bg-[#0070E0] hover:bg-[#005bb5] text-white text-xs font-bold cursor-pointer"
               >
                 Try Again
               </button>

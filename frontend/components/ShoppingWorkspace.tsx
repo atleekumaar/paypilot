@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Search, Sparkles, CheckCircle2, Star, Truck, ShieldCheck, ArrowRight, Loader2 } from "lucide-react";
+import { Search, Sparkles, Star, Truck, ShieldCheck, Loader2 } from "lucide-react";
 import ProductModal from "@/components/ProductModal";
 import PurchasePlanModal from "@/components/PurchasePlanModal";
 import { api } from "@/lib/api";
@@ -40,10 +40,10 @@ interface RecommendationResponse {
 }
 
 const LOADING_STEPS = [
-  "Understanding your request...",
-  "Finding matching products...",
-  "Comparing options...",
-  "Preparing recommendations...",
+  "Understanding your shopping criteria...",
+  "Querying verified product catalog...",
+  "Evaluating GPU, RAM, & performance constraints...",
+  "Formulating grounded recommendations...",
 ];
 
 const PRESET_QUERIES = [
@@ -95,11 +95,14 @@ export default function ShoppingWorkspace() {
       setResults(data);
 
       if (data.recommendations.length === 0) {
-        setError(data.explanation || "I couldn't find products matching those constraints. Try increasing your budget or relaxing a requirement.");
+        setError(
+          data.explanation ||
+            "I couldn't find products matching those constraints. Try increasing your budget or relaxing a requirement."
+        );
       }
     } catch (err: any) {
-      console.error("Discovery error:", err);
-      setError("Unable to process request right now. Ensure PayPilot backend is running on port 8000.");
+      console.warn("Discovery API notice:", err);
+      setError("Backend service is offline or unreachable at http://127.0.0.1:8000. Please launch FastAPI to query live catalogue.");
     } finally {
       setIsLoading(false);
     }
@@ -110,12 +113,18 @@ export default function ShoppingWorkspace() {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto px-4 py-8">
+    <div className="w-full max-w-6xl mx-auto px-4 py-8 text-left">
       {/* Search Input Box */}
-      <div className="bg-[#0e1422] border border-cyan-500/20 rounded-2xl p-6 shadow-2xl mb-8">
-        <label className="block text-xs font-semibold uppercase tracking-wider text-cyan-400 mb-2">
-          What are you looking for?
-        </label>
+      <div className="bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-8 shadow-card mb-8">
+        <div className="flex items-center gap-2 mb-2">
+          <Sparkles className="w-4 h-4 text-[#0070E0]" />
+          <label className="block text-xs font-bold uppercase tracking-wider text-[#0070E0]">
+            Direct Catalog Discovery
+          </label>
+        </div>
+        <h3 className="text-xl sm:text-2xl font-black text-[#14213D] mb-4 tracking-tight">
+          Find Any Product with Natural Language
+        </h3>
 
         <form
           onSubmit={(e) => {
@@ -130,14 +139,14 @@ export default function ShoppingWorkspace() {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="e.g. Find me a laptop under $1200 for AI development with good battery life."
-              className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-900/90 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all"
+              placeholder="e.g. Find me a laptop under $1200 for AI development with good battery life..."
+              className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-[#F5F8FC] border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0070E0] focus:bg-white focus:ring-2 focus:ring-[#0070E0]/10 transition-all"
             />
           </div>
           <button
             type="submit"
             disabled={isLoading}
-            className="px-7 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-sm font-semibold tracking-wide shadow-lg shadow-cyan-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer"
+            className="px-7 py-3.5 rounded-2xl bg-[#0070E0] hover:bg-[#005bb5] text-white text-sm font-bold tracking-tight shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             {isLoading ? (
               <>
@@ -146,7 +155,7 @@ export default function ShoppingWorkspace() {
               </>
             ) : (
               <>
-                <Sparkles className="w-4 h-4" />
+                <Search className="w-4 h-4" />
                 <span>Search</span>
               </>
             )}
@@ -155,7 +164,7 @@ export default function ShoppingWorkspace() {
 
         {/* Suggestion Chips */}
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          <span className="text-xs text-slate-500">Try asking:</span>
+          <span className="text-xs text-slate-500 font-medium">Try asking:</span>
           {PRESET_QUERIES.map((preset, idx) => (
             <button
               key={idx}
@@ -164,7 +173,7 @@ export default function ShoppingWorkspace() {
                 setQuery(preset);
                 handleSearch(preset);
               }}
-              className="text-xs bg-slate-800/60 hover:bg-slate-800 text-slate-300 hover:text-cyan-300 px-3 py-1.5 rounded-full border border-slate-700/60 transition-colors truncate max-w-xs text-left"
+              className="text-xs bg-[#F5F8FC] hover:bg-slate-100 text-slate-700 hover:text-[#0070E0] px-3 py-1.5 rounded-full border border-slate-200 transition-colors truncate max-w-xs text-left cursor-pointer"
             >
               {preset}
             </button>
@@ -174,9 +183,9 @@ export default function ShoppingWorkspace() {
 
       {/* Progressive Loading State */}
       {isLoading && (
-        <div className="p-8 rounded-2xl bg-[#0e1422] border border-cyan-500/20 text-center animate-pulse mb-8">
-          <Loader2 className="w-8 h-8 text-cyan-400 animate-spin mx-auto mb-3" />
-          <h4 className="text-base font-semibold text-white mb-2">
+        <div className="p-8 rounded-3xl bg-white border border-slate-200 text-center shadow-card mb-8">
+          <Loader2 className="w-8 h-8 text-[#0070E0] animate-spin mx-auto mb-3" />
+          <h4 className="text-base font-bold text-[#14213D] mb-3">
             {LOADING_STEPS[loadingStepIndex]}
           </h4>
           <div className="flex justify-center gap-2 max-w-xs mx-auto">
@@ -184,7 +193,7 @@ export default function ShoppingWorkspace() {
               <div
                 key={i}
                 className={`h-1.5 flex-1 rounded-full transition-all ${
-                  i <= loadingStepIndex ? "bg-cyan-400" : "bg-slate-800"
+                  i <= loadingStepIndex ? "bg-[#0070E0]" : "bg-slate-200"
                 }`}
               />
             ))}
@@ -192,20 +201,20 @@ export default function ShoppingWorkspace() {
         </div>
       )}
 
-      {/* Error or Empty State */}
+      {/* Error or Notice State */}
       {!isLoading && error && (
-        <div className="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 text-center mb-8">
-          <p className="text-sm text-slate-300">{error}</p>
+        <div className="p-6 rounded-2xl bg-[#F5F8FC] border border-slate-200 text-center mb-8">
+          <p className="text-sm text-slate-700">{error}</p>
         </div>
       )}
 
       {/* Success Notification */}
       {chosenMessage && (
-        <div className="p-4 rounded-xl bg-cyan-950/60 border border-cyan-500/40 text-cyan-200 text-xs sm:text-sm font-medium flex items-center justify-between mb-8 animate-in fade-in">
+        <div className="p-4 rounded-2xl bg-[#EAF3FF] border border-[#0070E0]/30 text-[#003087] text-xs sm:text-sm font-semibold flex items-center justify-between mb-8 animate-in fade-in">
           <span>{chosenMessage}</span>
           <button
             onClick={() => setChosenMessage(null)}
-            className="text-xs text-cyan-400 underline ml-4 hover:text-white"
+            className="text-xs text-[#0070E0] underline ml-4 hover:text-[#003087] cursor-pointer"
           >
             Dismiss
           </button>
@@ -216,15 +225,17 @@ export default function ShoppingWorkspace() {
       {!isLoading && results && results.recommendations.length > 0 && (
         <div className="space-y-8 animate-in fade-in duration-300">
           {/* Header Banner */}
-          <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-4 gap-2">
             <div>
-              <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-cyan-400 mb-1">
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#0070E0] mb-1">
                 <Sparkles className="w-3.5 h-3.5" />
                 AI Verified Recommendations
               </div>
-              <h3 className="text-2xl font-bold text-white">AI Found 3 Best Matches</h3>
+              <h3 className="text-2xl font-black text-[#14213D] tracking-tight">
+                Top Matches Found
+              </h3>
             </div>
-            <span className="text-xs text-slate-400">
+            <span className="text-xs text-slate-500 bg-[#F5F8FC] border border-slate-200 px-3 py-1.5 rounded-full font-medium">
               Evaluated {results.total_candidates} catalogue candidates
             </span>
           </div>
@@ -236,104 +247,106 @@ export default function ShoppingWorkspace() {
               return (
                 <div
                   key={item.product_id}
-                  className={`relative flex flex-col justify-between rounded-2xl p-6 transition-all duration-200 ${
+                  className={`relative flex flex-col justify-between rounded-3xl p-6 transition-all duration-200 ${
                     isTopPick
-                      ? "bg-gradient-to-b from-[#121c33] to-[#0e1422] border-2 border-cyan-500 shadow-xl shadow-cyan-500/10"
-                      : "bg-[#0e1422] border border-slate-800 hover:border-slate-700"
+                      ? "bg-white border-2 border-[#0070E0] shadow-card hover:shadow-cardHover"
+                      : "bg-white border border-slate-200/90 shadow-subtle hover:shadow-card"
                   }`}
                 >
-                  {/* Top Badge */}
-                  <div className="flex items-center justify-between mb-3">
-                    <span
-                      className={`text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
-                        isTopPick
-                          ? "bg-cyan-500 text-black font-extrabold"
-                          : "bg-slate-800 text-slate-300"
-                      }`}
-                    >
-                      {isTopPick ? "★ Rank #1 (Top Pick)" : `Rank #${item.rank}`}
-                    </span>
-                    <span className="text-xs font-mono font-bold text-cyan-400 bg-cyan-950/60 border border-cyan-800/40 px-2 py-0.5 rounded-md">
-                      {item.score}/100 Match
-                    </span>
-                  </div>
-
-                  {/* Title & Brand */}
-                  <div className="mb-4">
-                    <span className="text-[11px] uppercase tracking-wider text-slate-400 font-medium">
-                      {item.product.brand}
-                    </span>
-                    <h4 className="text-lg font-bold text-white mt-0.5 line-clamp-1">
-                      {item.product.name}
-                    </h4>
-                    <p className="text-xs text-slate-400 line-clamp-2 mt-1">
-                      {item.product.description}
-                    </p>
-                  </div>
-
-                  {/* Price & Rating */}
-                  <div className="flex items-baseline justify-between py-3 border-y border-slate-800/80 mb-4">
-                    <div>
-                      <span className="text-2xl font-extrabold text-white">
-                        ${item.product.price.toLocaleString("en-US", { minimumFractionDigits: 0 })}
+                  <div>
+                    {/* Top Badge */}
+                    <div className="flex items-center justify-between mb-3">
+                      <span
+                        className={`text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider ${
+                          isTopPick
+                            ? "bg-[#0070E0] text-white"
+                            : "bg-[#F5F8FC] text-slate-700 border border-slate-200"
+                        }`}
+                      >
+                        {isTopPick ? "★ Rank #1 (Top Pick)" : `Rank #${item.rank}`}
                       </span>
-                      <span className="text-xs text-slate-400 ml-1">USD</span>
+                      <span className="text-xs font-mono font-bold text-[#0070E0] bg-[#EAF3FF] border border-[#0070E0]/20 px-2 py-0.5 rounded-md">
+                        {item.score}/100 Match
+                      </span>
                     </div>
-                    <div className="flex items-center gap-1 text-xs text-amber-400">
-                      <Star className="w-3.5 h-3.5 fill-amber-400" />
-                      <span className="font-semibold text-white">{item.product.rating}</span>
-                      <span className="text-slate-500">({item.product.review_count})</span>
+
+                    {/* Title & Brand */}
+                    <div className="mb-4">
+                      <span className="text-[11px] uppercase tracking-wider text-slate-500 font-bold">
+                        {item.product.brand}
+                      </span>
+                      <h4 className="text-lg font-bold text-[#14213D] mt-0.5 line-clamp-1">
+                        {item.product.name}
+                      </h4>
+                      <p className="text-xs text-slate-600 line-clamp-2 mt-1">
+                        {item.product.description}
+                      </p>
                     </div>
-                  </div>
 
-                  {/* Feature Tags */}
-                  <div className="space-y-1.5 mb-5 text-xs">
-                    {item.product.features.gpu && (
-                      <div className="flex items-center gap-1.5 text-slate-300">
-                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
-                        <span className="truncate">{item.product.features.gpu}</span>
+                    {/* Price & Rating */}
+                    <div className="flex items-baseline justify-between py-3 border-y border-slate-100 mb-4">
+                      <div>
+                        <span className="text-2xl font-black text-[#003087] font-mono">
+                          ${item.product.price.toLocaleString("en-US", { minimumFractionDigits: 0 })}
+                        </span>
+                        <span className="text-xs text-slate-500 font-sans ml-1">USD</span>
                       </div>
-                    )}
-                    {item.product.features.ram_gb && (
-                      <div className="flex items-center gap-1.5 text-slate-300">
-                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
-                        <span>{item.product.features.ram_gb} GB RAM</span>
+                      <div className="flex items-center gap-1 text-xs text-amber-500">
+                        <Star className="w-3.5 h-3.5 fill-amber-400" />
+                        <span className="font-bold text-slate-800">{item.product.rating}</span>
+                        <span className="text-slate-400">({item.product.review_count})</span>
                       </div>
-                    )}
-                    {item.product.features.battery_hours && (
-                      <div className="flex items-center gap-1.5 text-slate-300">
-                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
-                        <span>{item.product.features.battery_hours}h Battery</span>
-                      </div>
-                    )}
-                  </div>
+                    </div>
 
-                  {/* Delivery & Seller snippet */}
-                  <div className="flex items-center justify-between text-[11px] text-slate-400 mb-4">
-                    <span className="flex items-center gap-1">
-                      <Truck className="w-3 h-3 text-cyan-400" />
-                      {item.product.delivery_days}-day delivery
-                    </span>
-                    <span className="flex items-center gap-1 truncate max-w-[120px]">
-                      <ShieldCheck className="w-3 h-3 text-cyan-400" />
-                      {item.product.seller}
-                    </span>
+                    {/* Feature Tags */}
+                    <div className="space-y-1.5 mb-5 text-xs">
+                      {item.product.features.gpu && (
+                        <div className="flex items-center gap-2 text-slate-700">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#0070E0]"></span>
+                          <span className="truncate">{item.product.features.gpu}</span>
+                        </div>
+                      )}
+                      {item.product.features.ram_gb && (
+                        <div className="flex items-center gap-2 text-slate-700">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#0070E0]"></span>
+                          <span>{item.product.features.ram_gb} GB RAM</span>
+                        </div>
+                      )}
+                      {item.product.features.battery_hours && (
+                        <div className="flex items-center gap-2 text-slate-700">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#0070E0]"></span>
+                          <span>{item.product.features.battery_hours}h Battery</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Delivery & Seller snippet */}
+                    <div className="flex items-center justify-between text-[11px] text-slate-500 mb-5">
+                      <span className="flex items-center gap-1">
+                        <Truck className="w-3.5 h-3.5 text-[#0070E0]" />
+                        {item.product.delivery_days}-day delivery
+                      </span>
+                      <span className="flex items-center gap-1 truncate max-w-[120px]">
+                        <ShieldCheck className="w-3.5 h-3.5 text-[#0070E0]" />
+                        {item.product.seller}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Action Buttons */}
                   <div className="flex gap-2">
                     <button
                       onClick={() => setSelectedProduct(item.product)}
-                      className="flex-1 py-2.5 rounded-xl border border-slate-700 hover:border-slate-500 bg-slate-900/60 hover:bg-slate-800 text-xs font-semibold text-slate-200 transition-colors"
+                      className="flex-1 py-2.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 transition-colors cursor-pointer"
                     >
                       View Details
                     </button>
                     <button
                       onClick={() => handleChooseProduct(item)}
-                      className={`flex-1 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                      className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                         isTopPick
-                          ? "bg-cyan-500 hover:bg-cyan-400 text-black shadow-md shadow-cyan-500/20"
-                          : "bg-slate-800 hover:bg-slate-700 text-white"
+                          ? "bg-[#0070E0] hover:bg-[#005bb5] text-white shadow-sm"
+                          : "bg-slate-900 hover:bg-black text-white"
                       }`}
                     >
                       {isTopPick ? "I like this one" : "Select"}
@@ -345,14 +358,14 @@ export default function ShoppingWorkspace() {
           </div>
 
           {/* "WHY THIS?" Grounded AI Explanation Box */}
-          <div className="p-6 rounded-2xl bg-[#0e1422] border border-cyan-500/30 shadow-xl">
+          <div className="p-6 rounded-3xl bg-[#EAF3FF]/80 border border-[#0070E0]/30 shadow-card">
             <div className="flex items-center gap-2 mb-3">
-              <Sparkles className="w-5 h-5 text-cyan-400" />
-              <h4 className="text-base font-bold text-white uppercase tracking-wider">
+              <Sparkles className="w-5 h-5 text-[#0070E0]" />
+              <h4 className="text-base font-bold text-[#003087] uppercase tracking-wider">
                 Why This? Grounded Recommendation Analysis
               </h4>
             </div>
-            <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 text-sm leading-relaxed text-slate-200 whitespace-pre-line font-sans">
+            <div className="p-4 rounded-2xl bg-white border border-[#0070E0]/20 text-xs sm:text-sm leading-relaxed text-slate-700 whitespace-pre-line font-sans">
               {results.explanation}
             </div>
           </div>

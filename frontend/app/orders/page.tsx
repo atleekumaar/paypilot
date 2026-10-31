@@ -13,7 +13,9 @@ import {
   RefreshCw,
   MessageSquare,
   ShieldCheck,
+  Search,
 } from "lucide-react";
+import { API_BASE_URL } from "@/lib/api";
 
 interface TimelineEvent {
   title: string;
@@ -62,13 +64,13 @@ export default function OrdersPage() {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:8000/api/orders?user_id=guest_user");
+      const res = await fetch(`${API_BASE_URL}/api/orders?user_id=guest_user`);
       if (res.ok) {
         const data = await res.json();
         setOrders(data);
       }
     } catch (err) {
-      console.error("Failed to fetch orders:", err);
+      console.warn("Failed to fetch orders from backend:", err);
     } finally {
       setLoading(false);
     }
@@ -88,8 +90,8 @@ export default function OrdersPage() {
 
     if (isDelayed) {
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-          <AlertTriangle className="w-3 h-3 text-amber-400" />
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+          <AlertTriangle className="w-3 h-3 text-amber-500" />
           Delayed In Transit
         </span>
       );
@@ -98,35 +100,35 @@ export default function OrdersPage() {
     switch (status) {
       case "DELIVERED":
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-            <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
             Delivered
           </span>
         );
       case "IN_TRANSIT":
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-            <Truck className="w-3 h-3 text-cyan-400 animate-pulse" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#EAF3FF] text-[#0070E0] border border-[#0070E0]/20">
+            <Truck className="w-3 h-3 text-[#0070E0]" />
             In Transit
           </span>
         );
       case "SHIPPED":
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
-            <Package className="w-3 h-3 text-blue-400" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+            <Package className="w-3 h-3 text-blue-600" />
             Shipped
           </span>
         );
       case "PROCESSING":
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20">
-            <Clock className="w-3 h-3 text-purple-400" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">
+            <Clock className="w-3 h-3 text-purple-600" />
             Processing
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-300">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
             {status}
           </span>
         );
@@ -134,30 +136,30 @@ export default function OrdersPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#07090e] text-slate-100">
+    <div className="flex flex-col min-h-screen bg-[#F5F8FC]/50 text-[#14213D]">
       <Navbar />
 
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-800/80 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200 mb-6">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-cyan-500/20 bg-cyan-500/5 text-cyan-400 text-xs font-medium mb-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#0070E0]/20 bg-[#EAF3FF] text-[#0070E0] text-xs font-bold mb-2">
               <Package className="w-3.5 h-3.5" />
-              Verified PayPal Purchases & Logistics
+              Verified PayPal Purchases &amp; Logistics
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              My Orders & Shipment Tracking
+            <h1 className="text-2xl sm:text-3xl font-black text-[#14213D] tracking-tight">
+              My Orders &amp; Shipment Tracking
             </h1>
-            <p className="text-xs sm:text-sm text-slate-400 mt-1">
-              Authoritative order state, real-time shipment scans, and grounded AI resolution.
+            <p className="text-xs sm:text-sm text-slate-600 mt-1">
+              Authoritative order records, real-time shipment scans, and grounded AI resolution.
             </p>
           </div>
 
           <button
             onClick={fetchOrders}
-            className="self-start sm:self-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-900/60 hover:bg-slate-800 text-xs font-medium text-slate-300 transition-colors"
+            className="self-start sm:self-auto flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 shadow-xs transition-colors cursor-pointer"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </button>
         </div>
@@ -168,10 +170,10 @@ export default function OrdersPage() {
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded-lg font-medium transition-all whitespace-nowrap ${
+              className={`px-3.5 py-1.5 rounded-full font-bold transition-all whitespace-nowrap cursor-pointer ${
                 filter === f
-                  ? "bg-cyan-500 text-black font-semibold shadow-md shadow-cyan-500/20"
-                  : "bg-slate-900 border border-slate-800 text-slate-400 hover:text-white"
+                  ? "bg-[#0070E0] text-white shadow-sm"
+                  : "bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50"
               }`}
             >
               {f.replace("_", " ")}
@@ -182,19 +184,21 @@ export default function OrdersPage() {
         {/* Orders List */}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 text-slate-500">
-            <RefreshCw className="w-8 h-8 animate-spin text-cyan-400 mb-3" />
-            <p className="text-sm">Loading order history...</p>
+            <RefreshCw className="w-8 h-8 animate-spin text-[#0070E0] mb-3" />
+            <p className="text-sm font-medium">Loading order history...</p>
           </div>
         ) : filteredOrders.length === 0 ? (
-          <div className="text-center py-16 px-4 rounded-2xl border border-slate-800/80 bg-slate-900/20">
-            <Package className="w-12 h-12 mx-auto text-slate-600 mb-3" />
-            <h3 className="text-base font-semibold text-white mb-1">No Orders Found</h3>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto mb-4">
-              You do not have any orders matching the selected filter.
+          <div className="text-center py-16 px-4 rounded-3xl border border-slate-200 bg-white shadow-subtle">
+            <div className="w-14 h-14 rounded-2xl bg-[#EAF3FF] text-[#0070E0] flex items-center justify-center mx-auto mb-3">
+              <Package className="w-7 h-7" />
+            </div>
+            <h3 className="text-base font-bold text-[#14213D] mb-1">No Orders Found</h3>
+            <p className="text-xs text-slate-500 max-w-sm mx-auto mb-5 leading-relaxed">
+              You do not have any orders matching the selected filter. Try discovering products with the PayPilot Assistant!
             </p>
             <Link
               href="/"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-cyan-500 text-black text-xs font-semibold hover:bg-cyan-400 transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#0070E0] text-white text-xs font-bold hover:bg-[#005bb5] transition-colors shadow-sm"
             >
               Start Shopping with PayPilot
             </Link>
@@ -208,48 +212,48 @@ export default function OrdersPage() {
               return (
                 <div
                   key={order.id}
-                  className="rounded-2xl border border-slate-800/80 bg-slate-900/40 hover:border-slate-700/80 transition-all p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 group"
+                  className="rounded-3xl border border-slate-200 bg-white shadow-subtle hover:shadow-card transition-all p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 group"
                 >
-                  <div className="flex items-start gap-4 flex-1">
-                    <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0 text-cyan-400">
+                  <div className="flex items-start gap-4 flex-1 min-w-0">
+                    <div className="w-12 h-12 rounded-2xl bg-[#EAF3FF] border border-[#0070E0]/20 flex items-center justify-center shrink-0 text-[#0070E0]">
                       <Package className="w-6 h-6" />
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <span className="text-xs font-mono font-medium text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded">
+                      <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                        <span className="text-xs font-mono font-bold text-slate-600 bg-[#F5F8FC] border border-slate-200 px-2.5 py-0.5 rounded-md">
                           {order.id}
                         </span>
                         {getStatusBadge(order.status, shipment?.last_update)}
                         {order.paypal_order_id && (
-                          <span className="text-[10px] font-mono text-cyan-400/80 bg-cyan-950/40 border border-cyan-900/40 px-1.5 py-0.5 rounded flex items-center gap-1">
-                            <ShieldCheck className="w-2.5 h-2.5 text-cyan-400" />
+                          <span className="text-[11px] font-mono font-semibold text-[#0070E0] bg-[#EAF3FF] border border-[#0070E0]/30 px-2 py-0.5 rounded-md flex items-center gap-1">
+                            <ShieldCheck className="w-3 h-3 text-[#0070E0]" />
                             PayPal Verified
                           </span>
                         )}
                       </div>
 
-                      <h3 className="text-base font-bold text-white group-hover:text-cyan-400 transition-colors truncate">
+                      <h3 className="text-base sm:text-lg font-bold text-[#14213D] group-hover:text-[#0070E0] transition-colors truncate">
                         {order.product_name}
                       </h3>
 
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        Brand: <span className="text-slate-300 font-medium">{order.brand || "Standard"}</span> &bull; Total:{" "}
-                        <span className="text-white font-semibold">
+                      <p className="text-xs text-slate-500 mt-1">
+                        Brand: <span className="text-slate-800 font-semibold">{order.brand || "Standard"}</span> &bull; Total:{" "}
+                        <span className="text-[#003087] font-black font-mono">
                           ${order.amount.toFixed(2)} {order.currency}
                         </span>
                       </p>
 
                       {/* Shipment Snippet */}
                       {shipment && (
-                        <div className="mt-3 text-xs bg-slate-950/60 border border-slate-800/60 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                          <div className="flex items-center gap-2 text-slate-300 truncate">
-                            <Truck className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                        <div className="mt-3.5 text-xs bg-[#F5F8FC] border border-slate-200/80 rounded-2xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 text-slate-700 truncate">
+                            <Truck className="w-4 h-4 text-[#0070E0] shrink-0" />
                             <span className="truncate">{shipment.last_update}</span>
                           </div>
-                          <div className="text-[11px] text-slate-400 shrink-0">
+                          <div className="text-[11px] text-slate-500 shrink-0 font-medium">
                             Est. Arrival:{" "}
-                            <span className={`font-semibold ${isDelayed ? "text-amber-400" : "text-white"}`}>
+                            <span className={`font-bold ${isDelayed ? "text-amber-600" : "text-slate-900"}`}>
                               {shipment.estimated_delivery}
                             </span>
                           </div>
@@ -259,21 +263,21 @@ export default function OrdersPage() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-2 shrink-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-800/60">
+                  <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-2.5 shrink-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-100">
                     <Link
                       href={`/orders/${order.id}`}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-xs font-semibold transition-all group-hover:bg-cyan-500 group-hover:text-black"
+                      className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#0070E0] hover:bg-[#005bb5] text-white text-xs font-bold transition-all shadow-sm"
                     >
-                      Track Order
+                      <span>Track Order</span>
                       <ChevronRight className="w-3.5 h-3.5" />
                     </Link>
 
                     <Link
                       href={`/?prompt=${encodeURIComponent(`Where is my order ${order.id}?`)}`}
-                      className="inline-flex items-center gap-1 text-[11px] text-slate-400 hover:text-cyan-400 transition-colors"
+                      className="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-[#0070E0] font-medium transition-colors"
                     >
                       <MessageSquare className="w-3 h-3" />
-                      Ask PayPilot
+                      <span>Ask PayPilot</span>
                     </Link>
                   </div>
                 </div>

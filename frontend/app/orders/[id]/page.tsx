@@ -18,7 +18,9 @@ import {
   Sparkles,
   FileText,
   MailCheck,
+  Loader2,
 } from "lucide-react";
+import { API_BASE_URL } from "@/lib/api";
 
 interface TimelineEvent {
   title: string;
@@ -86,7 +88,7 @@ export default function OrderDetailPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`http://localhost:8000/api/orders/${orderId}?user_id=guest_user`);
+      const res = await fetch(`${API_BASE_URL}/api/orders/${orderId}?user_id=guest_user`);
       if (!res.ok) {
         throw new Error(`Order not found or access denied (${res.status})`);
       }
@@ -121,7 +123,7 @@ export default function OrderDetailPage() {
     setChatLoading(true);
 
     try {
-      const res = await fetch("http://localhost:8000/api/agent/chat", {
+      const res = await fetch(`${API_BASE_URL}/api/agent/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -145,7 +147,15 @@ export default function OrderDetailPage() {
         }
       }
     } catch (err) {
-      console.error("Chat error:", err);
+      console.warn("Chat API notice:", err);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: `Checking telemetry for Order #${orderId}... Note: Backend is currently in offline mode.`,
+          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        },
+      ]);
     } finally {
       setChatLoading(false);
     }
@@ -154,7 +164,7 @@ export default function OrderDetailPage() {
   const handleApproveDraft = async () => {
     setChatLoading(true);
     try {
-      const res = await fetch(`http://localhost:8000/api/agent/${sessionId}/approve`, {
+      const res = await fetch(`${API_BASE_URL}/api/agent/${sessionId}/approve`, {
         method: "POST",
       });
       if (res.ok) {
@@ -177,7 +187,7 @@ export default function OrderDetailPage() {
   const handleDenyDraft = async () => {
     setChatLoading(true);
     try {
-      const res = await fetch(`http://localhost:8000/api/agent/${sessionId}/deny`, {
+      const res = await fetch(`${API_BASE_URL}/api/agent/${sessionId}/deny`, {
         method: "POST",
       });
       if (res.ok) {
@@ -201,31 +211,31 @@ export default function OrderDetailPage() {
   const isDelayed = shipment?.last_update.toLowerCase().includes("delay");
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#07090e] text-slate-100">
+    <div className="flex flex-col min-h-screen bg-[#F5F8FC]/50 text-[#14213D] text-left">
       <Navbar />
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6">
         {/* Back Link */}
         <Link
           href="/orders"
-          className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-cyan-400 transition-colors mb-4"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-[#0070E0] transition-colors mb-4"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          Back to all orders
+          <span>Back to all orders</span>
         </Link>
 
         {loading ? (
           <div className="py-20 text-center text-slate-500">
-            <Clock className="w-8 h-8 animate-spin mx-auto text-cyan-400 mb-2" />
-            <p className="text-sm">Retrieving order and shipment data...</p>
+            <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#0070E0] mb-2" />
+            <p className="text-sm font-medium">Retrieving order and shipment data...</p>
           </div>
         ) : error || !order ? (
-          <div className="p-8 rounded-2xl border border-red-500/20 bg-red-950/20 text-center">
-            <AlertTriangle className="w-10 h-10 text-red-400 mx-auto mb-2" />
-            <h3 className="text-base font-bold text-white mb-1">Order Access Error</h3>
-            <p className="text-xs text-slate-300 max-w-md mx-auto mb-4">{error}</p>
-            <Link href="/orders" className="text-xs font-semibold text-cyan-400 underline">
-              Return to Orders
+          <div className="p-8 rounded-3xl border border-red-200 bg-red-50 text-center">
+            <AlertTriangle className="w-10 h-10 text-red-500 mx-auto mb-2" />
+            <h3 className="text-base font-bold text-slate-900 mb-1">Order Access Notice</h3>
+            <p className="text-xs text-slate-600 max-w-md mx-auto mb-4">{error}</p>
+            <Link href="/orders" className="text-xs font-bold text-[#0070E0] hover:underline">
+              Return to Orders List
             </Link>
           </div>
         ) : (
@@ -233,45 +243,45 @@ export default function OrderDetailPage() {
             {/* Left Column: Order & Shipment Details (7 cols) */}
             <div className="lg:col-span-7 flex flex-col gap-6">
               {/* Order Header Card */}
-              <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-6">
-                <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-800/80">
+              <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-subtle">
+                <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100">
                   <div>
-                    <span className="text-xs font-mono font-semibold text-cyan-400 bg-cyan-950/50 border border-cyan-800/50 px-2 py-0.5 rounded">
+                    <span className="text-xs font-mono font-bold text-[#0070E0] bg-[#EAF3FF] border border-[#0070E0]/20 px-2.5 py-0.5 rounded-md">
                       {order.id}
                     </span>
-                    <h1 className="text-xl sm:text-2xl font-bold text-white mt-1.5">
+                    <h1 className="text-xl sm:text-2xl font-black text-[#14213D] mt-1.5">
                       {order.product_name}
                     </h1>
                   </div>
 
                   <div className="text-right">
-                    <div className="text-lg font-bold text-white">
+                    <div className="text-xl font-black text-[#003087] font-mono">
                       ${order.amount.toFixed(2)} {order.currency}
                     </div>
-                    <div className="text-[11px] text-slate-400">Qty: {order.quantity}</div>
+                    <div className="text-xs text-slate-500 font-medium">Qty: {order.quantity}</div>
                   </div>
                 </div>
 
                 {/* Metadata Grid */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4 text-xs">
-                  <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/60">
-                    <span className="text-slate-400 text-[11px]">Payment</span>
-                    <div className="font-semibold text-emerald-400 flex items-center gap-1 mt-0.5">
-                      <ShieldCheck className="w-3.5 h-3.5" />
+                  <div className="p-3 rounded-2xl bg-[#F5F8FC] border border-slate-200/80">
+                    <span className="text-slate-500 text-[11px] font-medium">Payment Status</span>
+                    <div className="font-bold text-emerald-700 flex items-center gap-1 mt-0.5">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                       Completed
                     </div>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/60">
-                    <span className="text-slate-400 text-[11px]">PayPal Order</span>
-                    <div className="font-mono text-slate-200 truncate mt-0.5" title={order.paypal_order_id || "N/A"}>
+                  <div className="p-3 rounded-2xl bg-[#F5F8FC] border border-slate-200/80">
+                    <span className="text-slate-500 text-[11px] font-medium">PayPal Order</span>
+                    <div className="font-mono text-slate-800 font-semibold truncate mt-0.5" title={order.paypal_order_id || "N/A"}>
                       {order.paypal_order_id || "MOCK-SANDBOX"}
                     </div>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/60">
-                    <span className="text-slate-400 text-[11px]">Carrier</span>
-                    <div className="font-medium text-slate-200 mt-0.5">
+                  <div className="p-3 rounded-2xl bg-[#F5F8FC] border border-slate-200/80">
+                    <span className="text-slate-500 text-[11px] font-medium">Carrier</span>
+                    <div className="font-bold text-slate-800 mt-0.5">
                       {shipment?.carrier || "FastShip Logistics"}
                     </div>
                   </div>
@@ -279,13 +289,13 @@ export default function OrderDetailPage() {
 
                 {/* Delay Notice Banner if applicable */}
                 {isDelayed && (
-                  <div className="mt-4 p-3.5 rounded-xl border border-amber-500/30 bg-amber-500/10 flex items-start gap-3">
-                    <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                  <div className="mt-4 p-3.5 rounded-2xl border border-amber-200 bg-amber-50 flex items-start gap-3">
+                    <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                     <div className="text-xs">
-                      <span className="font-bold text-amber-400">Delivery Delay Reported: </span>
-                      <span className="text-slate-200">{shipment?.last_update}</span>
-                      <div className="mt-1 text-[11px] text-amber-400/90">
-                        Ask the agent below to draft a support inquiry to the merchant.
+                      <span className="font-bold text-amber-800">Delivery Delay Reported: </span>
+                      <span className="text-slate-700">{shipment?.last_update}</span>
+                      <div className="mt-1 text-[11px] text-amber-700 font-medium">
+                        Ask the PayPilot Assistant on the right to draft a merchant inquiry.
                       </div>
                     </div>
                   </div>
@@ -294,23 +304,23 @@ export default function OrderDetailPage() {
 
               {/* Shipment Milestone Progress & Timeline */}
               {shipment && (
-                <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                      <Truck className="w-4 h-4 text-cyan-400" />
-                      Shipment Journey & Milestones
+                <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-subtle">
+                  <div className="flex items-center justify-between mb-5">
+                    <h2 className="text-xs font-bold text-[#14213D] uppercase tracking-wider flex items-center gap-2">
+                      <Truck className="w-4 h-4 text-[#0070E0]" />
+                      Shipment Journey &amp; Milestones
                     </h2>
-                    <span className="text-xs font-mono text-slate-400">
+                    <span className="text-xs font-mono font-medium text-slate-500">
                       Tracking: {shipment.tracking_number}
                     </span>
                   </div>
 
                   {/* Visual Stepper */}
-                  <div className="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-800">
+                  <div className="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
                     {(shipment.timeline.length > 0
                       ? shipment.timeline
                       : [
-                          { title: "Payment Completed", description: "PayPal transaction confirmed", timestamp: "Completed", completed: true, current: false },
+                          { title: "Payment Completed", description: "PayPal Sandbox transaction confirmed", timestamp: "Completed", completed: true, current: false },
                           { title: "In Transit", description: shipment.last_update, timestamp: "Current", completed: true, current: true },
                           { title: "Estimated Delivery", description: `Expected arrival: ${shipment.estimated_delivery}`, timestamp: shipment.estimated_delivery, completed: false, current: false },
                         ]
@@ -319,29 +329,29 @@ export default function OrderDetailPage() {
                         <div
                           className={`absolute -left-6 top-1 w-3.5 h-3.5 rounded-full border-2 ${
                             milestone.current
-                              ? "bg-cyan-400 border-cyan-300 ring-4 ring-cyan-500/20"
+                              ? "bg-[#0070E0] border-white ring-4 ring-[#0070E0]/20"
                               : milestone.completed
-                              ? "bg-emerald-500 border-emerald-400"
-                              : "bg-slate-900 border-slate-700"
+                              ? "bg-emerald-500 border-white ring-2 ring-emerald-200"
+                              : "bg-white border-slate-300"
                           }`}
                         />
                         <div className="flex items-baseline justify-between w-full">
                           <span
-                            className={`text-xs font-semibold ${
+                            className={`text-xs font-bold ${
                               milestone.current
-                                ? "text-cyan-400"
+                                ? "text-[#0070E0]"
                                 : milestone.completed
-                                ? "text-slate-200"
-                                : "text-slate-500"
+                                ? "text-slate-800"
+                                : "text-slate-400"
                             }`}
                           >
                             {milestone.title}
                           </span>
-                          <span className="text-[11px] font-mono text-slate-500">
+                          <span className="text-[11px] font-mono text-slate-400">
                             {milestone.timestamp}
                           </span>
                         </div>
-                        <p className="text-xs text-slate-400">{milestone.description}</p>
+                        <p className="text-xs text-slate-600 leading-relaxed">{milestone.description}</p>
                       </div>
                     ))}
                   </div>
@@ -350,34 +360,34 @@ export default function OrderDetailPage() {
             </div>
 
             {/* Right Column: Embedded Post-Purchase Agent Chat (5 cols) */}
-            <div className="lg:col-span-5 flex flex-col rounded-2xl border border-slate-800/80 bg-slate-900/60 overflow-hidden min-h-[550px] max-h-[700px]">
+            <div className="lg:col-span-5 flex flex-col rounded-3xl border border-slate-200 bg-white shadow-card overflow-hidden min-h-[550px] max-h-[700px]">
               {/* Chat Header */}
-              <div className="p-4 border-b border-slate-800/80 bg-slate-950/60 flex items-center justify-between">
+              <div className="p-4 border-b border-slate-100 bg-[#F5F8FC] flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
-                    <Bot className="w-4 h-4" />
+                  <div className="w-8 h-8 rounded-full bg-[#0070E0] flex items-center justify-center text-white font-extrabold text-xs">
+                    <span className="italic">P</span>
                   </div>
                   <div>
-                    <h3 className="text-xs font-bold text-white tracking-wide">
+                    <h3 className="text-xs font-bold text-[#14213D] tracking-tight">
                       Ask PayPilot About This Order
                     </h3>
-                    <p className="text-[10px] text-slate-400">Grounded in authoritative order telemetry</p>
+                    <p className="text-[10px] text-slate-500">Grounded in authoritative order telemetry</p>
                   </div>
                 </div>
-                <span className="flex items-center gap-1 text-[10px] text-emerald-400 font-medium">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span className="flex items-center gap-1.5 text-[11px] text-emerald-700 font-semibold bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                   Online
                 </span>
               </div>
 
               {/* Chat Message Stream */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3 text-xs">
+              <div className="flex-1 overflow-y-auto p-4 space-y-3 text-xs bg-white">
                 {messages.length === 0 ? (
-                  <div className="text-center py-8 px-4 text-slate-400">
-                    <Sparkles className="w-8 h-8 mx-auto text-cyan-400 mb-2" />
-                    <p className="font-semibold text-white mb-1">Need updates on this order?</p>
-                    <p className="text-[11px] text-slate-400 max-w-xs mx-auto mb-4">
-                      PayPilot can verify payment status, track shipment milestones, or prepare merchant support requests.
+                  <div className="text-center py-8 px-4 text-slate-500">
+                    <Sparkles className="w-7 h-7 mx-auto text-[#0070E0] mb-2" />
+                    <p className="font-bold text-[#14213D] mb-1">Need updates on this order?</p>
+                    <p className="text-[11px] text-slate-500 max-w-xs mx-auto mb-4 leading-relaxed">
+                      PayPilot can verify payment status, check shipment milestones, or prepare merchant support requests.
                     </p>
 
                     {/* Quick Action Chips */}
@@ -391,7 +401,7 @@ export default function OrderDetailPage() {
                         <button
                           key={prompt}
                           onClick={() => handleSendMessage(prompt)}
-                          className="px-3 py-2 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-cyan-500/30 text-slate-300 hover:text-cyan-400 text-xs transition-colors text-left"
+                          className="px-3 py-2 rounded-xl bg-[#F5F8FC] border border-slate-200 hover:border-[#0070E0]/30 hover:bg-[#EAF3FF] text-slate-700 hover:text-[#0070E0] text-xs font-medium transition-colors text-left cursor-pointer"
                         >
                           &ldquo;{prompt}&rdquo;
                         </button>
@@ -405,21 +415,21 @@ export default function OrderDetailPage() {
                       className={`flex gap-2.5 ${m.role === "user" ? "justify-end" : "justify-start"}`}
                     >
                       {m.role === "assistant" && (
-                        <div className="w-6 h-6 rounded-md bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shrink-0 mt-0.5">
-                          <Bot className="w-3.5 h-3.5" />
+                        <div className="w-6 h-6 rounded-full bg-[#0070E0] flex items-center justify-center text-white text-[10px] font-extrabold shrink-0 mt-0.5">
+                          <span className="italic">P</span>
                         </div>
                       )}
                       <div
-                        className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 whitespace-pre-line leading-relaxed ${
+                        className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 whitespace-pre-line leading-relaxed text-xs sm:text-sm ${
                           m.role === "user"
-                            ? "bg-cyan-500 text-black font-medium"
-                            : "bg-slate-950/90 border border-slate-800/80 text-slate-200"
+                            ? "bg-[#0070E0] text-white font-medium rounded-tr-none shadow-xs"
+                            : "bg-[#F5F8FC] border border-slate-200/80 text-slate-800 rounded-tl-none"
                         }`}
                       >
                         {m.content}
                       </div>
                       {m.role === "user" && (
-                        <div className="w-6 h-6 rounded-md bg-slate-800 flex items-center justify-center text-slate-300 shrink-0 mt-0.5">
+                        <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 shrink-0 mt-0.5">
                           <User className="w-3.5 h-3.5" />
                         </div>
                       )}
@@ -429,21 +439,21 @@ export default function OrderDetailPage() {
 
                 {/* Pending Support Draft Card with Approval Action */}
                 {pendingDraft && (
-                  <div className="p-3.5 rounded-2xl border border-cyan-500/40 bg-slate-950 text-xs space-y-2.5 shadow-lg shadow-cyan-500/5">
-                    <div className="flex items-center gap-1.5 text-cyan-400 font-bold">
+                  <div className="p-3.5 rounded-2xl border-2 border-[#0070E0]/40 bg-white text-xs space-y-2.5 shadow-card">
+                    <div className="flex items-center gap-1.5 text-[#0070E0] font-bold">
                       <FileText className="w-4 h-4" />
                       Pending Support Inquiry Draft
                     </div>
-                    <div className="bg-slate-900/90 p-2.5 rounded-xl border border-slate-800 space-y-1">
+                    <div className="bg-[#F5F8FC] p-3 rounded-xl border border-slate-200 space-y-1">
                       <div>
-                        <span className="text-slate-400 text-[10px]">Subject:</span>{" "}
-                        <span className="text-white font-medium">{pendingDraft.subject}</span>
+                        <span className="text-slate-500 text-[10px] font-bold">Subject:</span>{" "}
+                        <span className="text-slate-900 font-semibold">{pendingDraft.subject}</span>
                       </div>
                       <div>
-                        <span className="text-slate-400 text-[10px]">To:</span>{" "}
-                        <span className="text-slate-300">{pendingDraft.recipient}</span>
+                        <span className="text-slate-500 text-[10px] font-bold">To:</span>{" "}
+                        <span className="text-slate-700">{pendingDraft.recipient}</span>
                       </div>
-                      <div className="text-[11px] text-slate-300 whitespace-pre-line border-t border-slate-800/80 pt-1.5 mt-1 font-mono">
+                      <div className="text-[11px] text-slate-700 whitespace-pre-line border-t border-slate-200 pt-2 mt-1 font-mono">
                         {pendingDraft.message}
                       </div>
                     </div>
@@ -451,25 +461,25 @@ export default function OrderDetailPage() {
                       <button
                         onClick={handleDenyDraft}
                         disabled={chatLoading}
-                        className="px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-900 text-slate-400 hover:text-white text-xs font-semibold"
+                        className="px-3.5 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50 text-xs font-semibold cursor-pointer"
                       >
                         Cancel
                       </button>
                       <button
                         onClick={handleApproveDraft}
                         disabled={chatLoading}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-bold transition-all shadow-md shadow-cyan-500/20"
+                        className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#0070E0] hover:bg-[#005bb5] text-white text-xs font-bold transition-all shadow-sm cursor-pointer"
                       >
                         <MailCheck className="w-3.5 h-3.5" />
-                        Approve & Send
+                        Approve &amp; Send
                       </button>
                     </div>
                   </div>
                 )}
 
                 {chatLoading && (
-                  <div className="flex items-center gap-2 text-slate-400 text-xs pl-2">
-                    <Bot className="w-3.5 h-3.5 text-cyan-400 animate-spin" />
+                  <div className="flex items-center gap-2 text-slate-500 text-xs pl-2">
+                    <Loader2 className="w-3.5 h-3.5 text-[#0070E0] animate-spin" />
                     <span>PayPilot is checking order telemetry...</span>
                   </div>
                 )}
@@ -477,7 +487,7 @@ export default function OrderDetailPage() {
               </div>
 
               {/* Chat Input */}
-              <div className="p-3 border-t border-slate-800/80 bg-slate-950/60">
+              <div className="p-3 border-t border-slate-100 bg-white">
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
@@ -490,12 +500,12 @@ export default function OrderDetailPage() {
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     placeholder="Ask about this order (e.g. 'Why is it delayed?')..."
-                    className="flex-1 bg-slate-900/90 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/60"
+                    className="flex-1 bg-[#F5F8FC] border border-slate-200 rounded-2xl px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0070E0] focus:bg-white focus:ring-2 focus:ring-[#0070E0]/10 transition-all"
                   />
                   <button
                     type="submit"
                     disabled={!inputMessage.trim() || chatLoading}
-                    className="p-2 rounded-xl bg-cyan-500 text-black hover:bg-cyan-400 disabled:opacity-40 transition-colors"
+                    className="p-2.5 rounded-2xl bg-[#0070E0] text-white hover:bg-[#005bb5] disabled:opacity-40 transition-colors cursor-pointer shadow-sm"
                   >
                     <Send className="w-4 h-4" />
                   </button>

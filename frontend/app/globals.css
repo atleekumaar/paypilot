@@ -3,13 +3,44 @@
 @tailwind utilities;
 
 :root {
-  --background: #0a0d14;
-  --foreground: #f8fafc;
+  --background: #ffffff;
+  --foreground: #14213d;
+  --paypilot-blue: #003087;
+  --paypilot-bright: #0070e0;
+  --paypilot-accent: #eaf3ff;
+  --paypilot-surface: #f5f8fc;
+  --paypilot-border: #e2e8f0;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar for chat and activity panels */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
