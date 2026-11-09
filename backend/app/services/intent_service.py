@@ -180,7 +180,54 @@ class IntentService:
         )
 
     def _llm_extract(self, query: str) -> Optional[ProductSearchIntent]:
-        """Optionally invoke LLM for intent extraction if credentials exist."""
-        # Built to integrate with standard LLM provider via structured JSON
-        # Defaults to safe deterministic extraction if LLM is unavailable
+        """Optionally invoke Groq / OpenAI-compatible LLM for enhanced intent extraction."""
+        import httpx
+        system_prompt = (
+            "You are an AI commerce intent extractor for PayPilot. "
+            "Extract structured search intent as JSON with keys: "
+            "category (e.g. laptop, phone, headphones, keyboard, monitor, smartwatch, accessory), "
+            "max_budget (number or null), min_budget (number or null), "
+            "use_case (string or null), requirements (list of strings), preferences (list of strings)."
+        )
+        try:
+            with httpx.Client(timeout=6.0) as client:
+                resp = client.post(
+                    "https://api.groq.com/openai/v1/chat/completions",
+                    headers={"Authorization": f"Bearer {self._api_key}"},
+                    json={
+                        "model": "openai/gpt-oss-20b",
+                        "messages": [
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": query},
+                        ],
+                        "response_format": {"type": "json_object"},
+                        "temperature": 0.1,
+                    },
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    content = data["choices"][0]["message"]["content"]
+                    parsed = json.loads(content)
+                    max_b = parsed.get("max_budget")
+                    min_b = parsed.get("min_budget")
+                    budget_obj = None
+                    if max_b is not None or min_b is not None:
+                        budget_obj = BudgetConstraint(max=float(max_b) if max_b else None, min=float(min_b) if min_b else None, currency="USD")
+                    cat = parsed.get("category")
+                    return ProductSearchIntent(
+                        intent="product_search",
+                        category=cat.lower() if cat else None,
+                        budget=budget_obj,
+                        use_case=parsed.get("use_case"),
+                        requirements=parsed.get("requirements", []),
+                        preferences=parsed.get("preferences", []),
+                        hard_constraints=HardConstraints(
+                            max_price=float(max_b) if max_b else None,
+                            min_price=float(min_b) if min_b else None,
+                            category=cat.lower() if cat else None,
+                            in_stock=True,
+                        ),
+                    )
+        except Exception as e:
+            logger.debug(f"LLM extraction skipped: {e}")
         return None

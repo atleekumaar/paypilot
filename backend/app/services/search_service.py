@@ -21,6 +21,8 @@ class ProductSearchService:
         required_features: Optional[List[str]] = None,
         keywords: Optional[List[str]] = None,
         feature_thresholds: Optional[Dict[str, Any]] = None,
+        include_channel3: bool = False,
+        use_elastic: bool = False,
     ) -> List[Product]:
         """Perform deterministic search enforcing hard constraints.
 
@@ -30,14 +32,35 @@ class ProductSearchService:
         3. Hard category constraints are strictly enforced.
         """
         # Step 1: Base search via repository
-        candidates = self._repository.search(
+        candidates = list(self._repository.search(
             category=category,
             min_price=min_price,
             max_price=max_price,
             min_rating=min_rating,
             in_stock_only=in_stock_only,
             keywords=keywords,
-        )
+        ))
+
+        # Optional Step 1b: Channel3 cross-retailer product expansion
+        if include_channel3:
+            try:
+                from app.services.channel3.service import get_channel3_service
+                c3_svc = get_channel3_service()
+                search_term = " ".join(keywords) if keywords else (category or "tech")
+                c3_products = c3_svc.search(
+                    query=search_term,
+                    category=category,
+                    min_price=min_price,
+                    max_price=max_price,
+                    limit=10,
+                )
+                existing_ids = {p.id for p in candidates}
+                for c3_p in c3_products:
+                    if c3_p.id not in existing_ids:
+                        candidates.append(c3_p)
+                        existing_ids.add(c3_p.id)
+            except Exception:
+                pass
 
         # Step 2: Strict invariant filter (double check to guarantee safety against repository bugs)
         filtered: List[Product] = []

@@ -47,6 +47,10 @@ class ProductRepository(ABC):
         """Update inventory stock availability."""
         pass
 
+    def list_all(self) -> List[Product]:
+        """Fetch all products without pagination."""
+        return self.list_products(limit=10000)
+
 
 class DemoProductRepository(ProductRepository):
     """In-memory demo implementation loaded from deterministic JSON catalogue."""

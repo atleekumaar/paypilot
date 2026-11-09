@@ -323,9 +323,24 @@ class CheckoutService:
                     detail=f"PayPal order is not approved for capture. Current provider status: '{provider_status}'. Buyer approval required.",
                 )
             else:
-                # Update status to CAPTURE_PENDING to track transit
-                if existing_payment:
+                # Durably pre-persist CAPTURE_PENDING in database to coordinate distributed capture
+                if not existing_payment:
+                    existing_payment = Payment(
+                        id=f"PAY-{uuid.uuid4().hex[:8].upper()}",
+                        user_id=plan.user_id,
+                        purchase_plan_id=plan.id,
+                        provider=PaymentProvider.PAYPAL,
+                        provider_order_id=paypal_order_id,
+                        amount=plan.total_amount,
+                        currency=plan.currency,
+                        status=PaymentStatus.CAPTURE_PENDING,
+                        created_at=datetime.now(timezone.utc),
+                        updated_at=datetime.now(timezone.utc),
+                    )
+                    self._payment_repo.create(existing_payment)
+                else:
                     existing_payment.status = PaymentStatus.CAPTURE_PENDING
+                    existing_payment.updated_at = datetime.now(timezone.utc)
                     self._payment_repo.update(existing_payment)
 
                 # Step 2: Execute PayPal Capture via API with ambiguous timeout safety
@@ -339,9 +354,9 @@ class CheckoutService:
                         if recovery_details.get("status") == "COMPLETED":
                             capture_response = recovery_details
                         else:
-                            if existing_payment:
-                                existing_payment.status = PaymentStatus.RECONCILIATION_REQUIRED
-                                self._payment_repo.update(existing_payment)
+                            existing_payment.status = PaymentStatus.RECONCILIATION_REQUIRED
+                            existing_payment.updated_at = datetime.now(timezone.utc)
+                            self._payment_repo.update(existing_payment)
                             raise HTTPException(
                                 status_code=status.HTTP_504_GATEWAY_TIMEOUT,
                                 detail="Payment provider timeout during capture. Transaction marked for reconciliation.",
@@ -349,9 +364,9 @@ class CheckoutService:
                     except HTTPException:
                         raise
                     except Exception:
-                        if existing_payment:
-                            existing_payment.status = PaymentStatus.RECONCILIATION_REQUIRED
-                            self._payment_repo.update(existing_payment)
+                        existing_payment.status = PaymentStatus.RECONCILIATION_REQUIRED
+                        existing_payment.updated_at = datetime.now(timezone.utc)
+                        self._payment_repo.update(existing_payment)
                         raise HTTPException(
                             status_code=status.HTTP_504_GATEWAY_TIMEOUT,
                             detail="Payment provider timeout during capture. Transaction marked for reconciliation.",
@@ -474,6 +489,21 @@ class CheckoutService:
             except Exception as e:
                 logger.warning(f"Could not automatically create order on capture: {e}")
 
+            # Dispatch post-capture automation to Zapier (accounting, Google Sheets, email)
+            try:
+                from app.services.zapier.service import get_zapier_service
+                zapier_svc = get_zapier_service()
+                zapier_svc.dispatch_order_completed(
+                    order_id=plan.id,
+                    user_id=plan.user_id,
+                    amount=plan.total_amount,
+                    currency=plan.currency,
+                    product_name=plan.product_name,
+                    paypal_capture_id=payment.capture_id or payment.id,
+                )
+            except Exception as e:
+                logger.warning(f"Zapier post-capture dispatch failed: {e}")
+
             logger.info(
                 f"Payment capture completed successfully. Plan: {plan.id}, Amount: {plan.total_amount} {plan.currency}"
             )
@@ -524,7 +554,12 @@ class CheckoutService:
     def refund_payment(
         self, payment_id: str, amount: Optional[float] = None, user_id: Optional[str] = None
     ) -> Payment:
-        """Process an official PayPal refund with ownership, cumulative balance, and provider idempotency."""
+        """Process an official PayPal refund with ownership, cumulative balance, and persistent idempotency ledger."""
+        from decimal import Decimal
+        from app.db.session import get_db_context
+        from app.models.refund_attempt import RefundAttemptModel
+        from app.models.outbox import OutboxEventModel
+
         payment = self.get_payment(payment_id, user_id=user_id)
         if payment.status not in (PaymentStatus.COMPLETED, PaymentStatus.PARTIALLY_REFUNDED):
             raise HTTPException(
@@ -551,37 +586,82 @@ class CheckoutService:
                 detail="Cannot refund payment without verified provider capture ID.",
             )
 
-        # Validate refund amounts and cumulative balance
-        already_refunded = float(payment.total_refunded or 0.0)
-        refundable_balance = round(float(payment.amount) - already_refunded, 2)
-        refund_amt = amount if amount is not None else refundable_balance
+        total_amount = Decimal(str(payment.amount))
 
-        if refund_amt <= 0:
+        # Query past refund attempts for this payment to enforce cumulative balance & idempotency
+        with get_db_context() as db:
+            past_attempts = (
+                db.query(RefundAttemptModel)
+                .filter(RefundAttemptModel.payment_id == payment.id)
+                .all()
+            )
+            completed_refunded = sum(
+                Decimal(str(att.requested_amount))
+                for att in past_attempts
+                if att.status == "COMPLETED"
+            )
+
+        # Fallback to payment.total_refunded if no ledger records yet (for backwards compatibility)
+        if completed_refunded == Decimal("0.00") and payment.total_refunded:
+            completed_refunded = Decimal(str(payment.total_refunded))
+
+        refundable_balance = total_amount - completed_refunded
+        if refundable_balance <= Decimal("0.00"):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid refund amount: ${refund_amt:.2f}. Must be strictly greater than 0.",
-            )
-        if round(refund_amt, 2) > refundable_balance:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Refund amount ${refund_amt:.2f} exceeds remaining refundable balance ${refundable_balance:.2f}.",
+                detail="Payment is already fully refunded.",
             )
 
-        # Persist pending refund attempt prior to provider confirmation
+        req_decimal = Decimal(str(amount)) if amount is not None else refundable_balance
+        req_decimal = req_decimal.quantize(Decimal("0.01"))
+
+        if req_decimal <= Decimal("0.00"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid refund amount: ${req_decimal}. Must be strictly greater than 0.",
+            )
+        if req_decimal > refundable_balance:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Refund amount ${req_decimal} exceeds remaining refundable balance ${refundable_balance}.",
+            )
+
+        # Generate persistent attempt record with stable idempotency key
+        attempt_id = f"ref_{uuid.uuid4().hex[:12]}"
+        idempotency_key = f"ref-idem-{payment.id}-{uuid.uuid4().hex[:12]}"
+
+        with get_db_context() as db:
+            attempt_rec = RefundAttemptModel(
+                id=attempt_id,
+                payment_id=payment.id,
+                user_id=payment.user_id,
+                provider="PAYPAL",
+                provider_capture_id=payment.capture_id,
+                idempotency_key=idempotency_key,
+                requested_amount=req_decimal,
+                currency=payment.currency,
+                status="PENDING",
+            )
+            db.add(attempt_rec)
+            db.flush()
+
         payment.refund_status = "PENDING"
         self._payment_repo.update(payment)
-
-        idempotency_key = f"ref-idem-{payment.id}-{uuid.uuid4().hex[:8]}"
 
         try:
             refund_resp = self._paypal.refund_capture(
                 capture_id=payment.capture_id,
-                amount=refund_amt,
+                amount=float(req_decimal),
                 currency=payment.currency,
                 idempotency_key=idempotency_key,
             )
         except TimeoutError as exc:
             logger.error(f"Timeout calling PayPal capture refund for {payment.id}: {exc}")
+            with get_db_context() as db:
+                rec = db.query(RefundAttemptModel).filter(RefundAttemptModel.id == attempt_id).first()
+                if rec:
+                    rec.status = "RECONCILIATION_REQUIRED"
+                    rec.error_message = str(exc)
             payment.refund_status = "RECONCILIATION_REQUIRED"
             self._payment_repo.update(payment)
             raise HTTPException(
@@ -590,6 +670,11 @@ class CheckoutService:
             )
         except Exception as exc:
             logger.error(f"PayPal capture refund failed for {payment.id}: {exc}")
+            with get_db_context() as db:
+                rec = db.query(RefundAttemptModel).filter(RefundAttemptModel.id == attempt_id).first()
+                if rec:
+                    rec.status = "FAILED"
+                    rec.error_message = str(exc)
             payment.refund_status = "FAILED"
             self._payment_repo.update(payment)
             raise HTTPException(
@@ -599,6 +684,11 @@ class CheckoutService:
 
         provider_refund_status = str(refund_resp.get("status", "")).upper()
         if provider_refund_status not in ("COMPLETED", "PENDING"):
+            with get_db_context() as db:
+                rec = db.query(RefundAttemptModel).filter(RefundAttemptModel.id == attempt_id).first()
+                if rec:
+                    rec.status = "FAILED"
+                    rec.error_message = f"Provider returned {provider_refund_status}"
             payment.refund_status = "FAILED"
             self._payment_repo.update(payment)
             raise HTTPException(
@@ -607,12 +697,21 @@ class CheckoutService:
             )
 
         refund_id = refund_resp.get("id") or f"REF-{uuid.uuid4().hex[:8].upper()}"
-        new_total_refunded = round(already_refunded + refund_amt, 2)
-        is_full = new_total_refunded >= round(float(payment.amount), 2)
+        new_total_refunded = completed_refunded + req_decimal
+        is_full = new_total_refunded >= total_amount
+
+        # Update persistent attempt record as COMPLETED
+        with get_db_context() as db:
+            rec = db.query(RefundAttemptModel).filter(RefundAttemptModel.id == attempt_id).first()
+            if rec:
+                rec.status = "COMPLETED"
+                rec.provider_refund_id = refund_id
+                rec.provider_response = refund_resp
+                rec.completed_at = datetime.now(timezone.utc)
 
         payment.refund_id = refund_id
-        payment.refund_amount = refund_amt
-        payment.total_refunded = new_total_refunded
+        payment.refund_amount = float(req_decimal)
+        payment.total_refunded = float(new_total_refunded)
         payment.refund_status = provider_refund_status
         payment.status = PaymentStatus.REFUNDED if is_full else PaymentStatus.PARTIALLY_REFUNDED
         payment.updated_at = datetime.now(timezone.utc)
@@ -620,8 +719,6 @@ class CheckoutService:
 
         # Record outbox event for atomic notification/side-effect dispatch
         try:
-            from app.db.session import get_db_context
-            from app.models.outbox import OutboxEventModel
             with get_db_context() as db:
                 evt = OutboxEventModel(
                     id=f"evt_{uuid.uuid4().hex[:12]}",
@@ -631,8 +728,8 @@ class CheckoutService:
                     payload={
                         "payment_id": payment.id,
                         "refund_id": refund_id,
-                        "refund_amount": refund_amt,
-                        "total_refunded": new_total_refunded,
+                        "refund_amount": float(req_decimal),
+                        "total_refunded": float(new_total_refunded),
                         "status": payment.status.value,
                         "user_id": payment.user_id,
                     },
@@ -643,16 +740,20 @@ class CheckoutService:
             logger.warning(f"Could not persist refund outbox event: {e}")
 
         logger.info(
-            f"Payment {payment.id} refunded successfully via PayPal. Refund ID: {refund_id}, Amount: {refund_amt}"
+            f"Payment {payment.id} refunded successfully via PayPal. Refund ID: {refund_id}, Amount: {req_decimal}"
         )
         return payment
 
     def reconcile_payments(self, max_batch: int = 50) -> List[Dict[str, Any]]:
-        """Identify and heal payments in CAPTURE_PENDING or RECONCILIATION_REQUIRED with bounded requests."""
+        """Identify and heal payments and refund attempts in pending/reconciliation states with bounded requests."""
+        from app.db.session import get_db_context
+        from app.models.refund_attempt import RefundAttemptModel
+
         all_payments = self._payment_repo.list_all()
         reconciliation_reports: List[Dict[str, Any]] = []
         processed_count = 0
 
+        # Part 1: Reconcile in-flight Captures
         for p in all_payments:
             if processed_count >= max_batch:
                 break
@@ -666,6 +767,7 @@ class CheckoutService:
                         p.updated_at = datetime.now(timezone.utc)
                         self._payment_repo.update(p)
                         reconciliation_reports.append({
+                            "type": "capture",
                             "payment_id": p.id,
                             "provider_order_id": p.provider_order_id,
                             "action": "reconciled_to_completed",
@@ -676,6 +778,7 @@ class CheckoutService:
                         p.updated_at = datetime.now(timezone.utc)
                         self._payment_repo.update(p)
                         reconciliation_reports.append({
+                            "type": "capture",
                             "payment_id": p.id,
                             "provider_order_id": p.provider_order_id,
                             "action": "reconciled_to_cancelled",
@@ -683,19 +786,57 @@ class CheckoutService:
                         })
                 except Exception as e:
                     reconciliation_reports.append({
+                        "type": "capture",
                         "payment_id": p.id,
                         "provider_order_id": p.provider_order_id,
                         "action": "reconciliation_failed",
                         "error": str(e),
                     })
+
+        # Part 2: Reconcile stuck Refund Attempts
+        with get_db_context() as db:
+            pending_refunds = (
+                db.query(RefundAttemptModel)
+                .filter(RefundAttemptModel.status.in_(["PENDING", "RECONCILIATION_REQUIRED"]))
+                .limit(max(0, max_batch - processed_count))
+                .all()
+            )
+            for ref in pending_refunds:
+                processed_count += 1
+                try:
+                    cap_details = self._paypal.get_capture_details(ref.provider_capture_id)
+                    cap_status = cap_details.get("status")
+                    if cap_status in ("REFUNDED", "PARTIALLY_REFUNDED"):
+                        ref.status = "COMPLETED"
+                        ref.completed_at = datetime.now(timezone.utc)
+                        reconciliation_reports.append({
+                            "type": "refund",
+                            "refund_attempt_id": ref.id,
+                            "payment_id": ref.payment_id,
+                            "action": "reconciled_to_completed",
+                            "status": "COMPLETED",
+                        })
+                except Exception as e:
+                    reconciliation_reports.append({
+                        "type": "refund",
+                        "refund_attempt_id": ref.id,
+                        "payment_id": ref.payment_id,
+                        "action": "reconciliation_failed",
+                        "error": str(e),
+                    })
+
         return reconciliation_reports
 
     def process_paypal_webhook(self, headers: Dict[str, str], payload: Dict[str, Any]) -> Dict[str, Any]:
-        """Verify authenticity and process incoming PayPal webhook with atomic replay protection."""
+        """Verify authenticity and process incoming PayPal webhook with atomic replay protection and lifecycle tracking."""
         from app.core.config import get_settings
+        from sqlalchemy.exc import IntegrityError
+        from app.db.session import get_db_context
+        from app.models.webhook_event import WebhookEventModel
+
         settings = get_settings()
 
-        # Step 1: Official signature verification
+        # Step 1: Official signature verification (Fail-closed)
         is_verified = self._paypal.verify_webhook_signature(
             headers=headers,
             body_json=payload,
@@ -721,13 +862,12 @@ class CheckoutService:
 
         resource_id = resource.get("id")
 
-        # Step 3: Atomic database deduplication
-        from sqlalchemy.exc import IntegrityError
-        from app.db.session import get_db_context
-        from app.models.webhook_event import WebhookEventModel
-
+        # Step 3: Atomic database deduplication & lifecycle: RECEIVED -> PROCESSING
         with get_db_context() as db:
-            existing = db.query(WebhookEventModel).filter(WebhookEventModel.id == event_id).first()
+            existing = db.query(WebhookEventModel).filter(
+                WebhookEventModel.provider == "PAYPAL",
+                WebhookEventModel.id == event_id,
+            ).first()
             if existing:
                 logger.info(f"Duplicate webhook event ignored: {event_id}")
                 return {"status": "duplicate", "event_id": event_id, "event_type": event_type}
@@ -739,8 +879,9 @@ class CheckoutService:
                     event_type=event_type,
                     resource_type=payload.get("resource_type"),
                     resource_id=resource_id,
-                    status="PROCESSED",
+                    status="PROCESSING",
                     payload=payload,
+                    received_at=datetime.now(timezone.utc),
                 )
                 db.add(event_record)
                 db.flush()
@@ -750,55 +891,109 @@ class CheckoutService:
                 return {"status": "duplicate", "event_id": event_id, "event_type": event_type}
 
         # Step 4: Correct event-specific state transitions
-        if event_type == "CHECKOUT.ORDER.APPROVED":
-            logger.info(f"Webhook received order approval for PayPal Order: {resource_id}")
-            if resource_id:
-                p = self._payment_repo.get_by_provider_order_id(resource_id)
-                if p and p.status == PaymentStatus.APPROVAL_PENDING:
-                    p.status = PaymentStatus.APPROVED
-                    self._payment_repo.update(p)
+        try:
+            if event_type == "CHECKOUT.ORDER.APPROVED":
+                logger.info(f"Webhook received order approval for PayPal Order: {resource_id}")
+                if resource_id:
+                    p = self._payment_repo.get_by_provider_order_id(resource_id)
+                    if p and p.status == PaymentStatus.APPROVAL_PENDING:
+                        p.status = PaymentStatus.APPROVED
+                        p.updated_at = datetime.now(timezone.utc)
+                        self._payment_repo.update(p)
 
-        elif event_type == "PAYMENT.CAPTURE.COMPLETED":
-            logger.info(f"Webhook received capture completion for resource: {resource_id}")
-            order_id = resource.get("supplementary_data", {}).get("related_ids", {}).get("order_id")
-            payment = None
-            if order_id:
-                payment = self._payment_repo.get_by_provider_order_id(order_id)
-            if not payment and resource_id:
-                # Check by capture_id
-                all_p = self._payment_repo.list_all()
-                for item in all_p:
-                    if item.capture_id == resource_id:
-                        payment = item
-                        break
+            elif event_type == "PAYMENT.CAPTURE.COMPLETED":
+                logger.info(f"Webhook received capture completion for resource: {resource_id}")
+                order_id = resource.get("supplementary_data", {}).get("related_ids", {}).get("order_id")
+                payment = None
+                if order_id:
+                    payment = self._payment_repo.get_by_provider_order_id(order_id)
+                if not payment and resource_id:
+                    for item in self._payment_repo.list_all():
+                        if item.capture_id == resource_id:
+                            payment = item
+                            break
 
-            if payment and payment.status != PaymentStatus.COMPLETED:
-                payment.status = PaymentStatus.COMPLETED
-                payment.capture_id = resource_id
-                payment.updated_at = datetime.now(timezone.utc)
-                self._payment_repo.update(payment)
+                if payment and payment.status != PaymentStatus.COMPLETED:
+                    payment.status = PaymentStatus.COMPLETED
+                    payment.capture_id = resource_id
+                    payment.updated_at = datetime.now(timezone.utc)
+                    self._payment_repo.update(payment)
 
-        elif event_type in ("PAYMENT.CAPTURE.DENIED", "PAYMENT.CAPTURE.DECLINED"):
-            logger.info(f"Webhook received capture denial for: {resource_id}")
-            if resource_id:
-                all_p = self._payment_repo.list_all()
-                for item in all_p:
-                    if item.capture_id == resource_id or item.provider_order_id == resource_id:
-                        item.status = PaymentStatus.FAILED
-                        self._payment_repo.update(item)
-                        break
+                    # Trigger order creation if not already created
+                    try:
+                        from app.services.order_service import OrderService
+                        plan = self._plan_repo.get_by_id(payment.purchase_plan_id)
+                        if plan:
+                            order_svc = OrderService()
+                            order_svc.create_order_from_purchase(
+                                purchase_plan_id=plan.id,
+                                user_id=plan.user_id,
+                                product_id=plan.product_id,
+                                product_name=plan.product_name,
+                                brand=plan.brand,
+                                quantity=plan.quantity,
+                                amount=plan.total_amount,
+                                currency=plan.currency,
+                                paypal_order_id=payment.provider_order_id,
+                                payment_id=payment.id,
+                                delivery_days=plan.delivery_days,
+                            )
+                    except Exception as exc:
+                        logger.warning(f"Could not automatically fulfill order from webhook capture: {exc}")
 
-        elif event_type == "PAYMENT.CAPTURE.REFUNDED":
-            logger.info(f"Webhook received refund completion for: {resource_id}")
-            capture_id = resource.get("capture_id")
-            if capture_id:
-                all_p = self._payment_repo.list_all()
-                for item in all_p:
-                    if item.capture_id == capture_id:
-                        item.status = PaymentStatus.REFUNDED
-                        item.refund_status = "COMPLETED"
-                        item.refund_id = resource_id
-                        self._payment_repo.update(item)
-                        break
+            elif event_type in ("PAYMENT.CAPTURE.DENIED", "PAYMENT.CAPTURE.DECLINED"):
+                logger.info(f"Webhook received capture denial for: {resource_id}")
+                if resource_id:
+                    for item in self._payment_repo.list_all():
+                        if item.capture_id == resource_id or item.provider_order_id == resource_id:
+                            item.status = PaymentStatus.FAILED
+                            item.updated_at = datetime.now(timezone.utc)
+                            self._payment_repo.update(item)
+                            break
+
+            elif event_type == "PAYMENT.CAPTURE.PENDING":
+                logger.info(f"Webhook received capture pending for: {resource_id}")
+                if resource_id:
+                    for item in self._payment_repo.list_all():
+                        if item.capture_id == resource_id or item.provider_order_id == resource_id:
+                            item.status = PaymentStatus.CAPTURE_PENDING
+                            item.updated_at = datetime.now(timezone.utc)
+                            self._payment_repo.update(item)
+                            break
+
+            elif event_type == "PAYMENT.CAPTURE.REFUNDED":
+                logger.info(f"Webhook received refund completion for: {resource_id}")
+                capture_id = resource.get("capture_id")
+                if capture_id:
+                    for item in self._payment_repo.list_all():
+                        if item.capture_id == capture_id:
+                            item.status = PaymentStatus.REFUNDED
+                            item.refund_status = "COMPLETED"
+                            item.refund_id = resource_id
+                            item.updated_at = datetime.now(timezone.utc)
+                            self._payment_repo.update(item)
+                            break
+
+            # Step 5: Transition to PROCESSED
+            with get_db_context() as db:
+                rec = db.query(WebhookEventModel).filter(
+                    WebhookEventModel.provider == "PAYPAL",
+                    WebhookEventModel.id == event_id,
+                ).first()
+                if rec:
+                    rec.status = "PROCESSED"
+                    rec.processed_at = datetime.now(timezone.utc)
+
+        except Exception as exc:
+            logger.error(f"Error executing state transitions for webhook {event_id}: {exc}")
+            with get_db_context() as db:
+                rec = db.query(WebhookEventModel).filter(
+                    WebhookEventModel.provider == "PAYPAL",
+                    WebhookEventModel.id == event_id,
+                ).first()
+                if rec:
+                    rec.status = "FAILED"
+                    rec.last_error = str(exc)
+            raise
 
         return {"status": "processed", "event_id": event_id, "event_type": event_type}

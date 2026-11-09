@@ -32,7 +32,7 @@ class PayPalOrderService:
         logger.info(f"Creating PayPal order for internal plan {plan.id} (${plan.total_amount:.2f} {plan.currency})")
 
         # Mock fallback isolated strictly behind explicit demo/sandbox configuration
-        if not self._config.is_configured:
+        if not self._config.is_configured or (self._config.is_mock_allowed and self._config.mock_enabled is True):
             if not self._config.is_mock_allowed:
                 raise RuntimeError("PayPal credentials are not configured and mock transactions are disabled.")
 
@@ -115,7 +115,7 @@ class PayPalOrderService:
         logger.info(f"Capturing PayPal order {paypal_order_id}")
 
         # Mock fallback isolated behind explicit test/demo configuration
-        if not self._config.is_configured or paypal_order_id.startswith("MOCK-"):
+        if not self._config.is_configured or (self._config.is_mock_allowed and self._config.mock_enabled is True) or paypal_order_id.startswith("MOCK-"):
             if not self._config.is_configured and not self._config.is_mock_allowed:
                 raise RuntimeError("PayPal credentials are not configured and mock transactions are disabled.")
 
@@ -181,7 +181,7 @@ class PayPalOrderService:
 
     def get_order_details(self, paypal_order_id: str) -> Dict[str, Any]:
         """Retrieve details of an existing PayPal Order for server-side verification."""
-        if not self._config.is_configured or paypal_order_id.startswith("MOCK-"):
+        if not self._config.is_configured or (self._config.is_mock_allowed and self._config.mock_enabled is True) or paypal_order_id.startswith("MOCK-"):
             if not self._config.is_configured and not self._config.is_mock_allowed:
                 raise RuntimeError("PayPal credentials are not configured and mock transactions are disabled.")
 
@@ -236,7 +236,7 @@ class PayPalOrderService:
         """Execute a refund against a completed PayPal capture with provider idempotency."""
         logger.info(f"Initiating PayPal refund for capture {capture_id}: {amount:.2f} {currency}")
 
-        if not self._config.is_configured or capture_id.startswith("MOCK-"):
+        if not self._config.is_configured or (self._config.is_mock_allowed and self._config.mock_enabled is True) or capture_id.startswith("MOCK-"):
             if not self._config.is_configured and not self._config.is_mock_allowed:
                 raise RuntimeError("PayPal credentials are not configured and mock transactions are disabled.")
 
@@ -285,7 +285,7 @@ class PayPalOrderService:
 
     def get_capture_details(self, capture_id: str) -> Dict[str, Any]:
         """Retrieve details of a PayPal capture for authoritative verification."""
-        if not self._config.is_configured or capture_id.startswith("MOCK-"):
+        if not self._config.is_configured or (self._config.is_mock_allowed and self._config.mock_enabled is True) or capture_id.startswith("MOCK-"):
             if not self._config.is_configured and not self._config.is_mock_allowed:
                 raise RuntimeError("PayPal credentials are not configured and mock transactions are disabled.")
             return {
@@ -317,7 +317,7 @@ class PayPalOrderService:
         body_json: Dict[str, Any],
         webhook_id: Optional[str] = None,
     ) -> bool:
-        """Verify authenticity of PayPal webhook notification using provider API."""
+        """Verify authenticity of PayPal webhook notification using provider API. Fail-closed by default."""
         norm_headers = {k.lower(): v for k, v in headers.items()}
         auth_algo = norm_headers.get("paypal-auth-algo")
         cert_url = norm_headers.get("paypal-cert-url")
@@ -329,8 +329,11 @@ class PayPalOrderService:
             logger.warning("Missing required PayPal webhook signature headers.")
             return False
 
-        # In mock / test harness mode
-        if not self._config.is_configured:
+        # In mock / test harness mode: Strictly permitted ONLY when mock is explicitly allowed
+        if not self._config.is_configured or (self._config.is_mock_allowed and self._config.mock_enabled is True):
+            if not self._config.is_mock_allowed:
+                logger.error("PayPal credentials not configured and mock transactions are disallowed; rejecting webhook signature.")
+                return False
             # Deterministic test validation: reject forged/invalid signatures
             if "forged" in transmission_sig.lower() or "invalid" in transmission_sig.lower():
                 return False
@@ -339,7 +342,7 @@ class PayPalOrderService:
         # Live / Sandbox verification via PayPal API
         target_webhook_id = webhook_id or self._config.webhook_id
         if not target_webhook_id:
-            logger.error("PAYPAL_WEBHOOK_ID is not configured; cannot verify signature.")
+            logger.error("PAYPAL_WEBHOOK_ID is not configured; cannot verify signature in non-mock mode.")
             return False
 
         token = self._auth_service.get_access_token()

@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 from app.agents.orchestrator import AgentOrchestrator
 from app.agents.state import AgentAction, AgentState, get_session_store
 from app.core.auth import AuthenticatedUser, get_current_user
+from app.services.astropods_service import get_astropods_service
 
 router = APIRouter(prefix="/api/agent", tags=["Agent"])
 
@@ -170,3 +171,37 @@ async def get_agent_summary(
         "total_actions": len(state.actions),
         "created_at": state.created_at,
     }
+
+
+@router.get(
+    "/{session_id}/astropods-traces",
+    summary="Get Astropods Agent Traces for Session",
+)
+async def get_session_astropods_traces(
+    session_id: str,
+    current_user: AuthenticatedUser = Depends(get_current_user),
+) -> List[Dict[str, Any]]:
+    """Retrieve recorded Astropods telemetry traces and spans for this agent session."""
+    store = get_session_store()
+    try:
+        state = store.get(session_id, user_id=current_user.id)
+    except PermissionError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+    if not state:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Session '{session_id}' not found.")
+
+    astropods = get_astropods_service()
+    return astropods.get_session_traces(session_id)
+
+
+@router.get(
+    "/astropods/overview",
+    summary="Get Astropods Control Plane & Telemetry Overview",
+)
+async def get_astropods_overview(
+    current_user: AuthenticatedUser = Depends(get_current_user),
+) -> Dict[str, Any]:
+    """Retrieve global Astropods observability metrics and blueprint runtime status."""
+    astropods = get_astropods_service()
+    return astropods.get_overview()
+

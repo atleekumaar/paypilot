@@ -20,13 +20,46 @@ class OutboxConsumer:
         self._order_service = order_service or OrderService()
 
     def claim_events(self, batch_size: int = 10, lease_seconds: int = 30) -> List[str]:
-        """Claim a batch of pending or expired-lease outbox events atomically."""
+        """Claim a batch of pending or expired-lease outbox events atomically (FOR UPDATE SKIP LOCKED on Postgres, conditional update on SQLite)."""
         now = datetime.now(timezone.utc)
         leased_until = now + timedelta(seconds=lease_seconds)
         claimed_ids: List[str] = []
 
         with get_db_context() as db:
-            # Query eligible events
+            is_pg = False
+            try:
+                bind = db.get_bind()
+                if bind and bind.dialect.name == "postgresql":
+                    is_pg = True
+            except Exception:
+                pass
+
+            if is_pg:
+                candidates = (
+                    db.query(OutboxEventModel)
+                    .filter(
+                        or_(
+                            OutboxEventModel.status == "PENDING",
+                            and_(
+                                OutboxEventModel.status == "PROCESSING",
+                                OutboxEventModel.leased_until < now,
+                            ),
+                        ),
+                        OutboxEventModel.retry_count < OutboxEventModel.max_retries,
+                    )
+                    .order_by(OutboxEventModel.created_at.asc())
+                    .limit(batch_size)
+                    .with_for_update(skip_locked=True)
+                    .all()
+                )
+                for evt in candidates:
+                    evt.status = "PROCESSING"
+                    evt.leased_until = leased_until
+                    claimed_ids.append(evt.id)
+                db.flush()
+                return claimed_ids
+
+            # SQLite / Fallback atomic conditional update
             query = (
                 db.query(OutboxEventModel.id)
                 .filter(

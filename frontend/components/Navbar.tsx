@@ -9,6 +9,8 @@ import {
   Menu,
   X,
   ExternalLink,
+  LineChart,
+  CalendarRange,
 } from "lucide-react";
 
 export default function Navbar() {
@@ -23,6 +25,8 @@ export default function Navbar() {
     if (!isHome) {
       if (pathname.startsWith("/orders")) setActiveSection("orders");
       else if (pathname.startsWith("/notifications")) setActiveSection("notifications");
+      else if (pathname.startsWith("/insights")) setActiveSection("insights");
+      else if (pathname.startsWith("/timeline")) setActiveSection("timeline");
       return;
     }
 
@@ -173,6 +177,30 @@ export default function Navbar() {
             Demo
           </button>
 
+          <Link
+            href="/insights"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+              pathname.startsWith("/insights")
+                ? "bg-[#EAF3FF] text-[#0070E0] font-semibold"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+            }`}
+          >
+            <LineChart className="w-3.5 h-3.5" />
+            <span>Insights</span>
+          </Link>
+
+          <Link
+            href="/timeline"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+              pathname.startsWith("/timeline")
+                ? "bg-[#EAF3FF] text-[#0070E0] font-semibold"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+            }`}
+          >
+            <CalendarRange className="w-3.5 h-3.5" />
+            <span>Timeline</span>
+          </Link>
+
           <a
             href="https://github.com/atleekumaar/paypilot#readme"
             target="_blank"
@@ -310,6 +338,22 @@ export default function Navbar() {
           >
             Demo
           </button>
+          <Link
+            href="/insights"
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            <LineChart className="w-4 h-4 text-[#0070E0]" />
+            <span>Commerce Intelligence</span>
+          </Link>
+          <Link
+            href="/timeline"
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            <CalendarRange className="w-4 h-4 text-[#0070E0]" />
+            <span>Commerce Timeline</span>
+          </Link>
           <a
             href="https://github.com/atleekumaar/paypilot#readme"
             target="_blank"

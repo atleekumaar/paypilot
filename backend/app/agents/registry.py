@@ -88,6 +88,10 @@ class ToolRegistry:
         """Look up tool definition by name."""
         return self._tools.get(name)
 
+    def get(self, name: str) -> Optional[ToolDefinition]:
+        """Alias for get_tool to provide dict-like access."""
+        return self._tools.get(name)
+
     def list_tools(self) -> List[ToolDefinition]:
         """Return list of all registered tool definitions."""
         return list(self._tools.values())

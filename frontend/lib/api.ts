@@ -79,5 +79,32 @@ export const api = {
 
   delete: <T>(path: string, headers?: Record<string, string>) =>
     request<T>(path, { method: "DELETE", headers }),
+
+  getTimelineEvents: (params?: { order_id?: string; event_type?: string; start_date?: string; end_date?: string }) => {
+    const query = new URLSearchParams();
+    if (params?.order_id) query.append("order_id", params.order_id);
+    if (params?.event_type) query.append("event_type", params.event_type);
+    if (params?.start_date) query.append("start_date", params.start_date);
+    if (params?.end_date) query.append("end_date", params.end_date);
+    const qs = query.toString();
+    return request<any>(`/api/timeline/events${qs ? `?${qs}` : ""}`, { method: "GET" });
+  },
+
+  getTimelineSummary: () => request<any>("/api/timeline/summary", { method: "GET" }),
+
+  getAstropodsOverview: () => request<any>("/api/agent/astropods/overview", { method: "GET" }),
+
+  // Channel3 API
+  searchChannel3: (body: { query: string; category?: string; min_price?: number; max_price?: number; brand?: string; limit?: number }) =>
+    request<any>("/api/channel3/search", { method: "POST", body: JSON.stringify(body) }),
+
+  compareChannel3: (product_ids: string[]) =>
+    request<any>("/api/channel3/compare", { method: "POST", body: JSON.stringify({ product_ids }) }),
+
+  // Elasticsearch API
+  searchElastic: (body: { query: string; mode?: "hybrid" | "keyword" | "semantic"; category?: string; min_price?: number; max_price?: number; limit?: number }) =>
+    request<any>("/api/elastic/search", { method: "POST", body: JSON.stringify(body) }),
+
+  getElasticHealth: () => request<any>("/api/elastic/health", { method: "GET" }),
 };
 

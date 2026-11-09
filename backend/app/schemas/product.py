@@ -36,6 +36,8 @@ class ProductBase(BaseModel):
     delivery_days: int = Field(default=3, ge=1, description="Estimated delivery time in days", json_schema_extra={"example": 3})
     features: Dict[str, Any] = Field(default_factory=dict, description="Arbitrary feature dictionary")
     image_url: Optional[str] = Field(default=None, description="Public image thumbnail URL")
+    source: str = Field(default="CATALOG", description="Discovery source (CATALOG, CHANNEL3, ELASTIC)")
+    source_url: Optional[str] = Field(default=None, description="Direct retailer offer or merchant URL")
 
 
 class Product(ProductBase):
