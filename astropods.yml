@@ -1,0 +1,93 @@
+spec: blueprint/v1
+name: paypilot-commerce-agent
+version: 1.0.0
+description: Autonomous AI Commerce Agent with verified PayPal Sandbox checkout, AG Grid intelligence, and Bryntum lifecycle scheduling.
+
+agent:
+  build:
+    context: .
+    dockerfile: Dockerfile
+  runtime: python3.12
+  entrypoint: backend/app/main.py
+  interfaces:
+    messaging: true
+    rest_api: true
+
+inputs:
+  APP_NAME:
+    name: APP_NAME
+    datatype: string
+    default: "PayPilot"
+  ENVIRONMENT:
+    name: ENVIRONMENT
+    datatype: string
+    default: "development"
+  AUTH_MODE:
+    name: AUTH_MODE
+    datatype: string
+    default: "demo"
+  MAX_AGENT_STEPS:
+    name: MAX_AGENT_STEPS
+    datatype: number
+    default: 12
+  LOG_LEVEL:
+    name: LOG_LEVEL
+    datatype: string
+    default: "info"
+
+models:
+  primary:
+    provider: groq
+    model: openai/gpt-oss-20b
+    temperature: 0.1
+    fallback:
+      provider: groq
+      model: openai/gpt-oss-120b
+
+knowledge:
+  catalog:
+    provider: local_json
+    path: backend/app/data/products.json
+
+integrations:
+  paypal:
+    provider: paypal-sandbox
+    api_spec: https://api.sandbox.paypal.com/v2/checkout/orders
+    scope: [orders, payments, captures, refunds]
+    variables:
+      - name: PAYPAL_CLIENT_ID
+        datatype: string
+        secret: true
+      - name: PAYPAL_CLIENT_SECRET
+        datatype: string
+        secret: true
+      - name: PAYPAL_ENVIRONMENT
+        datatype: string
+        default: "sandbox"
+
+guardrails:
+  human_in_the_loop:
+    consequential_actions:
+      - create_paypal_order
+      - capture_paypal_payment
+      - refund_capture
+    enforcement: strict_blocking
+  data_redaction:
+    rules:
+      - redact_paypal_secrets
+      - redact_bearer_tokens
+      - redact_cardholder_pii
+  rate_limits:
+    max_requests_per_minute: 60
+
+observability:
+  tracing:
+    enabled: true
+    sample_rate: 1.0
+    export_format: opentelemetry
+  metrics:
+    token_usage: true
+    tool_latency: true
+    error_rates: true
+    step_duration: true
+

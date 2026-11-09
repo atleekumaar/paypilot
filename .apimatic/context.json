@@ -1,0 +1,69 @@
+{
+  "$schema": "https://apimatic.io/schemas/context-plugin.json",
+  "name": "apimatic-paypal-context-plugin",
+  "version": "1.0.0",
+  "description": "APIMatic PayPal Context Plugin providing authoritative PayPal Orders v2, Captures, and Refunds API contracts for PayPilot AI Coding Agents.",
+  "provider": "PayPal",
+  "api_spec": "https://api.sandbox.paypal.com/v2/checkout/orders",
+  "environment": "sandbox",
+  "auth": {
+    "type": "oauth2",
+    "token_endpoint": "/v1/oauth2/token",
+    "grant_type": "client_credentials"
+  },
+  "endpoints": [
+    {
+      "operation": "CreateOrder",
+      "method": "POST",
+      "path": "/v2/checkout/orders",
+      "headers": {
+        "PayPal-Request-Id": "{idempotency_key}",
+        "Prefer": "return=representation"
+      },
+      "intent": "CAPTURE"
+    },
+    {
+      "operation": "GetOrderDetails",
+      "method": "GET",
+      "path": "/v2/checkout/orders/{id}"
+    },
+    {
+      "operation": "CaptureOrder",
+      "method": "POST",
+      "path": "/v2/checkout/orders/{id}/capture",
+      "headers": {
+        "PayPal-Request-Id": "{idempotency_key}",
+        "Prefer": "return=representation"
+      }
+    },
+    {
+      "operation": "RefundCapture",
+      "method": "POST",
+      "path": "/v2/payments/captures/{capture_id}/refund",
+      "headers": {
+        "PayPal-Request-Id": "{idempotency_key}",
+        "Prefer": "return=representation"
+      }
+    },
+    {
+      "operation": "GetCaptureDetails",
+      "method": "GET",
+      "path": "/v2/payments/captures/{capture_id}"
+    },
+    {
+      "operation": "VerifyWebhookSignature",
+      "method": "POST",
+      "path": "/v1/notifications/verify-webhook-signature"
+    }
+  ],
+  "agent_context": {
+    "validation_rules": [
+      "Strict decimal precision for amount values",
+      "Server-side capture verification; never trust client redirect",
+      "Durable idempotency keys on all POST financial mutations",
+      "Fail-closed signature verification on incoming webhooks",
+      "Cumulative balance enforcement preventing over-refunds"
+    ]
+  }
+}
+

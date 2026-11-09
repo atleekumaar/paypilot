@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bot, Package, Bell, Compass, Home } from "lucide-react";
+import { Bot, Package, Bell, Compass, Home, LineChart, CalendarRange } from "lucide-react";
 
 export default function Navbar() {
   const pathname = usePathname();
 
   const navItems = [
     { label: "Home", href: "/", icon: Home },
+    { label: "Commerce Intelligence", href: "/insights", icon: LineChart },
+    { label: "Timeline", href: "/timeline", icon: CalendarRange },
     { label: "Orders", href: "/orders", icon: Package },
     { label: "Notifications", href: "/notifications", icon: Bell },
   ];

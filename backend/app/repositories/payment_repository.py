@@ -110,6 +110,11 @@ class PaymentRepository:
             records = db.query(PaymentModel).all()
             return [_model_to_schema(m) for m in records]
 
+    def list_by_user(self, user_id: str) -> List[Payment]:
+        with get_db_context() as db:
+            records = db.query(PaymentModel).filter(PaymentModel.user_id == user_id).all()
+            return [_model_to_schema(m) for m in records]
+
     def clear(self) -> None:
         """Clear all stored payments (used for test teardown)."""
         with get_db_context() as db:

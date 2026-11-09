@@ -1,0 +1,489 @@
+{
+  "info": {
+    "_postman_id": "paypilot-api-collection-v2",
+    "name": "PayPilot Agentic Commerce API",
+    "description": "Comprehensive Postman test collection for PayPilot (PayPal AI Hackathon). Covers PayPal Sandbox, Channel3, Elasticsearch, Kernel Browser, Zapier Automation, Bryntum Timeline, and AG Grid Analytics.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01 - Health & Infrastructure",
+      "item": [
+        {
+          "name": "API Root Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/", "host": ["{{baseUrl}}"], "path": [""] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Application is PayPilot', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.name).to.eql('PayPilot');",
+                  "    pm.expect(json.status).to.eql('running');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "System Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Health status ok', function () {",
+                  "    pm.expect(pm.response.json().status).to.eql('ok');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Kernel Browser Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/kernel/health", "host": ["{{baseUrl}}"], "path": ["api", "kernel", "health"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Kernel healthy', function () { pm.expect(pm.response.json().status).to.eql('healthy'); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Zapier Automation Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/zapier/health", "host": ["{{baseUrl}}"], "path": ["api", "zapier", "health"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Zapier healthy', function () { pm.expect(pm.response.json().status).to.eql('healthy'); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Elasticsearch Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/elastic/health", "host": ["{{baseUrl}}"], "path": ["api", "elastic", "health"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Elastic healthy', function () { pm.expect(pm.response.json().status).to.eql('healthy'); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 - Product Discovery & Catalog",
+      "item": [
+        {
+          "name": "List Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/?limit=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", ""],
+              "query": [{ "key": "limit", "value": "5" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Products returned', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.length).to.be.above(0);",
+                  "    pm.environment.set('test_product_id', json[0].id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Product Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/{{test_product_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", "{{test_product_id}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Valid product structure', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('name');",
+                  "    pm.expect(json).to.have.property('price');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 - Channel3 Universal Retailers",
+      "item": [
+        {
+          "name": "Channel3 Live Product Search",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"running shoes\",\n  \"limit\": 3\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/channel3/search", "host": ["{{baseUrl}}"], "path": ["api", "channel3", "search"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Channel3 items returned', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.results.length).to.be.above(0);",
+                  "    pm.expect(json.source).to.eql('CHANNEL3');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Channel3 Multi-Retailer Comparison",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_ids\": [\"c3_prod_apple_macbook_air_m3\", \"c3_prod_dell_xps_15\"]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/channel3/compare", "host": ["{{baseUrl}}"], "path": ["api", "channel3", "compare"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Comparison matrix populated', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('matrix');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 - Elasticsearch Hybrid & Knowledge",
+      "item": [
+        {
+          "name": "Elastic Hybrid Search (BM25 + Dense Vector)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"laptop for developers\",\n  \"limit\": 3\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/elastic/search", "host": ["{{baseUrl}}"], "path": ["api", "elastic", "search"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Hybrid hits returned', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.total).to.be.above(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Elastic Knowledge Retrieval (Merchant Policies)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"buyer protection warranty\",\n  \"limit\": 2\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/elastic/knowledge", "host": ["{{baseUrl}}"], "path": ["api", "elastic", "knowledge"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Knowledge policies returned', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.policies.length).to.be.above(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05 - Kernel Cloud Browser",
+      "item": [
+        {
+          "name": "Browse & Verify Merchant Page",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://www.target.com/p/apple-macbook-air-m3\",\n  \"extract_policy\": true\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/kernel/browse", "host": ["{{baseUrl}}"], "path": ["api", "kernel", "browse"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Browser inspection successful', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.status).to.eql('SUCCESS');",
+                  "    pm.expect(json).to.have.property('replay_url');",
+                  "    pm.expect(json.bot_bypass_success).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Verify Merchant Domain Trust",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"domain\": \"target.com\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/kernel/verify-domain", "host": ["{{baseUrl}}"], "path": ["api", "kernel", "verify-domain"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Domain verified', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.status).to.eql('VERIFIED_MERCHANT');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "06 - Zapier Workflow Automation",
+      "item": [
+        {
+          "name": "Dispatch Event to Zapier (Sheets, Slack, Gmail)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"order_completed\",\n  \"payload\": {\n    \"order_id\": \"ord_test_999\",\n    \"product_name\": \"Pro Developer Laptop\",\n    \"total_amount\": 1299.99,\n    \"currency\": \"USD\"\n  }\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/zapier/dispatch", "host": ["{{baseUrl}}"], "path": ["api", "zapier", "dispatch"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Zapier dispatch status valid', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(['DISPATCHED', 'SUCCESS_SIMULATED']).to.include(json.status);",
+                  "    pm.expect(json.target_apps.length).to.be.above(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Inbound Zapier Webhook Callback",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"zap_id\": \"zap_12345\",\n  \"action\": \"inventory_sync\",\n  \"sku\": \"PROD-123\",\n  \"status\": \"confirmed\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/zapier/webhook", "host": ["{{baseUrl}}"], "path": ["api", "zapier", "webhook"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Webhook accepted', function () {",
+                  "    pm.expect(pm.response.json().status).to.eql('ACCEPTED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "07 - Bryntum Commerce Timeline",
+      "item": [
+        {
+          "name": "Query Commerce Timeline Events",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/timeline/events", "host": ["{{baseUrl}}"], "path": ["api", "timeline", "events"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Timeline events returned', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('events');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "08 - AG Grid Commerce Analytics",
+      "item": [
+        {
+          "name": "KPI Analytics Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/analytics/overview", "host": ["{{baseUrl}}"], "path": ["api", "analytics", "overview"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('KPI totals available', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('total_spending');",
+                  "    pm.expect(json).to.have.property('total_orders');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Spending Trends Over Time",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/analytics/spending", "host": ["{{baseUrl}}"], "path": ["api", "analytics", "spending"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Spending series returned', function () {",
+                  "    pm.expect(pm.response.json()).to.have.property('series');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+

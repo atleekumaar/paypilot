@@ -326,8 +326,50 @@ class SessionStore:
                 self._sessions[state.session_id] = state
             return state
 
+    def _merge_states(self, local: AgentState, remote: AgentState) -> AgentState:
+        """Intelligently merge local changes onto the latest remote state on concurrency conflict."""
+        # Align version with remote for subsequent atomic conditional update
+        local.version = remote.version
+
+        # Merge messages without duplication
+        existing_msg_keys = {(m.role, m.content) for m in remote.messages}
+        for m in local.messages:
+            if (m.role, m.content) not in existing_msg_keys:
+                remote.messages.append(m)
+                existing_msg_keys.add((m.role, m.content))
+        local.messages = remote.messages
+
+        # Merge actions without duplication
+        existing_action_ids = {a.id for a in remote.actions}
+        for a in local.actions:
+            if a.id not in existing_action_ids:
+                remote.actions.append(a)
+                existing_action_ids.add(a.id)
+        local.actions = remote.actions
+
+        # Step count progression
+        local.current_step = max(local.current_step, remote.current_step)
+
+        # Preserve remote artifacts if local hasn't set them
+        if not local.purchase_plan_id and remote.purchase_plan_id:
+            local.purchase_plan_id = remote.purchase_plan_id
+            local.purchase_plan = remote.purchase_plan
+        if not local.paypal_order_id and remote.paypal_order_id:
+            local.paypal_order_id = remote.paypal_order_id
+        if not local.active_order_id and remote.active_order_id:
+            local.active_order_id = remote.active_order_id
+            local.active_order = remote.active_order
+        if not local.active_shipment and remote.active_shipment:
+            local.active_shipment = remote.active_shipment
+
+        # Preserve authoritative ownership
+        if remote.user_id and remote.user_id != "guest_user":
+            local.user_id = remote.user_id
+
+        return local
+
     def save_with_retry(self, state: AgentState, max_retries: int = 3, touch: bool = True) -> AgentState:
-        """Atomically persist state with bounded exponential-backoff retry on optimistic locking conflict."""
+        """Atomically persist state with bounded exponential-backoff retry and intelligent merge on conflict."""
         import random
         import time
 
@@ -340,7 +382,7 @@ class SessionStore:
                 time.sleep(0.02 * (2 ** attempt) + random.uniform(0.005, 0.015))
                 latest = self.get(state.session_id, force_reload=True)
                 if latest:
-                    state.version = latest.version
+                    state = self._merge_states(state, latest)
         return state
 
     def clear(self) -> None:

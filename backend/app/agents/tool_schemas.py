@@ -20,6 +20,8 @@ class SearchProductsArgs(StrictBaseToolArgs):
     in_stock_only: bool = Field(default=True, description="Filter for items currently in stock")
     keywords: Optional[List[str]] = Field(None, description="Keywords to match against product titles and tags")
     required_features: Optional[List[str]] = Field(None, description="Key hardware/software requirements")
+    include_channel3: Optional[bool] = Field(default=False, description="Include products discovered via Channel3")
+    use_elastic: Optional[bool] = Field(default=False, description="Use Elasticsearch hybrid retrieval")
 
 
 class GetProductArgs(StrictBaseToolArgs):
@@ -118,4 +120,55 @@ class SendSupportRequestArgs(StrictBaseToolArgs):
     """Arguments for send_support_request tool."""
 
     order_id: Optional[str] = Field(None, min_length=1, max_length=50, description="Order identifier")
+
+
+class QueryCommerceTimelineArgs(StrictBaseToolArgs):
+    """Arguments for query_commerce_timeline tool."""
+
+    order_id: Optional[str] = Field(None, min_length=1, max_length=50, description="Optional specific order ID to inspect")
+    event_type: Optional[str] = Field(None, max_length=50, description="Filter by event type (APPROVAL, PAYMENT, FULFILLMENT, IN_TRANSIT, DELIVERY, REFUND)")
+
+
+class SearchChannel3Args(StrictBaseToolArgs):
+    """Arguments for search_channel3_products tool."""
+
+    query: str = Field(..., min_length=1, description="Natural language product query to discover across 25,000+ retailers")
+    category: Optional[str] = Field(None, description="Optional category filter (e.g. laptop, audio, apparel)")
+    max_price: Optional[float] = Field(None, ge=0.0, description="Maximum budget boundary")
+    min_price: Optional[float] = Field(None, ge=0.0, description="Minimum price boundary")
+    brand: Optional[str] = Field(None, description="Optional brand filter")
+    limit: int = Field(default=5, ge=1, le=20, description="Maximum products to retrieve")
+
+
+class ElasticHybridSearchArgs(StrictBaseToolArgs):
+    """Arguments for elastic_hybrid_search tool."""
+
+    query: str = Field(..., min_length=1, description="Search term for dense vector and BM25 hybrid matching")
+    category: Optional[str] = Field(None, description="Optional category filter")
+    max_price: Optional[float] = Field(None, ge=0.0, description="Maximum price")
+    limit: int = Field(default=5, ge=1, le=20, description="Number of results")
+
+
+class GetMerchantPoliciesArgs(StrictBaseToolArgs):
+    """Arguments for get_merchant_policies tool grounded by Elastic knowledge base."""
+
+    query: str = Field(..., min_length=1, description="Inquiry regarding buyer protection, shipping SLA, or warranty")
+    limit: int = Field(default=3, ge=1, le=10, description="Number of policy excerpts")
+
+
+class BrowseMerchantPageArgs(StrictBaseToolArgs):
+    """Arguments for browse_merchant_page tool executed on Kernel cloud browser infrastructure."""
+
+    url: str = Field(..., min_length=5, description="Direct merchant URL to inspect or verify live availability")
+    extract_policy: bool = Field(default=True, description="Whether to extract live return and shipping terms")
+    max_wait_seconds: int = Field(default=15, ge=1, le=60, description="Max dynamic hydration wait")
+
+
+class TriggerZapierAutomationArgs(StrictBaseToolArgs):
+    """Arguments for trigger_zapier_automation tool connecting to 9,000+ apps."""
+
+    event: str = Field(..., min_length=2, description="Automation event name: order_alert, invoice_request, erp_sync")
+    payload: Optional[dict] = Field(default_factory=dict, description="Structured event data to dispatch")
+
+
 

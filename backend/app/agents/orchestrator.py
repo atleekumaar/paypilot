@@ -111,6 +111,11 @@ class AgentOrchestrator:
         state.messages.append(ConversationMessage(role="user", content=message))
         state.status = AgentStatus.UNDERSTANDING
 
+        # Astropods agent turn telemetry start
+        from app.services.astropods_service import get_astropods_service
+        astropods = get_astropods_service()
+        astropods.start_trace(session_id=state.session_id, user_id=state.user_id, query=message)
+
         # Step 0: Check for Post-Purchase inquiry
         from app.agents.post_purchase import PostPurchaseAgent
         post_purchase_agent = PostPurchaseAgent(tool_registry=self._registry)
@@ -187,7 +192,15 @@ class AgentOrchestrator:
                 break
 
             # Allowed: Execute Tool
+            astropods.start_span(state.session_id, step_tool, span_type="tool_call")
             result = self._registry.execute(step_tool, arguments, state)
+            astropods.finish_span(
+                state.session_id,
+                step_tool,
+                status="success" if result.success else "error",
+                error=result.error if not result.success else None,
+                metadata={"arguments": arguments},
+            )
             if not result.success:
                 logger.error(f"Tool execution failure: {result.error}")
                 response_text = f"Encountered an issue running {step_tool}: {result.error}"
@@ -201,6 +214,7 @@ class AgentOrchestrator:
 
         state.messages.append(ConversationMessage(role="assistant", content=response_text))
         self._sessions.save(state)
+        astropods.finish_trace(state.session_id, status=state.status.value)
 
         return {
             "session_id": state.session_id,

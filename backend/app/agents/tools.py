@@ -24,6 +24,12 @@ from app.agents.tool_schemas import (
     RequestPurchaseApprovalArgs,
     SearchProductsArgs,
     SendSupportRequestArgs,
+    QueryCommerceTimelineArgs,
+    SearchChannel3Args,
+    ElasticHybridSearchArgs,
+    GetMerchantPoliciesArgs,
+    BrowseMerchantPageArgs,
+    TriggerZapierAutomationArgs,
 )
 from app.repositories.product_repository import get_product_repository
 from app.schemas.purchase_plan import PurchasePlanCreateRequest
@@ -32,6 +38,11 @@ from app.services.order_service import OrderService
 from app.services.purchase_plan_service import PurchasePlanService
 from app.services.ranking_service import ProductRankingService
 from app.services.search_service import ProductSearchService
+from app.services.timeline_service import get_timeline_service
+from app.services.channel3.service import get_channel3_service
+from app.services.elastic.service import get_elastic_service
+from app.services.kernel.service import get_kernel_service
+from app.services.zapier.service import get_zapier_service
 
 logger = logging.getLogger(__name__)
 
@@ -548,6 +559,270 @@ def build_default_tool_registry() -> ToolRegistry:
             "type": "object",
             "properties": {"order_id": {"type": "string"}},
             "required": ["order_id"],
+        },
+    )
+
+    # 17. TOOL: query_commerce_timeline (READ)
+    timeline_service = get_timeline_service()
+
+    def _query_commerce_timeline_handler(state: AgentState, **kwargs) -> Dict[str, Any]:
+        user_id = state.user_id or "demo_user"
+        order_id = kwargs.get("order_id")
+        event_type = kwargs.get("event_type")
+        timeline_data = timeline_service.get_timeline(
+            user_id=user_id,
+            order_id=order_id,
+            event_type=event_type,
+        )
+        summary = timeline_service.get_summary(user_id=user_id)
+        state.log_action("query_commerce_timeline", f"Retrieved timeline ({len(timeline_data.get('events', []))} events)")
+        return {
+            "summary": summary,
+            "events_count": len(timeline_data.get("events", [])),
+            "events": timeline_data.get("events", [])[:10],
+            "time_range": timeline_data.get("timeRange"),
+        }
+
+    registry.register(
+        name="query_commerce_timeline",
+        description="Query commerce schedule, milestones, carrier transit, and estimated delivery dates across all orders or a specific order.",
+        permission=ToolPermission.READ,
+        handler=_query_commerce_timeline_handler,
+        schema_model=QueryCommerceTimelineArgs,
+        parameters={
+            "type": "object",
+            "properties": {
+                "order_id": {"type": "string", "description": "Optional order ID to inspect"},
+                "event_type": {"type": "string", "description": "Filter by event type (APPROVAL, PAYMENT, FULFILLMENT, IN_TRANSIT, DELIVERY, REFUND)"},
+            },
+        },
+    )
+
+    # 18. TOOL: search_channel3_products (READ)
+    channel3_service = get_channel3_service()
+
+    def _search_channel3_handler(
+        arguments: Optional[Dict[str, Any]] = None,
+        state: Optional[AgentState] = None,
+        **kwargs,
+    ) -> Dict[str, Any]:
+        args = dict(arguments or {})
+        args.update(kwargs)
+        if "arguments" in args and isinstance(args["arguments"], dict):
+            args.update(args["arguments"])
+
+        st = state or kwargs.get("state") or AgentState()
+        query = args.get("query", "tech")
+        category = args.get("category")
+        max_price = args.get("max_price")
+        min_price = args.get("min_price")
+        brand = args.get("brand")
+        limit = args.get("limit", 5)
+
+        products = channel3_service.search(
+            query=query,
+            category=category,
+            min_price=min_price,
+            max_price=max_price,
+            brand=brand,
+            limit=limit,
+        )
+        for p in products:
+            if not any(c.id == p.id for c in st.candidate_products):
+                st.candidate_products.append(p)
+
+        st.log_action("search_channel3_products", f"Discovered {len(products)} live retailer products for '{query}'")
+        return {
+            "source": "Channel3 Multi-Retailer Graph",
+            "count": len(products),
+            "products": [p.model_dump() for p in products],
+        }
+
+    registry.register(
+        name="search_channel3_products",
+        description="Discover live multi-merchant products across 25,000+ retailers (Best Buy, Target, Amazon, etc.) with normalized pricing.",
+        permission=ToolPermission.READ,
+        handler=_search_channel3_handler,
+        schema_model=SearchChannel3Args,
+        parameters={
+            "type": "object",
+            "properties": {
+                "query": {"type": "string", "description": "Search term"},
+                "category": {"type": "string"},
+                "max_price": {"type": "number"},
+                "min_price": {"type": "number"},
+                "brand": {"type": "string"},
+                "limit": {"type": "integer"},
+            },
+            "required": ["query"],
+        },
+    )
+
+    # 19. TOOL: elastic_hybrid_search (READ)
+    elastic_service = get_elastic_service()
+
+    def _elastic_hybrid_search_handler(
+        arguments: Optional[Dict[str, Any]] = None,
+        state: Optional[AgentState] = None,
+        **kwargs,
+    ) -> Dict[str, Any]:
+        args = dict(arguments or {})
+        args.update(kwargs)
+        if "arguments" in args and isinstance(args["arguments"], dict):
+            args.update(args["arguments"])
+
+        st = state or kwargs.get("state") or AgentState()
+        query = args.get("query", "electronics")
+        category = args.get("category")
+        max_price = args.get("max_price")
+        limit = args.get("limit", 5)
+
+        hits = elastic_service.hybrid_search(
+            query=query,
+            category=category,
+            max_price=max_price,
+            limit=limit,
+        )
+        st.log_action("elastic_hybrid_search", f"Elasticsearch retrieved {len(hits)} hybrid matches for '{query}'")
+        return {
+            "engine": "Elasticsearch Hybrid RRF (BM25 + Dense Vector)",
+            "total_hits": len(hits),
+            "results": hits,
+        }
+
+    registry.register(
+        name="elastic_hybrid_search",
+        description="High-performance hybrid search across products using Elasticsearch BM25 keyword matching and vector semantic similarity.",
+        permission=ToolPermission.READ,
+        handler=_elastic_hybrid_search_handler,
+        schema_model=ElasticHybridSearchArgs,
+        parameters={
+            "type": "object",
+            "properties": {
+                "query": {"type": "string", "description": "Product search query"},
+                "category": {"type": "string"},
+                "max_price": {"type": "number"},
+                "limit": {"type": "integer"},
+            },
+            "required": ["query"],
+        },
+    )
+
+    # 20. TOOL: get_merchant_policies (READ)
+    def _get_merchant_policies_handler(
+        arguments: Optional[Dict[str, Any]] = None,
+        state: Optional[AgentState] = None,
+        **kwargs,
+    ) -> Dict[str, Any]:
+        args = dict(arguments or {})
+        args.update(kwargs)
+        if "arguments" in args and isinstance(args["arguments"], dict):
+            args.update(args["arguments"])
+
+        st = state or kwargs.get("state") or AgentState()
+        query = args.get("query", "policy")
+        limit = args.get("limit", 3)
+        policies = elastic_service.search_knowledge(query=query, limit=limit)
+        st.log_action("get_merchant_policies", f"Retrieved {len(policies)} merchant knowledge items from Elasticsearch")
+        return {
+            "source": "Elasticsearch Knowledge Base",
+            "policies": policies,
+        }
+
+    registry.register(
+        name="get_merchant_policies",
+        description="Retrieve verified merchant policies, PayPal Buyer Protection terms, warranties, and shipping SLAs.",
+        permission=ToolPermission.READ,
+        handler=_get_merchant_policies_handler,
+        schema_model=GetMerchantPoliciesArgs,
+        parameters={
+            "type": "object",
+            "properties": {
+                "query": {"type": "string", "description": "Policy inquiry (buyer protection, warranty, shipping)"},
+                "limit": {"type": "integer"},
+            },
+            "required": ["query"],
+        },
+    )
+
+    # 21. TOOL: browse_merchant_page (READ - KERNEL CLOUD BROWSER)
+    kernel_service = get_kernel_service()
+
+    def _browse_merchant_page_handler(
+        arguments: Optional[Dict[str, Any]] = None,
+        state: Optional[AgentState] = None,
+        **kwargs,
+    ) -> Dict[str, Any]:
+        args = dict(arguments or {})
+        args.update(kwargs)
+        if "arguments" in args and isinstance(args["arguments"], dict):
+            args.update(args["arguments"])
+
+        st = state or kwargs.get("state") or AgentState()
+        url = args.get("url", "")
+        extract_policy = args.get("extract_policy", True)
+        max_wait = args.get("max_wait_seconds", 15)
+        browse_res = kernel_service.inspect_merchant_product(url, extract_policy=extract_policy, max_wait_seconds=max_wait)
+        st.log_action(
+            "browse_merchant_page",
+            f"Kernel cloud browser inspected {url} in {browse_res.latency_ms}ms (Replay: {browse_res.replay_url})",
+        )
+        return browse_res.model_dump()
+
+    registry.register(
+        name="browse_merchant_page",
+        description="Inspect a live merchant product URL using Kernel cloud browser infrastructure to verify live stock, return terms, and bot protection bypass.",
+        permission=ToolPermission.READ,
+        handler=_browse_merchant_page_handler,
+        schema_model=BrowseMerchantPageArgs,
+        parameters={
+            "type": "object",
+            "properties": {
+                "url": {"type": "string", "description": "Merchant URL to inspect"},
+                "extract_policy": {"type": "boolean"},
+                "max_wait_seconds": {"type": "integer"},
+            },
+            "required": ["url"],
+        },
+    )
+
+    # 22. TOOL: trigger_zapier_automation (WRITE - ZAPIER MULTI-APP AUTOMATION)
+    zapier_service = get_zapier_service()
+
+    def _trigger_zapier_automation_handler(
+        arguments: Optional[Dict[str, Any]] = None,
+        state: Optional[AgentState] = None,
+        **kwargs,
+    ) -> Dict[str, Any]:
+        args = dict(arguments or {})
+        args.update(kwargs)
+        if "arguments" in args and isinstance(args["arguments"], dict):
+            args.update(args["arguments"])
+
+        st = state or kwargs.get("state") or AgentState()
+        event = args.get("event", "agent_action")
+        payload = args.get("payload") or {}
+        payload["user_id"] = st.user_id
+        res = zapier_service.trigger_custom_action(event=event, payload=payload)
+        st.log_action(
+            "trigger_zapier_automation",
+            f"Dispatched Zapier automation '{event}' (Status: {res.status}, Target Apps: {', '.join(res.target_apps)})",
+        )
+        return res.model_dump()
+
+    registry.register(
+        name="trigger_zapier_automation",
+        description="Trigger automated workflows across 9,000+ connected business applications (Google Sheets, Slack, Gmail, QuickBooks) via Zapier.",
+        permission=ToolPermission.WRITE,
+        handler=_trigger_zapier_automation_handler,
+        schema_model=TriggerZapierAutomationArgs,
+        parameters={
+            "type": "object",
+            "properties": {
+                "event": {"type": "string", "description": "Workflow event name"},
+                "payload": {"type": "object", "description": "Event data payload"},
+            },
+            "required": ["event"],
         },
     )
 

@@ -14,6 +14,12 @@ from app.api.payments import router as payments_router
 from app.api.agent import router as agent_router
 from app.api.orders import router as orders_router
 from app.api.notifications import router as notifications_router
+from app.api.analytics import router as analytics_router
+from app.api.timeline import router as timeline_router
+from app.api.channel3 import router as channel3_router
+from app.api.elastic import router as elastic_router
+from app.api.kernel import router as kernel_router
+from app.api.zapier import router as zapier_router
 
 settings = get_settings()
 
@@ -47,6 +53,12 @@ app.include_router(payments_router)
 app.include_router(agent_router)
 app.include_router(orders_router)
 app.include_router(notifications_router)
+app.include_router(analytics_router)
+app.include_router(timeline_router)
+app.include_router(channel3_router)
+app.include_router(elastic_router)
+app.include_router(kernel_router)
+app.include_router(zapier_router)
 
 
 @app.get("/", response_model=RootResponse, tags=["General"])

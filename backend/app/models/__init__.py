@@ -9,6 +9,7 @@ from app.models.outbox import OutboxEventModel
 from app.models.payment import PaymentModel
 from app.models.product import ProductModel
 from app.models.purchase_plan import PurchasePlanModel
+from app.models.refund_attempt import RefundAttemptModel
 from app.models.shipment import ShipmentModel
 from app.models.user import UserModel
 from app.models.webhook_event import WebhookEventModel
@@ -19,6 +20,7 @@ __all__ = [
     "UserModel",
     "PurchasePlanModel",
     "PaymentModel",
+    "RefundAttemptModel",
     "OrderModel",
     "ShipmentModel",
     "NotificationModel",

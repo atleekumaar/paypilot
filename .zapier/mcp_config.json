@@ -1,0 +1,48 @@
+{
+  "name": "PayPilot-Zapier-Integration",
+  "version": "1.0.0",
+  "description": "Zapier AI Actions and MCP integration specification for PayPilot Agentic Commerce.",
+  "provider": "Zapier",
+  "auth": {
+    "type": "api_key",
+    "header": "X-API-Key"
+  },
+  "actions": [
+    {
+      "id": "order_completed",
+      "name": "Order Completed Trigger",
+      "description": "Fires when a customer successfully captures a PayPal payment. Creates invoices in QuickBooks, logs transaction rows in Google Sheets, and sends customer receipt via Gmail.",
+      "endpoint": "/api/zapier/dispatch",
+      "method": "POST",
+      "payload_schema": {
+        "order_id": "string",
+        "user_id": "string",
+        "product_name": "string",
+        "total_amount": "number",
+        "currency": "string",
+        "paypal_capture_id": "string"
+      }
+    },
+    {
+      "id": "refund_alert",
+      "name": "Refund Processed Alert",
+      "description": "Fires when a PayPal refund is initiated or captured, alerting merchant team in Slack and updating CRM.",
+      "endpoint": "/api/zapier/dispatch",
+      "method": "POST",
+      "payload_schema": {
+        "order_id": "string",
+        "refund_amount": "number",
+        "reason": "string",
+        "paypal_refund_id": "string"
+      }
+    },
+    {
+      "id": "trigger_agent_action",
+      "name": "Trigger Agent Commerce Action",
+      "description": "Allows external connected apps (e.g. Zendesk, Salesforce) to trigger automated agent workflows.",
+      "endpoint": "/api/zapier/webhook",
+      "method": "POST"
+    }
+  ]
+}
+

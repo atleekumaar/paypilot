@@ -37,6 +37,7 @@ class PostPurchaseIntent(str, Enum):
     ORDER_PROBLEM = "ORDER_PROBLEM"
     SUPPORT_DRAFT = "SUPPORT_DRAFT"
     SUPPORT_APPROVAL = "SUPPORT_APPROVAL"
+    TIMELINE = "TIMELINE"
     AMBIGUOUS = "AMBIGUOUS"
     GENERAL = "GENERAL"
 
@@ -69,6 +70,7 @@ class PostPurchaseAgent:
             r"\b(my orders|order history|past orders|recent orders|list my orders)\b",
             r"\b(prepare a support|prepare support|contact merchant|contact support|support request)\b",
             r"\b(approve and send|send request|send the request|send this request)\b",
+            r"\b(timeline|commerce timeline|schedule|milestones|delivery schedule)\b",
             r"\bord-[0-9a-fA-F]+\b",
             r"\bpp-[0-9a-fA-F]+\b",
         ]
@@ -98,6 +100,9 @@ class PostPurchaseAgent:
 
         if re.search(r"\b(my orders|past orders|order history|all orders|what did i buy)\b", msg_lower):
             return PostPurchaseIntent.ORDER_HISTORY
+
+        if re.search(r"\b(timeline|commerce timeline|schedule|milestones|delivery schedule)\b", msg_lower):
+            return PostPurchaseIntent.TIMELINE
 
         if re.search(r"\b(problem|issue|broken|damaged|wrong item|cancelled)\b", msg_lower):
             return PostPurchaseIntent.ORDER_PROBLEM
@@ -184,6 +189,25 @@ class PostPurchaseAgent:
                     lines.append(f"• **{o['product_name']}** ({o['id']}) — ${o['amount']:.2f} {o['currency']} [Status: {o['status']}]")
                 lines.append("\nYou can ask me for tracking details, delivery estimates, or payment verification on any of these orders.")
                 response = "\n".join(lines)
+            state.messages.append(ConversationMessage(role="assistant", content=response))
+            state.status = AgentStatus.IDLE
+            return {"message": response, "intent": intent.value, "actions": [a.model_dump() for a in state.actions]}
+
+        # Turn: Commerce Timeline & Milestone Schedule
+        if intent == PostPurchaseIntent.TIMELINE:
+            timeline_res = self._registry.execute("query_commerce_timeline", {}, state).data
+            summary = timeline_res.get("summary", {})
+            next_del = summary.get("next_delivery")
+            lines = [
+                "📅 **Commerce Schedule & Lifecycle Milestones**\n",
+                f"• Active Orders: **{summary.get('total_orders', 0)}**",
+                f"• Shipments in Transit: **{summary.get('active_shipments', 0)}**",
+                f"• Pending Payments: **{summary.get('pending_payments', 0)}**",
+            ]
+            if next_del:
+                lines.append(f"• Next Expected Delivery: **{format_friendly_date(next_del.get('estimated_delivery'))}** ({next_del.get('carrier')} #{next_del.get('tracking_number')})")
+            lines.append("\nYou can explore the full interactive visual Gantt timeline on the **/timeline** dashboard.")
+            response = "\n".join(lines)
             state.messages.append(ConversationMessage(role="assistant", content=response))
             state.status = AgentStatus.IDLE
             return {"message": response, "intent": intent.value, "actions": [a.model_dump() for a in state.actions]}

@@ -46,6 +46,27 @@ class Settings(BaseSettings):
     PAYPAL_MOCK_ENABLED: Optional[bool] = None  # None: auto (mock allowed in sandbox/dev only if credentials not configured)
     PAYPAL_WEBHOOK_ID: Optional[str] = None
 
+    # Channel3 Integration
+    CHANNEL3_API_KEY: Optional[str] = None
+    CHANNEL3_BASE_URL: str = "https://api.trychannel3.com"
+
+    # Elasticsearch Integration
+    ELASTICSEARCH_URL: str = "http://localhost:9200"
+    ELASTICSEARCH_API_KEY: Optional[str] = None
+    ELASTIC_PRODUCT_INDEX: str = "paypilot_products"
+    ELASTIC_KNOWLEDGE_INDEX: str = "paypilot_knowledge"
+
+    # Kernel Browser Cloud Infrastructure
+    KERNEL_API_KEY: Optional[str] = None
+    KERNEL_BASE_URL: str = "https://api.onkernel.com"
+
+    # Zapier Multi-App Workflow Automation
+    ZAPIER_WEBHOOK_URL: Optional[str] = None
+    ZAPIER_NLA_API_KEY: Optional[str] = None
+
+    # Render Cloud Deployment
+    RENDER_EXTERNAL_URL: Optional[str] = None
+
     @model_validator(mode="after")
     def validate_production_security(self) -> "Settings":
         """Enforce strict production fail-closed security rules."""
@@ -56,6 +77,16 @@ class Settings(BaseSettings):
                 raise ValueError("AUTH_ISSUER must be configured when ENVIRONMENT='production'")
             if not self.AUTH_JWKS_URL:
                 raise ValueError("AUTH_JWKS_URL must be configured when ENVIRONMENT='production'")
+            if not self.PAYPAL_CLIENT_ID or self.PAYPAL_CLIENT_ID.startswith("your_"):
+                raise ValueError("PAYPAL_CLIENT_ID must be configured when ENVIRONMENT='production'")
+            if not self.PAYPAL_CLIENT_SECRET or self.PAYPAL_CLIENT_SECRET.startswith("your_"):
+                raise ValueError("PAYPAL_CLIENT_SECRET must be configured when ENVIRONMENT='production'")
+            if not self.PAYPAL_WEBHOOK_ID or self.PAYPAL_WEBHOOK_ID.startswith("your_"):
+                raise ValueError("PAYPAL_WEBHOOK_ID must be configured when ENVIRONMENT='production'")
+            if not self.DATABASE_URL or self.DATABASE_URL.startswith("sqlite"):
+                raise ValueError("Production environment requires a production PostgreSQL DATABASE_URL (SQLite is disallowed)")
+            if not self.ALLOWED_ORIGINS or any("*" in o for o in self.ALLOWED_ORIGINS):
+                raise ValueError("ALLOWED_ORIGINS must be explicitly configured without wildcards in production")
         return self
 
     @property
@@ -66,7 +97,7 @@ class Settings(BaseSettings):
         return "https://api-m.sandbox.paypal.com"
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(".env", "../.env"),
         env_file_encoding="utf-8",
         extra="ignore",
     )
