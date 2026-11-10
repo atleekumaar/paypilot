@@ -83,50 +83,50 @@ export default function NotificationsPage() {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F5F8FC]/50 text-[#14213D] text-left">
+    <div className="flex flex-col min-h-screen bg-[#F5F8FC]/50 dark:bg-[#090D16] text-[#14213D] dark:text-slate-100 text-left transition-colors duration-200">
       <Navbar />
 
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-8">
-        <div className="flex items-center justify-between pb-6 border-b border-slate-200 mb-6">
+        <div className="flex items-center justify-between pb-6 border-b border-slate-200 dark:border-slate-800 mb-6">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#0070E0]/20 bg-[#EAF3FF] text-[#0070E0] text-xs font-bold mb-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#0070E0]/20 bg-[#EAF3FF] dark:bg-[#0070E0]/20 text-[#0070E0] dark:text-[#38BDF8] text-xs font-bold mb-2">
               <Bell className="w-3.5 h-3.5" />
               Proactive Commerce Updates
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-[#14213D] tracking-tight flex items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-black text-[#14213D] dark:text-white tracking-tight flex items-center gap-3">
               Notification Center
               {unreadCount > 0 && (
-                <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#EAF3FF] border border-[#0070E0]/30 text-[#0070E0] font-bold">
+                <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#EAF3FF] dark:bg-[#0070E0]/20 border border-[#0070E0]/30 dark:border-[#0070E0]/50 text-[#0070E0] dark:text-[#38BDF8] font-bold">
                   {unreadCount} unread
                 </span>
               )}
             </h1>
-            <p className="text-xs sm:text-sm text-slate-600 mt-1">
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">
               Real-time delivery milestones, shipment delay alerts, and payment verification events.
             </p>
           </div>
 
           <button
             onClick={fetchNotifications}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 shadow-xs transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 shadow-xs transition-colors cursor-pointer"
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`w-3.5 h-3.5 text-slate-500 dark:text-slate-400 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </button>
         </div>
 
         {loading ? (
-          <div className="py-20 text-center text-slate-500">
-            <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#0070E0] mb-2" />
+          <div className="py-20 text-center text-slate-500 dark:text-slate-400">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#0070E0] dark:text-[#38BDF8] mb-2" />
             <p className="text-sm font-medium">Loading notifications...</p>
           </div>
         ) : notifications.length === 0 ? (
-          <div className="text-center py-16 px-4 rounded-3xl border border-slate-200 bg-white shadow-subtle">
-            <div className="w-14 h-14 rounded-2xl bg-[#EAF3FF] text-[#0070E0] flex items-center justify-center mx-auto mb-3">
+          <div className="text-center py-16 px-4 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0E1422] shadow-subtle">
+            <div className="w-14 h-14 rounded-2xl bg-[#EAF3FF] dark:bg-[#0070E0]/20 text-[#0070E0] dark:text-[#38BDF8] flex items-center justify-center mx-auto mb-3">
               <Bell className="w-7 h-7" />
             </div>
-            <h3 className="text-base font-bold text-[#14213D] mb-1">No Notifications</h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+            <h3 className="text-base font-bold text-[#14213D] dark:text-white mb-1">No Notifications</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
               You are all caught up! New order updates, delay notices, and payment captures will appear here.
             </p>
           </div>
@@ -137,8 +137,8 @@ export default function NotificationsPage() {
                 key={item.id}
                 className={`p-5 rounded-2xl border transition-all flex items-start justify-between gap-4 ${
                   item.read
-                    ? "border-slate-200/80 bg-white/70 text-slate-500"
-                    : "border-[#0070E0]/30 bg-white text-slate-800 shadow-subtle"
+                    ? "border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/40 text-slate-500 dark:text-slate-400"
+                    : "border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0E1422] shadow-subtle text-[#14213D] dark:text-white"
                 }`}
               >
                 <div className="flex items-start gap-3.5">

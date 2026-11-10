@@ -12,6 +12,17 @@
   --paypilot-border: #e2e8f0;
 }
 
+.dark {
+  --background: #090d16;
+  --foreground: #f8fafc;
+  --paypilot-blue: #0070e0;
+  --paypilot-bright: #38bdf8;
+  --paypilot-accent: #1e293b;
+  --paypilot-surface: #0e1422;
+  --paypilot-border: #1e293b;
+  color-scheme: dark;
+}
+
 html {
   scroll-behavior: smooth;
 }

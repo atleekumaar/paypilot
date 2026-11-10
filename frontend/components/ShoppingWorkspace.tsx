@@ -157,11 +157,11 @@ export default function ShoppingWorkspace() {
   return (
     <div className="w-full max-w-6xl mx-auto px-4 py-8 text-left">
       {/* Search Input Box */}
-      <div className="bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-8 shadow-card mb-8">
+      <div className="bg-white dark:bg-[#0E1422] border border-slate-200/90 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-card mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-[#0070E0]" />
-            <label className="block text-xs font-bold uppercase tracking-wider text-[#0070E0]">
+            <Sparkles className="w-4 h-4 text-[#0070E0] dark:text-[#38BDF8]" />
+            <label className="block text-xs font-bold uppercase tracking-wider text-[#0070E0] dark:text-[#38BDF8]">
               Direct Catalog Discovery
             </label>
           </div>
@@ -171,8 +171,8 @@ export default function ShoppingWorkspace() {
               onClick={() => setDiscoverySource("ALL")}
               className={`px-3 py-1.5 text-xs rounded-full font-semibold transition-all cursor-pointer ${
                 discoverySource === "ALL"
-                  ? "bg-[#EAF3FF] text-[#0070E0] border border-[#0070E0]/30 shadow-sm"
-                  : "bg-[#F5F8FC] text-slate-600 hover:text-slate-900 border border-slate-200"
+                  ? "bg-[#EAF3FF] dark:bg-[#0070E0]/20 text-[#0070E0] dark:text-[#38BDF8] border border-[#0070E0]/30 dark:border-[#0070E0]/50 shadow-sm"
+                  : "bg-[#F5F8FC] dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800"
               }`}
             >
               Unified Discovery
@@ -182,8 +182,8 @@ export default function ShoppingWorkspace() {
               onClick={() => setDiscoverySource("CHANNEL3")}
               className={`px-3 py-1.5 text-xs rounded-full font-semibold transition-all cursor-pointer ${
                 discoverySource === "CHANNEL3"
-                  ? "bg-emerald-50 text-emerald-700 border border-emerald-300 shadow-sm"
-                  : "bg-[#F5F8FC] text-slate-600 hover:text-slate-900 border border-slate-200"
+                  ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700 shadow-sm"
+                  : "bg-[#F5F8FC] dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800"
               }`}
             >
               Channel3 Retailers
@@ -193,15 +193,15 @@ export default function ShoppingWorkspace() {
               onClick={() => setDiscoverySource("ELASTIC")}
               className={`px-3 py-1.5 text-xs rounded-full font-semibold transition-all cursor-pointer ${
                 discoverySource === "ELASTIC"
-                  ? "bg-purple-50 text-purple-700 border border-purple-300 shadow-sm"
-                  : "bg-[#F5F8FC] text-slate-600 hover:text-slate-900 border border-slate-200"
+                  ? "bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-400 border border-purple-300 dark:border-purple-700 shadow-sm"
+                  : "bg-[#F5F8FC] dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800"
               }`}
             >
               Elasticsearch
             </button>
           </div>
         </div>
-        <h3 className="text-xl sm:text-2xl font-black text-[#14213D] mb-4 tracking-tight">
+        <h3 className="text-xl sm:text-2xl font-black text-[#14213D] dark:text-white mb-4 tracking-tight">
           Find Any Product with Natural Language
         </h3>
 
@@ -219,7 +219,7 @@ export default function ShoppingWorkspace() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="e.g. Find me a laptop under $1200 for AI development with good battery life..."
-              className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-[#F5F8FC] border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-[#0070E0] focus:bg-white focus:ring-2 focus:ring-[#0070E0]/10 transition-all"
+              className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-[#F5F8FC] dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 text-sm focus:outline-none focus:border-[#0070E0] focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#0070E0]/10 transition-all"
             />
           </div>
           <button
@@ -243,7 +243,7 @@ export default function ShoppingWorkspace() {
 
         {/* Suggestion Chips */}
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          <span className="text-xs text-slate-500 font-medium">Try asking:</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Try asking:</span>
           {PRESET_QUERIES.map((preset, idx) => (
             <button
               key={idx}
@@ -252,7 +252,7 @@ export default function ShoppingWorkspace() {
                 setQuery(preset);
                 handleSearch(preset);
               }}
-              className="text-xs bg-[#F5F8FC] hover:bg-slate-100 text-slate-700 hover:text-[#0070E0] px-3 py-1.5 rounded-full border border-slate-200 transition-colors truncate max-w-xs text-left cursor-pointer"
+              className="text-xs bg-[#F5F8FC] dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-[#0070E0] dark:hover:text-[#38BDF8] px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-800 transition-colors truncate max-w-xs text-left cursor-pointer"
             >
               {preset}
             </button>
@@ -304,17 +304,17 @@ export default function ShoppingWorkspace() {
       {!isLoading && results && results.recommendations.length > 0 && (
         <div className="space-y-8 animate-in fade-in duration-300">
           {/* Header Banner */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-4 gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 gap-2">
             <div>
-              <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#0070E0] mb-1">
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#0070E0] dark:text-[#38BDF8] mb-1">
                 <Sparkles className="w-3.5 h-3.5" />
                 AI Verified Recommendations
               </div>
-              <h3 className="text-2xl font-black text-[#14213D] tracking-tight">
+              <h3 className="text-2xl font-black text-[#14213D] dark:text-white tracking-tight">
                 Top Matches Found
               </h3>
             </div>
-            <span className="text-xs text-slate-500 bg-[#F5F8FC] border border-slate-200 px-3 py-1.5 rounded-full font-medium">
+            <span className="text-xs text-slate-500 dark:text-slate-400 bg-[#F5F8FC] dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-full font-medium">
               Evaluated {results.total_candidates} catalogue candidates
             </span>
           </div>
@@ -328,8 +328,8 @@ export default function ShoppingWorkspace() {
                   key={item.product_id}
                   className={`relative flex flex-col justify-between rounded-3xl p-6 transition-all duration-200 ${
                     isTopPick
-                      ? "bg-white border-2 border-[#0070E0] shadow-card hover:shadow-cardHover"
-                      : "bg-white border border-slate-200/90 shadow-subtle hover:shadow-card"
+                      ? "bg-white dark:bg-[#0E1422] border-2 border-[#0070E0] dark:border-[#38BDF8] shadow-card hover:shadow-cardHover"
+                      : "bg-white dark:bg-[#0E1422] border border-slate-200/90 dark:border-slate-800 shadow-subtle hover:shadow-card"
                   }`}
                 >
                   <div>
@@ -339,12 +339,12 @@ export default function ShoppingWorkspace() {
                         className={`text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider ${
                           isTopPick
                             ? "bg-[#0070E0] text-white"
-                            : "bg-[#F5F8FC] text-slate-700 border border-slate-200"
+                            : "bg-[#F5F8FC] dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800"
                         }`}
                       >
                         {isTopPick ? "★ Rank #1 (Top Pick)" : `Rank #${item.rank}`}
                       </span>
-                      <span className="text-xs font-mono font-bold text-[#0070E0] bg-[#EAF3FF] border border-[#0070E0]/20 px-2 py-0.5 rounded-md">
+                      <span className="text-xs font-mono font-bold text-[#0070E0] dark:text-[#38BDF8] bg-[#EAF3FF] dark:bg-[#0070E0]/20 border border-[#0070E0]/20 px-2 py-0.5 rounded-md">
                         {item.score}/100 Match
                       </span>
                     </div>
@@ -352,39 +352,41 @@ export default function ShoppingWorkspace() {
                     {/* Title & Brand */}
                     <div className="mb-4">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-[11px] uppercase tracking-wider text-slate-500 font-bold">
+                        <span className="text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold">
                           {item.product.brand}
                         </span>
                         {item.product.source === "CHANNEL3" && (
-                          <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                          <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
                             Channel3 Retailer
                           </span>
                         )}
                         {item.product.source === "ELASTIC" && (
-                          <span className="text-[10px] font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
-                            Elastic Hybrid
+                          <span className="text-[10px] font-semibold text-purple-700 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/60 px-2 py-0.5 rounded-full border border-purple-200 dark:border-purple-800">
+                            Elasticsearch
                           </span>
                         )}
                       </div>
-                      <h4 className="text-lg font-bold text-[#14213D] mt-0.5 line-clamp-1">
+                      <h4 className="font-extrabold text-[#14213D] dark:text-white text-lg leading-snug">
                         {item.product.name}
                       </h4>
-                      <p className="text-xs text-slate-600 line-clamp-2 mt-1">
+                      <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 mt-2">
                         {item.product.description}
                       </p>
                     </div>
 
                     {/* Price & Rating */}
-                    <div className="flex items-baseline justify-between py-3 border-y border-slate-100 mb-4">
+                    <div className="flex items-baseline justify-between py-3 border-y border-slate-100 dark:border-slate-800 mb-4">
                       <div>
-                        <span className="text-2xl font-black text-[#003087] font-mono">
+                        <span className="text-2xl font-black text-[#003087] dark:text-[#38BDF8] font-mono">
                           ${item.product.price.toLocaleString("en-US", { minimumFractionDigits: 0 })}
                         </span>
-                        <span className="text-xs text-slate-500 font-sans ml-1">USD</span>
+                        <span className="text-xs text-slate-500 dark:text-slate-400 font-sans ml-1">
+                          {item.product.currency || "USD"}
+                        </span>
                       </div>
                       <div className="flex items-center gap-1 text-xs text-amber-500">
                         <Star className="w-3.5 h-3.5 fill-amber-400" />
-                        <span className="font-bold text-slate-800">{item.product.rating}</span>
+                        <span className="font-bold text-slate-800 dark:text-slate-200">{item.product.rating}</span>
                         <span className="text-slate-400">({item.product.review_count})</span>
                       </div>
                     </div>
@@ -392,33 +394,33 @@ export default function ShoppingWorkspace() {
                     {/* Feature Tags */}
                     <div className="space-y-1.5 mb-5 text-xs">
                       {item.product.features?.gpu && (
-                        <div className="flex items-center gap-2 text-slate-700">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#0070E0]"></span>
+                        <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#0070E0] dark:bg-[#38BDF8]"></span>
                           <span className="truncate">{item.product.features.gpu}</span>
                         </div>
                       )}
                       {item.product.features?.ram_gb && (
-                        <div className="flex items-center gap-2 text-slate-700">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#0070E0]"></span>
+                        <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#0070E0] dark:bg-[#38BDF8]"></span>
                           <span>{item.product.features.ram_gb} GB RAM</span>
                         </div>
                       )}
                       {item.product.features?.battery_hours && (
-                        <div className="flex items-center gap-2 text-slate-700">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#0070E0]"></span>
+                        <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#0070E0] dark:bg-[#38BDF8]"></span>
                           <span>{item.product.features.battery_hours}h Battery</span>
                         </div>
                       )}
                     </div>
 
                     {/* Delivery & Seller snippet */}
-                    <div className="flex items-center justify-between text-[11px] text-slate-500 mb-5">
+                    <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 mb-5">
                       <span className="flex items-center gap-1">
-                        <Truck className="w-3.5 h-3.5 text-[#0070E0]" />
+                        <Truck className="w-3.5 h-3.5 text-[#0070E0] dark:text-[#38BDF8]" />
                         {item.product.delivery_days}-day delivery
                       </span>
                       <span className="flex items-center gap-1 truncate max-w-[120px]">
-                        <ShieldCheck className="w-3.5 h-3.5 text-[#0070E0]" />
+                        <ShieldCheck className="w-3.5 h-3.5 text-[#0070E0] dark:text-[#38BDF8]" />
                         {item.product.seller}
                       </span>
                     </div>
@@ -428,7 +430,7 @@ export default function ShoppingWorkspace() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => setSelectedProduct(item.product)}
-                      className="flex-1 py-2.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 transition-colors cursor-pointer"
+                      className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
                     >
                       View Details
                     </button>
@@ -437,7 +439,7 @@ export default function ShoppingWorkspace() {
                       className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                         isTopPick
                           ? "bg-[#0070E0] hover:bg-[#005bb5] text-white shadow-sm"
-                          : "bg-slate-900 hover:bg-black text-white"
+                          : "bg-slate-900 dark:bg-slate-700 hover:bg-black dark:hover:bg-slate-600 text-white"
                       }`}
                     >
                       {isTopPick ? "I like this one" : "Select"}

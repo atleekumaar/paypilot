@@ -243,21 +243,21 @@ export default function AgentCommerceChat() {
   return (
     <div
       id="assistant"
-      className="w-full bg-white border border-slate-200/90 rounded-3xl shadow-card flex flex-col h-[620px] max-h-[90vh] overflow-hidden transition-all text-left"
+      className="w-full bg-white dark:bg-[#0E1422] border border-slate-200/90 dark:border-slate-800 rounded-3xl shadow-card flex flex-col h-[620px] max-h-[90vh] overflow-hidden transition-all text-left"
     >
       {/* Header */}
-      <div className="px-5 py-4 bg-white border-b border-slate-100 flex items-center justify-between">
+      <div className="px-5 py-4 bg-white dark:bg-[#0E1422] border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-[#0070E0] flex items-center justify-center text-white font-extrabold text-sm shadow-sm">
             <span className="italic">P</span>
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold text-[#14213D]">
+              <h3 className="text-sm font-bold text-[#14213D] dark:text-white">
                 PayPilot Assistant
               </h3>
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
               <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
               <span>Online</span>
             </div>
@@ -266,15 +266,15 @@ export default function AgentCommerceChat() {
 
         <button
           onClick={resetChat}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-colors cursor-pointer"
         >
-          <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+          <RotateCcw className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
           <span>New Chat</span>
         </button>
       </div>
 
       {/* Messages Stream */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 bg-white">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 bg-white dark:bg-[#090D16]">
         {messages.map((msg) => (
           <div
             key={msg.id}
@@ -292,13 +292,13 @@ export default function AgentCommerceChat() {
                   <span className="italic">P</span>
                 </div>
                 <div className="flex-1 space-y-3">
-                  <div className="text-xs sm:text-sm text-[#14213D] leading-relaxed font-normal whitespace-pre-line">
+                  <div className="text-xs sm:text-sm text-[#14213D] dark:text-slate-100 leading-relaxed font-normal whitespace-pre-line">
                     {msg.text}
                   </div>
 
                   {/* Candidate Product Cards */}
                   {msg.candidateProducts && msg.candidateProducts.length > 0 && (
-                    <div className="rounded-2xl border border-slate-200/90 overflow-hidden divide-y divide-slate-100 bg-[#F5F8FC]/50 max-w-md shadow-subtle">
+                    <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 overflow-hidden divide-y divide-slate-100 dark:divide-slate-800 bg-[#F5F8FC]/50 dark:bg-slate-900/60 max-w-md shadow-subtle">
                       {msg.candidateProducts.map((p: any, idx: number) => {
                         const name = p.name || p.product_name;
                         const price = p.priceDisplay || (p.price ? `$${p.price}` : "");
@@ -314,27 +314,27 @@ export default function AgentCommerceChat() {
                           <div
                             key={p.id || idx}
                             onClick={() => handleSendMessage(`Tell me more about ${name}`)}
-                            className="p-3 sm:p-3.5 flex items-center justify-between gap-3 hover:bg-white transition-colors cursor-pointer group"
+                            className="p-3 sm:p-3.5 flex items-center justify-between gap-3 hover:bg-white dark:hover:bg-slate-800/80 transition-colors cursor-pointer group"
                           >
                             <div className="flex items-center gap-3 min-w-0">
-                              <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 shrink-0 group-hover:border-[#0070E0] transition-colors">
-                                <Laptop className="w-5 h-5 text-slate-600 group-hover:text-[#0070E0]" />
+                              <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 shrink-0 group-hover:border-[#0070E0] dark:group-hover:border-[#38BDF8] transition-colors">
+                                <Laptop className="w-5 h-5 text-slate-600 dark:text-slate-300 group-hover:text-[#0070E0] dark:group-hover:text-[#38BDF8]" />
                               </div>
                               <div className="min-w-0">
-                                <div className="text-xs sm:text-sm font-bold text-[#14213D] truncate group-hover:text-[#0070E0] transition-colors">
+                                <div className="text-xs sm:text-sm font-bold text-[#14213D] dark:text-white truncate group-hover:text-[#0070E0] dark:group-hover:text-[#38BDF8] transition-colors">
                                   {name}
                                 </div>
                                 <div className="flex items-center gap-2 mt-0.5">
-                                  <span className="text-xs font-extrabold text-[#003087]">
+                                  <span className="text-xs font-extrabold text-[#003087] dark:text-[#38BDF8]">
                                     {price}
                                   </span>
-                                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+                                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800">
                                     {badge}
                                   </span>
                                 </div>
                               </div>
                             </div>
-                            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#0070E0] shrink-0 transition-transform group-hover:translate-x-0.5" />
+                            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#0070E0] dark:group-hover:text-[#38BDF8] shrink-0 transition-transform group-hover:translate-x-0.5" />
                           </div>
                         );
                       })}
@@ -343,28 +343,28 @@ export default function AgentCommerceChat() {
 
                   {/* Payment Receipt */}
                   {msg.paymentReceipt && (
-                    <div className="w-full max-w-md p-4 rounded-xl bg-emerald-50/80 border border-emerald-300 text-xs font-mono space-y-1.5 text-slate-700">
-                      <div className="flex items-center gap-1.5 text-emerald-800 font-bold text-sm mb-2">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <div className="w-full max-w-md p-4 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-xs font-mono space-y-1.5 text-slate-700 dark:text-slate-200">
+                      <div className="flex items-center gap-1.5 text-emerald-800 dark:text-emerald-400 font-bold text-sm mb-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                         PAYMENT SUCCESSFUL
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-500">Amount:</span>
-                        <span className="text-slate-900 font-bold">
+                        <span className="text-slate-500 dark:text-slate-400">Amount:</span>
+                        <span className="text-slate-900 dark:text-white font-bold">
                           ${msg.paymentReceipt.amount} {msg.paymentReceipt.currency || "USD"}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-500">Status:</span>
-                        <span className="text-emerald-700 font-bold">COMPLETED</span>
+                        <span className="text-slate-500 dark:text-slate-400">Status:</span>
+                        <span className="text-emerald-700 dark:text-emerald-400 font-bold">COMPLETED</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-500">PayPal Order ID:</span>
-                        <span className="text-slate-900 font-medium">{msg.paymentReceipt.provider_order_id}</span>
+                        <span className="text-slate-500 dark:text-slate-400">PayPal Order ID:</span>
+                        <span className="text-slate-900 dark:text-white font-medium">{msg.paymentReceipt.provider_order_id}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-500">Capture ID:</span>
-                        <span className="text-slate-900 font-medium">{msg.paymentReceipt.capture_id}</span>
+                        <span className="text-slate-500 dark:text-slate-400">Capture ID:</span>
+                        <span className="text-slate-900 dark:text-white font-medium">{msg.paymentReceipt.capture_id}</span>
                       </div>
                     </div>
                   )}
@@ -392,7 +392,7 @@ export default function AgentCommerceChat() {
 
         {/* Loading Indicator */}
         {isLoading && !activePlan && (
-          <div className="flex items-center gap-2 text-xs text-[#0070E0] pl-9 animate-pulse">
+          <div className="flex items-center gap-2 text-xs text-[#0070E0] dark:text-[#38BDF8] pl-9 animate-pulse">
             <Loader2 className="w-4 h-4 animate-spin" />
             <span>PayPilot is searching live products and comparing options...</span>
           </div>
@@ -402,15 +402,15 @@ export default function AgentCommerceChat() {
       </div>
 
       {/* Suggested Prompts Bar */}
-      <div className="px-4 py-2 bg-[#F5F8FC] border-t border-slate-100 flex items-center gap-1.5 overflow-x-auto">
-        <span className="text-[11px] font-medium text-slate-500 shrink-0">Try:</span>
+      <div className="px-4 py-2 bg-[#F5F8FC] dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 flex items-center gap-1.5 overflow-x-auto">
+        <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 shrink-0">Try:</span>
         {DEMO_PROMPTS.slice(0, 3).map((prompt, idx) => (
           <button
             key={idx}
             type="button"
             onClick={() => handleSendMessage(prompt)}
             disabled={isLoading}
-            className="text-[11px] bg-white hover:bg-slate-50 text-slate-700 hover:text-[#0070E0] px-2.5 py-1 rounded-full border border-slate-200 shrink-0 transition-colors cursor-pointer disabled:opacity-50 truncate max-w-xs"
+            className="text-[11px] bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 hover:text-[#0070E0] dark:hover:text-[#38BDF8] px-2.5 py-1 rounded-full border border-slate-200 dark:border-slate-700 shrink-0 transition-colors cursor-pointer disabled:opacity-50 truncate max-w-xs"
           >
             {prompt}
           </button>
@@ -418,7 +418,7 @@ export default function AgentCommerceChat() {
       </div>
 
       {/* Input Composer */}
-      <div className="p-3 sm:p-4 bg-white border-t border-slate-100">
+      <div className="p-3 sm:p-4 bg-white dark:bg-[#0E1422] border-t border-slate-100 dark:border-slate-800">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -432,7 +432,7 @@ export default function AgentCommerceChat() {
             onChange={(e) => setInputText(e.target.value)}
             placeholder="Ask anything about products, prices, or purchases..."
             disabled={isLoading}
-            className="w-full pl-4 pr-12 py-3 rounded-2xl bg-[#F5F8FC] border border-slate-200 text-xs sm:text-sm text-[#14213D] placeholder:text-slate-400 focus:outline-none focus:border-[#0070E0] focus:bg-white focus:ring-2 focus:ring-[#0070E0]/10 transition-all disabled:opacity-60"
+            className="w-full pl-4 pr-12 py-3 rounded-2xl bg-[#F5F8FC] dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm text-[#14213D] dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-[#0070E0] focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#0070E0]/10 transition-all disabled:opacity-60"
           />
           <button
             type="submit"

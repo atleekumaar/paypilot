@@ -12,6 +12,7 @@ import {
   LineChart,
   CalendarRange,
 } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -104,7 +105,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className="w-full border-b border-slate-100 bg-white/95 backdrop-blur-md sticky top-0 z-50 transition-all">
+    <header className="w-full border-b border-slate-100 dark:border-slate-800 bg-white/95 dark:bg-[#090D16]/95 backdrop-blur-md sticky top-0 z-50 transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 py-3.5 flex items-center justify-between">
         {/* Brand Logo */}
         <Link
@@ -121,8 +122,8 @@ export default function Navbar() {
             <span className="tracking-tighter font-extrabold italic">P</span>
           </div>
           <div className="flex items-baseline gap-1.5">
-            <span className="font-extrabold text-xl tracking-tight text-[#14213D]">
-              Pay<span className="text-[#0070E0]">Pilot</span>
+            <span className="font-extrabold text-xl tracking-tight text-[#14213D] dark:text-white transition-colors">
+              Pay<span className="text-[#0070E0] dark:text-[#38BDF8]">Pilot</span>
             </span>
           </div>
         </Link>
@@ -134,8 +135,8 @@ export default function Navbar() {
             onClick={() => navigateTo("home")}
             className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
               isHome && activeSection === "home"
-                ? "bg-[#EAF3FF] text-[#0070E0]"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                ? "bg-[#EAF3FF] dark:bg-[#0070E0]/20 text-[#0070E0] dark:text-[#38BDF8]"
+                : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
             }`}
           >
             Home
@@ -146,8 +147,8 @@ export default function Navbar() {
             onClick={() => navigateTo("features")}
             className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
               isHome && activeSection === "features"
-                ? "bg-[#EAF3FF] text-[#0070E0]"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                ? "bg-[#EAF3FF] dark:bg-[#0070E0]/20 text-[#0070E0] dark:text-[#38BDF8]"
+                : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
             }`}
           >
             Features
@@ -158,8 +159,8 @@ export default function Navbar() {
             onClick={() => navigateTo("how-it-works")}
             className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
               isHome && activeSection === "how-it-works"
-                ? "bg-[#EAF3FF] text-[#0070E0]"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                ? "bg-[#EAF3FF] dark:bg-[#0070E0]/20 text-[#0070E0] dark:text-[#38BDF8]"
+                : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
             }`}
           >
             How it Works
@@ -170,8 +171,8 @@ export default function Navbar() {
             onClick={() => navigateTo("demo")}
             className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
               isHome && activeSection === "demo"
-                ? "bg-[#EAF3FF] text-[#0070E0]"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                ? "bg-[#EAF3FF] dark:bg-[#0070E0]/20 text-[#0070E0] dark:text-[#38BDF8]"
+                : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
             }`}
           >
             Demo
@@ -181,8 +182,8 @@ export default function Navbar() {
             href="/insights"
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
               pathname.startsWith("/insights")
-                ? "bg-[#EAF3FF] text-[#0070E0] font-semibold"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                ? "bg-[#EAF3FF] dark:bg-[#0070E0]/20 text-[#0070E0] dark:text-[#38BDF8] font-semibold"
+                : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
             }`}
           >
             <LineChart className="w-3.5 h-3.5" />
@@ -193,8 +194,8 @@ export default function Navbar() {
             href="/timeline"
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
               pathname.startsWith("/timeline")
-                ? "bg-[#EAF3FF] text-[#0070E0] font-semibold"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                ? "bg-[#EAF3FF] dark:bg-[#0070E0]/20 text-[#0070E0] dark:text-[#38BDF8] font-semibold"
+                : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
             }`}
           >
             <CalendarRange className="w-3.5 h-3.5" />
@@ -205,20 +206,20 @@ export default function Navbar() {
             href="https://github.com/atleekumaar/paypilot#readme"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-3.5 py-1.5 rounded-full text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all cursor-pointer flex items-center gap-1"
+            className="px-3.5 py-1.5 rounded-full text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-all cursor-pointer flex items-center gap-1"
           >
             <span>Docs</span>
             <ExternalLink className="w-3 h-3 text-slate-400" />
           </a>
 
-          <div className="h-4 w-px bg-slate-200 mx-1" />
+          <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-1" />
 
           <Link
             href="/orders"
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
               pathname.startsWith("/orders")
-                ? "bg-[#EAF3FF] text-[#0070E0] font-semibold"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                ? "bg-[#EAF3FF] dark:bg-[#0070E0]/20 text-[#0070E0] dark:text-[#38BDF8] font-semibold"
+                : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
             }`}
           >
             <Package className="w-3.5 h-3.5" />
@@ -229,8 +230,8 @@ export default function Navbar() {
             href="/notifications"
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
               pathname.startsWith("/notifications")
-                ? "bg-[#EAF3FF] text-[#0070E0] font-semibold"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                ? "bg-[#EAF3FF] dark:bg-[#0070E0]/20 text-[#0070E0] dark:text-[#38BDF8] font-semibold"
+                : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
             }`}
           >
             <Bell className="w-3.5 h-3.5" />
@@ -239,17 +240,22 @@ export default function Navbar() {
         </nav>
 
         {/* Right Action Area */}
-        <div className="hidden sm:flex items-center gap-3">
+        <div className="hidden sm:flex items-center gap-2.5">
+          {/* Sun / Moon Theme Toggle */}
+          <ThemeToggle />
+
           {/* GitHub icon link */}
           <a
             href="https://github.com/atleekumaar/paypilot"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="GitHub Repository"
-            className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-full transition-colors"
+            className="p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 rounded-full transition-colors"
           >
             <svg
               className="w-5 h-5 fill-current"
+              width="20"
+              height="20"
               viewBox="0 0 24 24"
               aria-hidden="true"
             >
@@ -274,6 +280,7 @@ export default function Navbar() {
 
         {/* Mobile menu button */}
         <div className="flex lg:hidden items-center gap-2">
+          <ThemeToggle />
           <button
             type="button"
             onClick={handleTryPayPilot}
@@ -283,7 +290,7 @@ export default function Navbar() {
           </button>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+            className="p-2 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             aria-label="Toggle navigation menu"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -293,14 +300,14 @@ export default function Navbar() {
 
       {/* Mobile dropdown menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-slate-100 bg-white px-4 pt-3 pb-5 space-y-2 animate-in slide-in-from-top-2 duration-150 text-left">
+        <div className="lg:hidden border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-[#0E1422] px-4 pt-3 pb-5 space-y-2 animate-in slide-in-from-top-2 duration-150 text-left">
           <button
             type="button"
             onClick={() => navigateTo("home")}
             className={`w-full text-left block px-3 py-2 rounded-lg text-sm font-medium ${
               isHome && activeSection === "home"
-                ? "bg-[#EAF3FF] text-[#0070E0] font-semibold"
-                : "text-slate-700 hover:bg-slate-50"
+                ? "bg-[#EAF3FF] dark:bg-[#0070E0]/20 text-[#0070E0] dark:text-[#38BDF8] font-semibold"
+                : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
             }`}
           >
             Home
@@ -310,8 +317,8 @@ export default function Navbar() {
             onClick={() => navigateTo("features")}
             className={`w-full text-left block px-3 py-2 rounded-lg text-sm font-medium ${
               isHome && activeSection === "features"
-                ? "bg-[#EAF3FF] text-[#0070E0] font-semibold"
-                : "text-slate-700 hover:bg-slate-50"
+                ? "bg-[#EAF3FF] dark:bg-[#0070E0]/20 text-[#0070E0] dark:text-[#38BDF8] font-semibold"
+                : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
             }`}
           >
             Features
@@ -321,8 +328,8 @@ export default function Navbar() {
             onClick={() => navigateTo("how-it-works")}
             className={`w-full text-left block px-3 py-2 rounded-lg text-sm font-medium ${
               isHome && activeSection === "how-it-works"
-                ? "bg-[#EAF3FF] text-[#0070E0] font-semibold"
-                : "text-slate-700 hover:bg-slate-50"
+                ? "bg-[#EAF3FF] dark:bg-[#0070E0]/20 text-[#0070E0] dark:text-[#38BDF8] font-semibold"
+                : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
             }`}
           >
             How it Works
@@ -332,8 +339,8 @@ export default function Navbar() {
             onClick={() => navigateTo("demo")}
             className={`w-full text-left block px-3 py-2 rounded-lg text-sm font-medium ${
               isHome && activeSection === "demo"
-                ? "bg-[#EAF3FF] text-[#0070E0] font-semibold"
-                : "text-slate-700 hover:bg-slate-50"
+                ? "bg-[#EAF3FF] dark:bg-[#0070E0]/20 text-[#0070E0] dark:text-[#38BDF8] font-semibold"
+                : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
             }`}
           >
             Demo
@@ -341,7 +348,7 @@ export default function Navbar() {
           <Link
             href="/insights"
             onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
           >
             <LineChart className="w-4 h-4 text-[#0070E0]" />
             <span>Commerce Intelligence</span>
@@ -349,7 +356,7 @@ export default function Navbar() {
           <Link
             href="/timeline"
             onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
           >
             <CalendarRange className="w-4 h-4 text-[#0070E0]" />
             <span>Commerce Timeline</span>
@@ -359,16 +366,16 @@ export default function Navbar() {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
           >
             <span>Documentation</span>
             <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
           </a>
-          <div className="border-t border-slate-100 my-2 pt-2 space-y-1">
+          <div className="border-t border-slate-100 dark:border-slate-800 my-2 pt-2 space-y-1">
             <Link
               href="/orders"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
             >
               <Package className="w-4 h-4 text-[#0070E0]" />
               <span>Orders &amp; Tracking</span>
@@ -376,7 +383,7 @@ export default function Navbar() {
             <Link
               href="/notifications"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
             >
               <Bell className="w-4 h-4 text-[#0070E0]" />
               <span>Notifications</span>
@@ -385,7 +392,7 @@ export default function Navbar() {
               href="https://github.com/atleekumaar/paypilot"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
             >
               <ExternalLink className="w-4 h-4 text-slate-400" />
               <span>GitHub Repository</span>

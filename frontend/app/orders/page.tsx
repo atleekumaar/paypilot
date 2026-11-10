@@ -136,30 +136,30 @@ export default function OrdersPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F5F8FC]/50 text-[#14213D]">
+    <div className="flex flex-col min-h-screen bg-[#F5F8FC]/50 dark:bg-[#090D16] text-[#14213D] dark:text-slate-100 transition-colors duration-200">
       <Navbar />
 
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800 mb-6">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#0070E0]/20 bg-[#EAF3FF] text-[#0070E0] text-xs font-bold mb-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#0070E0]/20 bg-[#EAF3FF] dark:bg-[#0070E0]/20 text-[#0070E0] dark:text-[#38BDF8] text-xs font-bold mb-2">
               <Package className="w-3.5 h-3.5" />
               Verified PayPal Purchases &amp; Logistics
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-[#14213D] tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-black text-[#14213D] dark:text-white tracking-tight">
               My Orders &amp; Shipment Tracking
             </h1>
-            <p className="text-xs sm:text-sm text-slate-600 mt-1">
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">
               Authoritative order records, real-time shipment scans, and grounded AI resolution.
             </p>
           </div>
 
           <button
             onClick={fetchOrders}
-            className="self-start sm:self-auto flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 shadow-xs transition-colors cursor-pointer"
+            className="self-start sm:self-auto flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 shadow-xs transition-colors cursor-pointer"
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`w-3.5 h-3.5 text-slate-500 dark:text-slate-400 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </button>
         </div>
@@ -173,7 +173,7 @@ export default function OrdersPage() {
               className={`px-3.5 py-1.5 rounded-full font-bold transition-all whitespace-nowrap cursor-pointer ${
                 filter === f
                   ? "bg-[#0070E0] text-white shadow-sm"
-                  : "bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                  : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700"
               }`}
             >
               {f.replace("_", " ")}
@@ -183,17 +183,17 @@ export default function OrdersPage() {
 
         {/* Orders List */}
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 text-slate-500">
-            <RefreshCw className="w-8 h-8 animate-spin text-[#0070E0] mb-3" />
+          <div className="flex flex-col items-center justify-center py-20 text-slate-500 dark:text-slate-400">
+            <RefreshCw className="w-8 h-8 animate-spin text-[#0070E0] dark:text-[#38BDF8] mb-3" />
             <p className="text-sm font-medium">Loading order history...</p>
           </div>
         ) : filteredOrders.length === 0 ? (
-          <div className="text-center py-16 px-4 rounded-3xl border border-slate-200 bg-white shadow-subtle">
-            <div className="w-14 h-14 rounded-2xl bg-[#EAF3FF] text-[#0070E0] flex items-center justify-center mx-auto mb-3">
+          <div className="text-center py-16 px-4 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0E1422] shadow-subtle">
+            <div className="w-14 h-14 rounded-2xl bg-[#EAF3FF] dark:bg-[#0070E0]/20 text-[#0070E0] dark:text-[#38BDF8] flex items-center justify-center mx-auto mb-3">
               <Package className="w-7 h-7" />
             </div>
-            <h3 className="text-base font-bold text-[#14213D] mb-1">No Orders Found</h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto mb-5 leading-relaxed">
+            <h3 className="text-base font-bold text-[#14213D] dark:text-white mb-1">No Orders Found</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto mb-5 leading-relaxed">
               You do not have any orders matching the selected filter. Try discovering products with the PayPilot Assistant!
             </p>
             <Link
@@ -212,10 +212,10 @@ export default function OrdersPage() {
               return (
                 <div
                   key={order.id}
-                  className="rounded-3xl border border-slate-200 bg-white shadow-subtle hover:shadow-card transition-all p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 group"
+                  className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0E1422] shadow-subtle hover:shadow-card transition-all p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 group"
                 >
                   <div className="flex items-start gap-4 flex-1 min-w-0">
-                    <div className="w-12 h-12 rounded-2xl bg-[#EAF3FF] border border-[#0070E0]/20 flex items-center justify-center shrink-0 text-[#0070E0]">
+                    <div className="w-12 h-12 rounded-2xl bg-[#EAF3FF] dark:bg-[#0070E0]/20 border border-[#0070E0]/20 dark:border-[#0070E0]/40 flex items-center justify-center shrink-0 text-[#0070E0] dark:text-[#38BDF8]">
                       <Package className="w-6 h-6" />
                     </div>
 
