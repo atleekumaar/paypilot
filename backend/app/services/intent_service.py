@@ -27,7 +27,7 @@ class IntentService:
 
     def __init__(self, api_key: Optional[str] = None):
         self._settings = get_settings()
-        self._api_key = api_key or self._settings.LLM_API_KEY
+        self._api_key = api_key or getattr(self._settings, "effective_llm_api_key", None) or self._settings.LLM_API_KEY
 
     def extract_intent(self, query: str) -> ProductSearchIntent:
         """Extract structured intent from user query.

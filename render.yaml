@@ -24,11 +24,13 @@ services:
       - key: APP_NAME
         value: PayPilot
       - key: ENVIRONMENT
-        value: production
+        value: staging
       - key: DEBUG
         value: "false"
       - key: AUTH_MODE
         value: demo
+      - key: DEMO_AUTH_ALLOWED_IN_PROD
+        value: "true"
       - key: DATABASE_URL
         fromDatabase:
           name: paypilot-db
@@ -45,6 +47,8 @@ services:
       - key: PAYPAL_CLIENT_SECRET
         sync: false
       - key: PAYPAL_WEBHOOK_ID
+        sync: false
+      - key: LLM_API_KEY
         sync: false
       - key: GROQ_API_KEY
         sync: false

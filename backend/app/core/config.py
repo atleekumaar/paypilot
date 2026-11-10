@@ -38,6 +38,12 @@ class Settings(BaseSettings):
 
     # LLM & AI Agents
     LLM_API_KEY: Optional[str] = None
+    GROQ_API_KEY: Optional[str] = None
+
+    @property
+    def effective_llm_api_key(self) -> Optional[str]:
+        """Return LLM API key with fallback to GROQ_API_KEY."""
+        return self.LLM_API_KEY or self.GROQ_API_KEY
 
     # PayPal Integration (Sandbox)
     PAYPAL_CLIENT_ID: Optional[str] = None
@@ -66,13 +72,14 @@ class Settings(BaseSettings):
 
     # Render Cloud Deployment
     RENDER_EXTERNAL_URL: Optional[str] = None
+    DEMO_AUTH_ALLOWED_IN_PROD: bool = False
 
     @model_validator(mode="after")
     def validate_production_security(self) -> "Settings":
         """Enforce strict production fail-closed security rules."""
-        if self.ENVIRONMENT.lower() == "production":
+        if self.ENVIRONMENT.lower() == "production" and not self.DEMO_AUTH_ALLOWED_IN_PROD:
             if self.AUTH_MODE.lower() != "jwt":
-                raise ValueError("AUTH_MODE must be 'jwt' in production environment")
+                raise ValueError("AUTH_MODE must be 'jwt' in production environment (set DEMO_AUTH_ALLOWED_IN_PROD=true for hackathon demo)")
             if not self.AUTH_ISSUER:
                 raise ValueError("AUTH_ISSUER must be configured when ENVIRONMENT='production'")
             if not self.AUTH_JWKS_URL:

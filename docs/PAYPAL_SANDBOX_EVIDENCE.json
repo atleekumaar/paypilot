@@ -1,0 +1,34 @@
+{
+  "timestamp": "2026-11-10T11:57:12.801853+00:00",
+  "paypal_environment": "sandbox",
+  "paypal_order_id": "3KP879318B449513P",
+  "order_status": "CREATED",
+  "amount": 1049.0,
+  "currency": "USD",
+  "product_name": "NovaBook Pro 14",
+  "approval_url": "https://www.sandbox.paypal.com/checkoutnow?token=3KP879318B449513P",
+  "oauth_token_prefix": "A21AAL98fMioCpo00_M1...",
+  "links": [
+    {
+      "href": "https://api.sandbox.paypal.com/v2/checkout/orders/3KP879318B449513P",
+      "rel": "self",
+      "method": "GET"
+    },
+    {
+      "href": "https://www.sandbox.paypal.com/checkoutnow?token=3KP879318B449513P",
+      "rel": "approve",
+      "method": "GET"
+    },
+    {
+      "href": "https://api.sandbox.paypal.com/v2/checkout/orders/3KP879318B449513P",
+      "rel": "update",
+      "method": "PATCH"
+    },
+    {
+      "href": "https://api.sandbox.paypal.com/v2/checkout/orders/3KP879318B449513P/capture",
+      "rel": "capture",
+      "method": "POST"
+    }
+  ],
+  "verified_live": true
+}

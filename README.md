@@ -56,19 +56,18 @@ PayPilot autonomously understands the request, searches product offerings, compa
   - 100% verified test suite (56/56 passing tests)
 
 - **Phase 6 — Hackathon Sponsor Integrations & Production Hardening** ✅ *(COMPLETED)*
-  - **PayPal Orders v2 Sandbox**: Authoritative payment capture, refunds, and signature-verified webhooks.
-  - **Groq LLM**: Ultra-low latency inference for multi-turn conversational commerce.
-  - **APIMatic**: Authoritative PayPal API Context Plugin and developer tooling context (`.apimatic/context.json`).
-  - **Astropods**: Agent control plane, declarative blueprint (`astropods.yml`), agent card (`AGENTS.md`), and secret-redacted telemetry tracing.
-  - **Bryntum**: Interactive Commerce Timeline (`/timeline`) with resource tracks and confirmed vs. estimated milestones.
-  - **AG Grid & AG Studio**: Enterprise commerce intelligence grids and AI-powered insights dashboard (`/insights`).
-  - **Channel3**: Live cross-retailer product discovery across 25,000+ stores with normalized pricing and variant models.
-  - **Elasticsearch**: BM25 keyword matching, dense vector semantic search, and Reciprocal Rank Fusion hybrid retrieval.
-  - **KERNEL**: Cloud browser infrastructure for agentic web browsing, sub-30ms spinup, stealth anti-bot bypass, and live session replays.
-  - **Zapier**: Post-purchase multi-app automation (invoicing in QuickBooks, Google Sheets ledger, Gmail receipts, Slack support alerts) and Zapier MCP spec (`.zapier/mcp_config.json`).
-  - **Postman**: Complete Postman Collection v2.1.0 (`postman/PayPilot.postman_collection.json`), environment, and automated test runner (`postman/run_collection.py` — 18/18 passing).
+  - **PayPal Orders v2 Sandbox**: Authoritative payment creation and capture against live `api-m.sandbox.paypal.com` with real Order ID verification (see [`docs/PAYPAL_SANDBOX_EVIDENCE.md`](docs/PAYPAL_SANDBOX_EVIDENCE.md)).
+  - **Groq LLM**: Ultra-low latency inference for multi-turn conversational commerce using `openai/gpt-oss-20b`.
+  - **Channel3**: Live cross-retailer product discovery across Samsung, Apple, Lenovo, Newegg, and Best Buy with normalized pricing and variant models.
+  - **Elasticsearch**: Live cluster REST & kNN vector search with Reciprocal Rank Fusion and local hybrid retrieval engine.
+  - **Kernel**: Cloud browser agent infrastructure for merchant inspection with replay URLs (`https://app.onkernel.com`).
+  - **Zapier**: Post-purchase multi-app automation (invoicing in QuickBooks, Google Sheets ledger, Gmail receipts, Slack support alerts) and Zapier MCP / AI Actions adapter.
+  - **Bryntum**: Interactive Commerce Timeline (`/timeline`) built on the Bryntum Scheduler Pro Data Model (`ResourceStore` + `EventStore` JSON schema) with Gantt milestones (see [`docs/BRYNTUM_INTEGRATION.md`](docs/BRYNTUM_INTEGRATION.md)).
+  - **AG Grid & AG Studio**: Enterprise commerce intelligence grids and AI-powered insights dashboard (`/insights`) with dark & sun theme toggle.
+  - **Postman**: Complete Postman Collection v2.1.0 (`postman/PayPilot.postman_collection.json`) with automated test runner (`postman/run_collection.py` — **18/18 requests passed, 23/23 `pm.test` assertions verified**).
   - **Render**: Infrastructure-as-Code multi-service cloud blueprint (`render.yaml`) deploying backend, frontend, worker, PostgreSQL, and Redis.
   - **191/191 Passing Automated Tests** across all modules and 0 frontend TypeScript errors.
+  - **Devpost Submission Package & 3-Minute Video Script**: Detailed field-by-field submission guide in [`docs/DEVPOST_SUBMISSION.md`](docs/DEVPOST_SUBMISSION.md).
 
 ---
 

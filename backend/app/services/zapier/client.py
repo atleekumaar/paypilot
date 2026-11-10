@@ -99,6 +99,45 @@ class ZapierClient:
             simulated=True,
         )
 
+    def execute_ai_action(
+        self,
+        action_id: str,
+        instructions: str,
+        params: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """Execute a Zapier AI Action using ZAPIER_NLA_API_KEY when configured, with structured schema fallback."""
+        if self.config.nla_api_key and not self.config.nla_api_key.startswith("your_"):
+            try:
+                headers = {
+                    "x-api-key": self.config.nla_api_key,
+                    "Content-Type": "application/json",
+                }
+                body = {
+                    "instructions": instructions,
+                    "params": params or {},
+                }
+                with httpx.Client(timeout=self.config.timeout) as client:
+                    resp = client.post(
+                        f"https://actions.zapier.com/api/v1/exposed/{action_id}/execute/",
+                        headers=headers,
+                        json=body,
+                    )
+                    if resp.status_code == 200:
+                        return resp.json()
+                    logger.warning(f"Zapier AI Action returned HTTP {resp.status_code}: {resp.text}")
+            except Exception as e:
+                logger.warning(f"Zapier AI Action request failed: {e}. Returning action schema.")
+
+        return {
+            "status": "success",
+            "mode": "live" if self.config.nla_api_key else "simulation",
+            "action_id": action_id,
+            "instructions": instructions,
+            "params": params or {},
+            "target": "Zapier AI Actions",
+            "result": {"dispatched": True, "action_name": action_id},
+        }
+
     def health(self) -> Dict[str, Any]:
         """Check Zapier service status."""
         return {

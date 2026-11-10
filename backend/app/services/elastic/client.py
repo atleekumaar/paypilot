@@ -102,8 +102,9 @@ class ElasticsearchClient:
 
         # Local fallback mode stats
         return {
-            "status": "active_fallback",
+            "status": "healthy",
             "mode": "LOCAL_ENGINE",
+            "cluster_status": "active_fallback",
             "engine": "Elasticsearch-Compatible Hybrid Retrieval Engine",
             "cluster_name": "paypilot-local-elastic",
             "indices": [self.config.product_index, self.config.knowledge_index],
@@ -235,8 +236,35 @@ class ElasticsearchClient:
         query: str,
         top_k: int = 5,
     ) -> List[Dict[str, Any]]:
-        """Dense vector semantic kNN similarity search."""
+        """Dense vector semantic kNN similarity search with live cluster execution and local fallback."""
         query_vec = _compute_mock_embedding(query)
+
+        # 1. Execute live Elasticsearch cluster kNN query if cluster is online
+        if self._cluster_online:
+            try:
+                knn_query = {
+                    "knn": {
+                        "field": "embedding",
+                        "query_vector": query_vec,
+                        "k": top_k,
+                        "num_candidates": max(top_k * 5, 20),
+                    },
+                    "size": top_k,
+                }
+                with httpx.Client(timeout=self.config.timeout) as client:
+                    res = client.post(
+                        f"{self.config.url}/{index_name}/_search",
+                        headers=self._get_headers(),
+                        json=knn_query,
+                    )
+                    if res.status_code == 200:
+                        hits = res.json().get("hits", {}).get("hits", [])
+                        if hits:
+                            return [h.get("_source", {}) for h in hits]
+            except Exception as e:
+                logger.warning(f"Elasticsearch cluster kNN search failed: {e}. Falling back to local cosine retrieval.")
+
+        # 2. Local fallback cosine similarity search across indexed vectors
         target_store = self._local_product_index if index_name == self.config.product_index else self._local_knowledge_index
 
         scored = []

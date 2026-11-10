@@ -40,6 +40,7 @@ class KernelBrowseResult(BaseModel):
     screenshot_url: Optional[str] = None
     latency_ms: float
     bot_bypass_success: bool = True
+    is_simulated: bool = False
     merchant_policy: Dict[str, Any] = Field(default_factory=dict)
     live_pricing: Optional[Dict[str, Any]] = None
     in_stock: bool = True
@@ -158,6 +159,7 @@ class KernelClient:
             screenshot_url=f"https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
             latency_ms=duration,
             bot_bypass_success=True,
+            is_simulated=True,
             merchant_policy=policy if extract_policy else {},
             live_pricing=pricing,
             in_stock=True,
