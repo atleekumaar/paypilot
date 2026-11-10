@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { PieChart, TrendingUp, Filter } from "lucide-react";
+import { PieChart, TrendingUp, Filter, Sparkles, Layers } from "lucide-react";
 
 interface SpendingData {
   spending_over_time: Array<{ date: string; amount: number; order_count: number }>;
@@ -16,6 +16,46 @@ interface SpendingAnalyticsProps {
   onSelectCategory: (cat: string | null) => void;
 }
 
+const CATEGORY_COLORS: Record<string, { gradient: string; bar: string; badge: string; text: string }> = {
+  laptop: {
+    gradient: "from-blue-600 via-cyan-500 to-cyan-400",
+    bar: "bg-gradient-to-r from-blue-500 to-cyan-400",
+    badge: "bg-cyan-950/70 text-cyan-300 border-cyan-800/60",
+    text: "text-cyan-400",
+  },
+  phone: {
+    gradient: "from-purple-600 via-fuchsia-500 to-pink-400",
+    bar: "bg-gradient-to-r from-purple-500 to-pink-400",
+    badge: "bg-purple-950/70 text-purple-300 border-purple-800/60",
+    text: "text-purple-400",
+  },
+  monitor: {
+    gradient: "from-emerald-600 via-teal-500 to-emerald-400",
+    bar: "bg-gradient-to-r from-emerald-500 to-teal-400",
+    badge: "bg-emerald-950/70 text-emerald-300 border-emerald-800/60",
+    text: "text-emerald-400",
+  },
+  headphones: {
+    gradient: "from-amber-600 via-amber-500 to-yellow-400",
+    bar: "bg-gradient-to-r from-amber-500 to-yellow-400",
+    badge: "bg-amber-950/70 text-amber-300 border-amber-800/60",
+    text: "text-amber-400",
+  },
+  keyboard: {
+    gradient: "from-indigo-600 via-indigo-500 to-violet-400",
+    bar: "bg-gradient-to-r from-indigo-500 to-violet-400",
+    badge: "bg-indigo-950/70 text-indigo-300 border-indigo-800/60",
+    text: "text-indigo-400",
+  },
+};
+
+const DEFAULT_CATEGORY_COLOR = {
+  gradient: "from-slate-600 via-slate-500 to-slate-400",
+  bar: "bg-gradient-to-r from-slate-500 to-slate-400",
+  badge: "bg-slate-800 text-slate-300 border-slate-700",
+  text: "text-slate-300",
+};
+
 export default function SpendingAnalytics({
   data,
   loading,
@@ -25,96 +65,142 @@ export default function SpendingAnalytics({
   if (loading || !data) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 p-6 rounded-2xl bg-slate-900/50 border border-slate-800 animate-pulse h-64" />
-        <div className="p-6 rounded-2xl bg-slate-900/50 border border-slate-800 animate-pulse h-64" />
+        <div className="lg:col-span-2 p-6 rounded-2xl bg-slate-900/50 border border-slate-800 animate-pulse h-72" />
+        <div className="p-6 rounded-2xl bg-slate-900/50 border border-slate-800 animate-pulse h-72" />
       </div>
     );
   }
 
   const maxSpend = Math.max(...data.spending_over_time.map((d) => d.amount), 1);
+  const totalSpend = data.spending_over_time.reduce((acc, curr) => acc + curr.amount, 0);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Spending Over Time Bar Chart */}
+      {/* 1. Spending Over Time Bar Chart */}
       <div className="lg:col-span-2 p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-sm flex flex-col justify-between shadow-xl">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
           <div className="flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-cyan-400" />
-            <h3 className="text-sm font-semibold text-white">Commerce Spending Timeline</h3>
+            <div className="p-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400">
+              <TrendingUp className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white tracking-wide">Commerce Spending Timeline</h3>
+              <p className="text-[11px] text-slate-400">Verified PayPal order settlements over time</p>
+            </div>
           </div>
-          <span className="text-xs text-slate-400">Past Verified Orders</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800/50 px-2.5 py-0.5 rounded-full">
+              Total ${totalSpend.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+          </div>
         </div>
 
-        <div className="h-44 flex items-end gap-3 pt-6 pb-2 px-2 border-b border-slate-800">
+        {/* Chart Canvas */}
+        <div className="h-56 flex items-end gap-3 sm:gap-4 pt-8 pb-3 px-3 border-b border-slate-800/90 relative">
+          {/* Background horizontal guide lines */}
+          <div className="absolute inset-x-3 top-6 border-b border-slate-800/30 pointer-events-none" />
+          <div className="absolute inset-x-3 top-24 border-b border-slate-800/30 pointer-events-none" />
+          <div className="absolute inset-x-3 top-40 border-b border-slate-800/30 pointer-events-none" />
+
           {data.spending_over_time.map((item, idx) => {
-            const heightPercent = Math.min(100, Math.max(12, Math.round((item.amount / maxSpend) * 100)));
+            const heightPercent = Math.min(100, Math.max(20, Math.round((item.amount / maxSpend) * 100)));
             return (
-              <div key={idx} className="flex-1 flex flex-col items-center gap-2 group relative">
+              <div key={idx} className="flex-1 h-full flex flex-col justify-end items-center group relative z-10">
+                {/* Value label directly above bar */}
+                <span className="text-[10px] sm:text-xs font-mono font-bold text-cyan-300 mb-1.5 transition-all duration-200 group-hover:scale-110 group-hover:text-white">
+                  ${item.amount >= 1000 ? `${(item.amount / 1000).toFixed(1)}k` : Math.round(item.amount)}
+                </span>
+
+                {/* Vertical Bar */}
                 <div
                   style={{ height: `${heightPercent}%` }}
-                  className="w-full rounded-t-md bg-gradient-to-t from-cyan-600/50 to-cyan-400 transition-all duration-300 group-hover:from-cyan-500 group-hover:to-cyan-300 group-hover:shadow-lg group-hover:shadow-cyan-500/20"
+                  className="w-full max-w-[44px] rounded-t-xl bg-gradient-to-t from-[#003087] via-[#0070E0] to-[#38BDF8] shadow-lg shadow-[#0070E0]/30 transition-all duration-300 group-hover:brightness-125 group-hover:shadow-cyan-400/50 group-hover:scale-x-105"
                 />
-                <span className="text-[10px] text-slate-500 truncate max-w-full">
+
+                {/* Date Label */}
+                <span className="text-[10px] sm:text-[11px] font-mono text-slate-400 mt-2 truncate max-w-full font-medium">
                   {item.date.slice(5)}
                 </span>
-                {/* Tooltip on hover */}
-                <div className="absolute -top-10 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-[11px] text-white py-1 px-2 rounded pointer-events-none whitespace-nowrap border border-slate-700 shadow-lg z-20">
-                  ${item.amount.toFixed(2)} ({item.order_count} ord)
+
+                {/* Floating Tooltip */}
+                <div className="absolute -top-12 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-slate-950/95 text-[11px] text-white py-1.5 px-3 rounded-xl pointer-events-none whitespace-nowrap border border-cyan-500/40 shadow-2xl z-30">
+                  <span className="font-bold text-cyan-300">${item.amount.toFixed(2)}</span>
+                  <span className="text-slate-400 ml-1.5 font-sans">({item.order_count} order{item.order_count > 1 ? "s" : ""})</span>
                 </div>
               </div>
             );
           })}
         </div>
+
         <div className="flex justify-between items-center text-xs text-slate-500 pt-3">
-          <span>Earliest Recorded Transaction</span>
-          <span>Authoritative Backend Settlement</span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+            Earliest Recorded Transaction
+          </span>
+          <span className="font-mono text-[11px] text-slate-400">Authoritative PayPal Rails</span>
         </div>
       </div>
 
-      {/* Spending by Category (Interactive Cross-Filtering) */}
+      {/* 2. Spending by Category (Interactive Cross-Filtering) */}
       <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-sm flex flex-col justify-between shadow-xl">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <PieChart className="w-4 h-4 text-blue-400" />
-            <h3 className="text-sm font-semibold text-white">Category Distribution</h3>
+            <div className="p-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400">
+              <PieChart className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white tracking-wide">Category Distribution</h3>
+              <p className="text-[11px] text-slate-400">Spending grouped by product vertical</p>
+            </div>
           </div>
           {selectedCategory && (
             <button
               onClick={() => onSelectCategory(null)}
-              className="text-[10px] flex items-center gap-1 text-cyan-400 hover:text-cyan-300 bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-800/50"
+              className="text-[10px] font-semibold flex items-center gap-1 text-cyan-300 hover:text-white bg-cyan-950/80 px-2.5 py-1 rounded-lg border border-cyan-500/40 transition-colors cursor-pointer"
             >
-              <Filter className="w-2.5 h-2.5" /> Clear Filter
+              <Filter className="w-3 h-3" /> Clear Filter
             </button>
           )}
         </div>
 
-        <div className="space-y-3.5 my-auto">
+        {/* Category List */}
+        <div className="space-y-3 my-auto">
           {data.spending_by_category.map((cat) => {
-            const isSelected = selectedCategory === cat.category;
+            const isSelected = selectedCategory?.toLowerCase() === cat.category.toLowerCase();
+            const colorCfg = CATEGORY_COLORS[cat.category.toLowerCase()] || DEFAULT_CATEGORY_COLOR;
+
             return (
               <div
                 key={cat.category}
                 onClick={() => onSelectCategory(isSelected ? null : cat.category)}
-                className={`p-2.5 rounded-xl border transition-all cursor-pointer ${
+                className={`p-3 rounded-xl border transition-all duration-200 cursor-pointer ${
                   isSelected
-                    ? "bg-cyan-500/10 border-cyan-500/50 shadow-md shadow-cyan-500/10"
-                    : "bg-slate-800/30 border-slate-800/70 hover:border-slate-700 hover:bg-slate-800/60"
+                    ? "bg-cyan-500/15 border-cyan-400/70 shadow-lg shadow-cyan-500/10 scale-[1.02]"
+                    : "bg-slate-800/40 border-slate-800/80 hover:border-slate-700 hover:bg-slate-800/70"
                 }`}
               >
-                <div className="flex justify-between text-xs mb-1.5">
-                  <span className={`font-medium ${isSelected ? "text-cyan-300" : "text-slate-200"}`}>
-                    {cat.category}
-                  </span>
-                  <span className="text-slate-400">
-                    ${cat.amount.toFixed(2)} ({cat.percentage}%)
-                  </span>
+                <div className="flex justify-between items-center text-xs mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full ${colorCfg.text.replace('text-', 'bg-')}`}></span>
+                    <span className={`font-bold capitalize ${isSelected ? "text-white" : "text-slate-200"}`}>
+                      {cat.category}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono font-bold text-white">
+                      ${cat.amount.toFixed(2)}
+                    </span>
+                    <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded border font-bold ${colorCfg.badge}`}>
+                      {cat.percentage}%
+                    </span>
+                  </div>
                 </div>
-                <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+
+                {/* Progress Bar */}
+                <div className="w-full h-2 bg-slate-800/90 rounded-full overflow-hidden p-0.5">
                   <div
-                    style={{ width: `${cat.percentage}%` }}
-                    className={`h-full rounded-full transition-all ${
-                      isSelected ? "bg-cyan-400" : "bg-blue-500"
-                    }`}
+                    style={{ width: `${Math.max(cat.percentage, 4)}%` }}
+                    className={`h-full rounded-full transition-all duration-500 ${colorCfg.bar}`}
                   />
                 </div>
               </div>
@@ -122,12 +208,14 @@ export default function SpendingAnalytics({
           })}
         </div>
 
-        <div className="text-[11px] text-slate-500 pt-2 flex items-center justify-between">
-          <span>Click to cross-filter intelligence grid</span>
-          <span>{data.spending_by_category.length} categories</span>
+        <div className="text-[11px] text-slate-500 pt-3 flex items-center justify-between border-t border-slate-800/60 mt-3">
+          <span className="flex items-center gap-1.5 text-cyan-400">
+            <Sparkles className="w-3 h-3" />
+            Click category to cross-filter
+          </span>
+          <span className="font-mono text-slate-400">{data.spending_by_category.length} categories</span>
         </div>
       </div>
     </div>
   );
 }
-

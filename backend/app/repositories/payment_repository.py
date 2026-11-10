@@ -82,6 +82,66 @@ def _get_seed_payments() -> List[Payment]:
             created_at=datetime(2026, 10, 19, 11, 45, tzinfo=timezone.utc),
             updated_at=datetime(2026, 10, 19, 11, 47, tzinfo=timezone.utc),
         ),
+        Payment(
+            id="PAY-004",
+            user_id="guest_user",
+            purchase_plan_id="PP-004",
+            provider=PaymentProvider.PAYPAL,
+            provider_order_id="MOCK-PAYPAL-ORD-004",
+            amount=799.0,
+            currency="USD",
+            status=PaymentStatus.COMPLETED,
+            capture_id="CAP-PAYPAL-004",
+            payer_email="buyer-sandbox@paypilot.demo",
+            payer_id="BUYER-USER-001",
+            created_at=datetime(2026, 10, 25, 14, 20, tzinfo=timezone.utc),
+            updated_at=datetime(2026, 10, 25, 14, 22, tzinfo=timezone.utc),
+        ),
+        Payment(
+            id="PAY-005",
+            user_id="guest_user",
+            purchase_plan_id="PP-005",
+            provider=PaymentProvider.PAYPAL,
+            provider_order_id="MOCK-PAYPAL-ORD-005",
+            amount=398.0,
+            currency="USD",
+            status=PaymentStatus.COMPLETED,
+            capture_id="CAP-PAYPAL-005",
+            payer_email="buyer-sandbox@paypilot.demo",
+            payer_id="BUYER-USER-001",
+            created_at=datetime(2026, 11, 2, 9, 30, tzinfo=timezone.utc),
+            updated_at=datetime(2026, 11, 2, 9, 32, tzinfo=timezone.utc),
+        ),
+        Payment(
+            id="PAY-006",
+            user_id="guest_user",
+            purchase_plan_id="PP-006",
+            provider=PaymentProvider.PAYPAL,
+            provider_order_id="MOCK-PAYPAL-ORD-006",
+            amount=199.0,
+            currency="USD",
+            status=PaymentStatus.COMPLETED,
+            capture_id="CAP-PAYPAL-006",
+            payer_email="buyer-sandbox@paypilot.demo",
+            payer_id="BUYER-USER-001",
+            created_at=datetime(2026, 11, 6, 15, 0, tzinfo=timezone.utc),
+            updated_at=datetime(2026, 11, 6, 15, 2, tzinfo=timezone.utc),
+        ),
+        Payment(
+            id="PAY-007",
+            user_id="guest_user",
+            purchase_plan_id="PP-007",
+            provider=PaymentProvider.PAYPAL,
+            provider_order_id="MOCK-PAYPAL-ORD-007",
+            amount=999.0,
+            currency="USD",
+            status=PaymentStatus.COMPLETED,
+            capture_id="CAP-PAYPAL-007",
+            payer_email="buyer-sandbox@paypilot.demo",
+            payer_id="BUYER-USER-001",
+            created_at=datetime(2026, 11, 9, 12, 15, tzinfo=timezone.utc),
+            updated_at=datetime(2026, 11, 9, 12, 17, tzinfo=timezone.utc),
+        ),
     ]
 
 
@@ -95,7 +155,7 @@ class PaymentRepository:
     def _seed_if_empty(self) -> None:
         try:
             with get_db_context() as db:
-                if db.query(PaymentModel).count() == 0:
+                if db.query(PaymentModel).count() < len(_get_seed_payments()):
                     for p in _get_seed_payments():
                         m = PaymentModel(
                             id=p.id,
