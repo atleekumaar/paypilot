@@ -135,7 +135,7 @@ export default function OrderIntelligenceGrid({ orders, loading }: OrderIntellig
         </div>
       </div>
 
-      <div className="ag-theme-quartz-dark w-full h-[320px] rounded-xl overflow-hidden border border-slate-800 shadow-inner">
+      <div className="ag-theme-quartz ag-theme-quartz-dark w-full h-[320px] rounded-xl overflow-hidden border border-slate-800 shadow-inner">
         <AgGridReact
           ref={gridRef}
           rowData={orders}

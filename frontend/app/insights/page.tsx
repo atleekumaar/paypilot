@@ -28,18 +28,18 @@ export default function InsightsPage() {
   const fetchAnalytics = async () => {
     setLoading(true);
     try {
-      const [ovRes, spRes, ordRes, payRes, prodRes] = await Promise.all([
+      const results = await Promise.allSettled([
         api.get<any>("/api/analytics/overview"),
         api.get<any>("/api/analytics/spending"),
         api.get<OrderRecord[]>("/api/analytics/orders"),
         api.get<PaymentRecord[]>("/api/analytics/payments"),
         api.get<ProductItem[]>("/api/analytics/products"),
       ]);
-      setOverview(ovRes);
-      setSpending(spRes);
-      setOrders(ordRes || []);
-      setPayments(payRes || []);
-      setProducts(prodRes || []);
+      if (results[0].status === "fulfilled") setOverview(results[0].value);
+      if (results[1].status === "fulfilled") setSpending(results[1].value);
+      if (results[2].status === "fulfilled") setOrders(results[2].value || []);
+      if (results[3].status === "fulfilled") setPayments(results[3].value || []);
+      if (results[4].status === "fulfilled") setProducts(results[4].value || []);
     } catch (err) {
       console.error("Failed fetching analytics data:", err);
     } finally {

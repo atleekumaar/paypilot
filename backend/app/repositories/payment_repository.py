@@ -34,11 +34,92 @@ def _model_to_schema(m: PaymentModel) -> Payment:
     )
 
 
+def _get_seed_payments() -> List[Payment]:
+    """Generates initial realistic synthetic payment records for demo and evaluation."""
+    return [
+        Payment(
+            id="PAY-001",
+            user_id="guest_user",
+            purchase_plan_id="PP-001",
+            provider=PaymentProvider.PAYPAL,
+            provider_order_id="MOCK-PAYPAL-ORD-001",
+            amount=1049.0,
+            currency="USD",
+            status=PaymentStatus.COMPLETED,
+            capture_id="CAP-PAYPAL-001",
+            payer_email="buyer-sandbox@paypilot.demo",
+            payer_id="BUYER-USER-001",
+            created_at=datetime(2026, 10, 12, 14, 30, tzinfo=timezone.utc),
+            updated_at=datetime(2026, 10, 12, 14, 32, tzinfo=timezone.utc),
+        ),
+        Payment(
+            id="PAY-002",
+            user_id="guest_user",
+            purchase_plan_id="PP-002",
+            provider=PaymentProvider.PAYPAL,
+            provider_order_id="MOCK-PAYPAL-ORD-002",
+            amount=1199.0,
+            currency="USD",
+            status=PaymentStatus.COMPLETED,
+            capture_id="CAP-PAYPAL-002",
+            payer_email="buyer-sandbox@paypilot.demo",
+            payer_id="BUYER-USER-001",
+            created_at=datetime(2026, 9, 28, 10, 0, tzinfo=timezone.utc),
+            updated_at=datetime(2026, 9, 28, 10, 2, tzinfo=timezone.utc),
+        ),
+        Payment(
+            id="PAY-003",
+            user_id="guest_user",
+            purchase_plan_id="PP-003",
+            provider=PaymentProvider.PAYPAL,
+            provider_order_id="MOCK-PAYPAL-ORD-003",
+            amount=1150.0,
+            currency="USD",
+            status=PaymentStatus.COMPLETED,
+            capture_id="CAP-PAYPAL-003",
+            payer_email="buyer-sandbox@paypilot.demo",
+            payer_id="BUYER-USER-001",
+            created_at=datetime(2026, 10, 19, 11, 45, tzinfo=timezone.utc),
+            updated_at=datetime(2026, 10, 19, 11, 47, tzinfo=timezone.utc),
+        ),
+    ]
+
+
 class PaymentRepository:
     """Database-backed repository storing Payment transactions."""
 
     def __init__(self):
         init_db()
+        self._seed_if_empty()
+
+    def _seed_if_empty(self) -> None:
+        try:
+            with get_db_context() as db:
+                if db.query(PaymentModel).count() == 0:
+                    for p in _get_seed_payments():
+                        m = PaymentModel(
+                            id=p.id,
+                            user_id=p.user_id or "guest_user",
+                            purchase_plan_id=p.purchase_plan_id,
+                            provider=p.provider.value if hasattr(p.provider, "value") else str(p.provider),
+                            provider_order_id=p.provider_order_id,
+                            amount=p.amount,
+                            currency=p.currency,
+                            status=p.status.value if hasattr(p.status, "value") else str(p.status),
+                            capture_id=p.capture_id,
+                            refund_id=p.refund_id,
+                            refund_status=p.refund_status,
+                            refund_amount=p.refund_amount,
+                            total_refunded=p.total_refunded or 0.0,
+                            payer_email=p.payer_email,
+                            payer_id=p.payer_id,
+                            metadata_json=p.metadata,
+                            created_at=p.created_at,
+                            updated_at=p.updated_at,
+                        )
+                        db.merge(m)
+        except Exception as e:
+            logger.warning(f"PaymentRepository seed skip: {e}")
 
     def create(self, payment: Payment) -> Payment:
         with get_db_context() as db:

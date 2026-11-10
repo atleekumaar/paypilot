@@ -182,7 +182,7 @@ export default function ProductIntelligenceGrid({
       </div>
 
       {/* Grid container with modern dark quartz theme */}
-      <div className="ag-theme-quartz-dark w-full h-[400px] rounded-xl overflow-hidden border border-slate-800 shadow-inner">
+      <div className="ag-theme-quartz ag-theme-quartz-dark w-full h-[400px] rounded-xl overflow-hidden border border-slate-800 shadow-inner">
         <AgGridReact
           ref={gridRef}
           rowData={filteredData}

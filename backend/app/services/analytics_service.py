@@ -16,6 +16,23 @@ from app.schemas.payment import PaymentStatus
 logger = logging.getLogger(__name__)
 
 
+def _to_iso(val: Any) -> Optional[str]:
+    if val is None:
+        return None
+    if hasattr(val, "isoformat"):
+        return val.isoformat()
+    return str(val)
+
+
+def _to_date_str(val: Any) -> str:
+    if val is None:
+        return "2026-10-01"
+    if hasattr(val, "strftime"):
+        return val.strftime("%Y-%m-%d")
+    s = str(val)
+    return s[:10] if len(s) >= 10 else s
+
+
 class AnalyticsService:
     """Computes verified commerce intelligence metrics, grids, and AI dashboard analytics."""
 
@@ -86,7 +103,7 @@ class AnalyticsService:
         # 1. Spending over time (by month/date)
         timeline = defaultdict(lambda: {"amount": 0.0, "order_count": 0})
         for o in orders:
-            dt_key = o.created_at.strftime("%Y-%m-%d") if o.created_at else "2026-10-01"
+            dt_key = _to_date_str(o.created_at)
             timeline[dt_key]["amount"] += float(o.amount)
             timeline[dt_key]["order_count"] += 1
 
@@ -145,14 +162,14 @@ class AnalyticsService:
                 "amount": float(o.amount),
                 "currency": o.currency,
                 "order_status": o.status.value if hasattr(o.status, "value") else str(o.status),
-                "order_date": o.created_at.isoformat() if o.created_at else None,
+                "order_date": _to_iso(o.created_at),
                 "paypal_order_id": o.paypal_order_id,
                 "payment_id": o.payment_id,
                 "shipment_id": shipment.id if shipment else None,
                 "shipment_status": shipment.status.value if shipment and hasattr(shipment.status, "value") else (str(shipment.status) if shipment else "PENDING"),
                 "carrier": shipment.carrier if shipment else "FedEx Priority",
                 "tracking_number": shipment.tracking_number if shipment else None,
-                "estimated_delivery": shipment.estimated_delivery.isoformat() if shipment and shipment.estimated_delivery else None,
+                "estimated_delivery": _to_iso(shipment.estimated_delivery) if shipment else None,
             })
         return records
 
@@ -177,7 +194,7 @@ class AnalyticsService:
                 "total_refunded": float(p.total_refunded or 0.0),
                 "verification_status": "VERIFIED" if is_verified else "UNVERIFIED",
                 "payer_email": p.payer_email,
-                "created_at": p.created_at.isoformat() if p.created_at else None,
+                "created_at": _to_iso(p.created_at),
             })
         return records
 
@@ -294,7 +311,7 @@ class AnalyticsService:
                 "product_name": o.product_name,
                 "amount": float(o.amount),
                 "status": o.status.value if hasattr(o.status, "value") else str(o.status),
-                "date": o.created_at.strftime("%Y-%m-%d") if o.created_at else "2026-10-01",
+                "date": _to_date_str(o.created_at),
             }
             for o in recent_orders
         ]

@@ -142,7 +142,7 @@ export default function PaymentIntelligenceGrid({ payments, loading }: PaymentIn
         </div>
       </div>
 
-      <div className="ag-theme-quartz-dark w-full h-[300px] rounded-xl overflow-hidden border border-slate-800 shadow-inner">
+      <div className="ag-theme-quartz ag-theme-quartz-dark w-full h-[300px] rounded-xl overflow-hidden border border-slate-800 shadow-inner">
         <AgGridReact
           ref={gridRef}
           rowData={payments}
