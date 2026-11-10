@@ -138,10 +138,11 @@ class PostPurchaseAgent:
         for o in user_orders:
             p_name = o.product_name.lower()
             b_name = (o.brand or "").lower()
+            is_laptop = o.product_id.startswith("LAP-") or "laptop" in p_name or "book" in p_name
             if "laptop" in msg_lower:
-                # All these demo orders are laptops
-                matching_orders.append(o)
-            elif (b_name and b_name in msg_lower) or any(part in msg_lower for part in p_name.split()):
+                if is_laptop:
+                    matching_orders.append(o)
+            elif (b_name and b_name in msg_lower) or any(part in msg_lower for part in p_name.split() if len(part) > 2):
                 matching_orders.append(o)
 
         # Ambiguity Guard (Section 12 & 37): If multiple orders match and user asked generically
