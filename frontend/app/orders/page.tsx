@@ -221,39 +221,39 @@ export default function OrdersPage() {
 
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                        <span className="text-xs font-mono font-bold text-slate-600 bg-[#F5F8FC] border border-slate-200 px-2.5 py-0.5 rounded-md">
+                        <span className="text-xs font-mono font-bold text-slate-600 dark:text-slate-300 bg-[#F5F8FC] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 py-0.5 rounded-md">
                           {order.id}
                         </span>
                         {getStatusBadge(order.status, shipment?.last_update)}
                         {order.paypal_order_id && (
-                          <span className="text-[11px] font-mono font-semibold text-[#0070E0] bg-[#EAF3FF] border border-[#0070E0]/30 px-2 py-0.5 rounded-md flex items-center gap-1">
-                            <ShieldCheck className="w-3 h-3 text-[#0070E0]" />
+                          <span className="text-[11px] font-mono font-semibold text-[#0070E0] dark:text-[#38BDF8] bg-[#EAF3FF] dark:bg-[#0070E0]/20 border border-[#0070E0]/30 px-2 py-0.5 rounded-md flex items-center gap-1">
+                            <ShieldCheck className="w-3 h-3 text-[#0070E0] dark:text-[#38BDF8]" />
                             PayPal Verified
                           </span>
                         )}
                       </div>
 
-                      <h3 className="text-base sm:text-lg font-bold text-[#14213D] group-hover:text-[#0070E0] transition-colors truncate">
+                      <h3 className="text-base sm:text-lg font-bold text-[#14213D] dark:text-white group-hover:text-[#0070E0] dark:group-hover:text-[#38BDF8] transition-colors truncate">
                         {order.product_name}
                       </h3>
 
-                      <p className="text-xs text-slate-500 mt-1">
-                        Brand: <span className="text-slate-800 font-semibold">{order.brand || "Standard"}</span> &bull; Total:{" "}
-                        <span className="text-[#003087] font-black font-mono">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        Brand: <span className="text-slate-800 dark:text-slate-200 font-semibold">{order.brand || "Standard"}</span> &bull; Total:{" "}
+                        <span className="text-[#003087] dark:text-[#38BDF8] font-black font-mono">
                           ${order.amount.toFixed(2)} {order.currency}
                         </span>
                       </p>
 
                       {/* Shipment Snippet */}
                       {shipment && (
-                        <div className="mt-3.5 text-xs bg-[#F5F8FC] border border-slate-200/80 rounded-2xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                          <div className="flex items-center gap-2 text-slate-700 truncate">
-                            <Truck className="w-4 h-4 text-[#0070E0] shrink-0" />
+                        <div className="mt-3.5 text-xs bg-[#F5F8FC] dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 rounded-2xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 truncate">
+                            <Truck className="w-4 h-4 text-[#0070E0] dark:text-[#38BDF8] shrink-0" />
                             <span className="truncate">{shipment.last_update}</span>
                           </div>
-                          <div className="text-[11px] text-slate-500 shrink-0 font-medium">
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400 shrink-0 font-medium">
                             Est. Arrival:{" "}
-                            <span className={`font-bold ${isDelayed ? "text-amber-600" : "text-slate-900"}`}>
+                            <span className={`font-bold ${isDelayed ? "text-amber-500" : "text-slate-900 dark:text-white"}`}>
                               {shipment.estimated_delivery}
                             </span>
                           </div>

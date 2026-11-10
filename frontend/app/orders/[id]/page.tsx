@@ -211,30 +211,30 @@ export default function OrderDetailPage() {
   const isDelayed = shipment?.last_update.toLowerCase().includes("delay");
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F5F8FC]/50 text-[#14213D] text-left">
+    <div className="flex flex-col min-h-screen bg-[#F5F8FC]/50 dark:bg-[#090D16] text-[#14213D] dark:text-slate-100 text-left transition-colors duration-200">
       <Navbar />
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6">
         {/* Back Link */}
         <Link
           href="/orders"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-[#0070E0] transition-colors mb-4"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-[#0070E0] dark:hover:text-[#38BDF8] transition-colors mb-4"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Back to all orders</span>
         </Link>
 
         {loading ? (
-          <div className="py-20 text-center text-slate-500">
-            <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#0070E0] mb-2" />
+          <div className="py-20 text-center text-slate-500 dark:text-slate-400">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#0070E0] dark:text-[#38BDF8] mb-2" />
             <p className="text-sm font-medium">Retrieving order and shipment data...</p>
           </div>
         ) : error || !order ? (
-          <div className="p-8 rounded-3xl border border-red-200 bg-red-50 text-center">
+          <div className="p-8 rounded-3xl border border-red-200 dark:border-red-900/40 bg-red-50 dark:bg-red-950/20 text-center">
             <AlertTriangle className="w-10 h-10 text-red-500 mx-auto mb-2" />
-            <h3 className="text-base font-bold text-slate-900 mb-1">Order Access Notice</h3>
-            <p className="text-xs text-slate-600 max-w-md mx-auto mb-4">{error}</p>
-            <Link href="/orders" className="text-xs font-bold text-[#0070E0] hover:underline">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">Order Access Notice</h3>
+            <p className="text-xs text-slate-600 dark:text-slate-400 max-w-md mx-auto mb-4">{error}</p>
+            <Link href="/orders" className="text-xs font-bold text-[#0070E0] dark:text-[#38BDF8] hover:underline">
               Return to Orders List
             </Link>
           </div>
@@ -243,45 +243,45 @@ export default function OrderDetailPage() {
             {/* Left Column: Order & Shipment Details (7 cols) */}
             <div className="lg:col-span-7 flex flex-col gap-6">
               {/* Order Header Card */}
-              <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-subtle">
-                <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100">
+              <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0E1422] p-6 shadow-subtle">
+                <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
                   <div>
-                    <span className="text-xs font-mono font-bold text-[#0070E0] bg-[#EAF3FF] border border-[#0070E0]/20 px-2.5 py-0.5 rounded-md">
+                    <span className="text-xs font-mono font-bold text-[#0070E0] dark:text-[#38BDF8] bg-[#EAF3FF] dark:bg-[#0070E0]/20 border border-[#0070E0]/20 dark:border-[#0070E0]/40 px-2.5 py-0.5 rounded-md">
                       {order.id}
                     </span>
-                    <h1 className="text-xl sm:text-2xl font-black text-[#14213D] mt-1.5">
+                    <h1 className="text-xl sm:text-2xl font-black text-[#14213D] dark:text-white mt-1.5">
                       {order.product_name}
                     </h1>
                   </div>
 
                   <div className="text-right">
-                    <div className="text-xl font-black text-[#003087] font-mono">
+                    <div className="text-xl font-black text-[#003087] dark:text-[#38BDF8] font-mono">
                       ${order.amount.toFixed(2)} {order.currency}
                     </div>
-                    <div className="text-xs text-slate-500 font-medium">Qty: {order.quantity}</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">Qty: {order.quantity}</div>
                   </div>
                 </div>
 
                 {/* Metadata Grid */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4 text-xs">
-                  <div className="p-3 rounded-2xl bg-[#F5F8FC] border border-slate-200/80">
-                    <span className="text-slate-500 text-[11px] font-medium">Payment Status</span>
-                    <div className="font-bold text-emerald-700 flex items-center gap-1 mt-0.5">
-                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  <div className="p-3 rounded-2xl bg-[#F5F8FC] dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60">
+                    <span className="text-slate-500 dark:text-slate-400 text-[11px] font-medium">Payment Status</span>
+                    <div className="font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1 mt-0.5">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                       Completed
                     </div>
                   </div>
 
-                  <div className="p-3 rounded-2xl bg-[#F5F8FC] border border-slate-200/80">
-                    <span className="text-slate-500 text-[11px] font-medium">PayPal Order</span>
-                    <div className="font-mono text-slate-800 font-semibold truncate mt-0.5" title={order.paypal_order_id || "N/A"}>
+                  <div className="p-3 rounded-2xl bg-[#F5F8FC] dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60">
+                    <span className="text-slate-500 dark:text-slate-400 text-[11px] font-medium">PayPal Order</span>
+                    <div className="font-mono text-slate-800 dark:text-slate-200 font-semibold truncate mt-0.5" title={order.paypal_order_id || "N/A"}>
                       {order.paypal_order_id || "MOCK-SANDBOX"}
                     </div>
                   </div>
 
-                  <div className="p-3 rounded-2xl bg-[#F5F8FC] border border-slate-200/80">
-                    <span className="text-slate-500 text-[11px] font-medium">Carrier</span>
-                    <div className="font-bold text-slate-800 mt-0.5">
+                  <div className="p-3 rounded-2xl bg-[#F5F8FC] dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60">
+                    <span className="text-slate-500 dark:text-slate-400 text-[11px] font-medium">Carrier</span>
+                    <div className="font-bold text-slate-800 dark:text-slate-200 mt-0.5">
                       {shipment?.carrier || "FastShip Logistics"}
                     </div>
                   </div>
@@ -304,19 +304,19 @@ export default function OrderDetailPage() {
 
               {/* Shipment Milestone Progress & Timeline */}
               {shipment && (
-                <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-subtle">
+                <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0E1422] p-6 shadow-subtle">
                   <div className="flex items-center justify-between mb-5">
-                    <h2 className="text-xs font-bold text-[#14213D] uppercase tracking-wider flex items-center gap-2">
-                      <Truck className="w-4 h-4 text-[#0070E0]" />
+                    <h2 className="text-xs font-bold text-[#14213D] dark:text-white uppercase tracking-wider flex items-center gap-2">
+                      <Truck className="w-4 h-4 text-[#0070E0] dark:text-[#38BDF8]" />
                       Shipment Journey &amp; Milestones
                     </h2>
-                    <span className="text-xs font-mono font-medium text-slate-500">
+                    <span className="text-xs font-mono font-medium text-slate-500 dark:text-slate-400">
                       Tracking: {shipment.tracking_number}
                     </span>
                   </div>
 
                   {/* Visual Stepper */}
-                  <div className="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
+                  <div className="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200 dark:before:bg-slate-700">
                     {(shipment.timeline.length > 0
                       ? shipment.timeline
                       : [
@@ -331,27 +331,27 @@ export default function OrderDetailPage() {
                             milestone.current
                               ? "bg-[#0070E0] border-white ring-4 ring-[#0070E0]/20"
                               : milestone.completed
-                              ? "bg-emerald-500 border-white ring-2 ring-emerald-200"
-                              : "bg-white border-slate-300"
+                              ? "bg-emerald-500 border-white ring-2 ring-emerald-200 dark:ring-emerald-900/50"
+                              : "bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
                           }`}
                         />
                         <div className="flex items-baseline justify-between w-full">
                           <span
                             className={`text-xs font-bold ${
                               milestone.current
-                                ? "text-[#0070E0]"
+                                ? "text-[#0070E0] dark:text-[#38BDF8]"
                                 : milestone.completed
-                                ? "text-slate-800"
-                                : "text-slate-400"
+                                ? "text-slate-800 dark:text-slate-200"
+                                : "text-slate-400 dark:text-slate-500"
                             }`}
                           >
                             {milestone.title}
                           </span>
-                          <span className="text-[11px] font-mono text-slate-400">
+                          <span className="text-[11px] font-mono text-slate-400 dark:text-slate-500">
                             {milestone.timestamp}
                           </span>
                         </div>
-                        <p className="text-xs text-slate-600 leading-relaxed">{milestone.description}</p>
+                        <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{milestone.description}</p>
                       </div>
                     ))}
                   </div>
@@ -360,28 +360,28 @@ export default function OrderDetailPage() {
             </div>
 
             {/* Right Column: Embedded Post-Purchase Agent Chat (5 cols) */}
-            <div className="lg:col-span-5 flex flex-col rounded-3xl border border-slate-200 bg-white shadow-card overflow-hidden min-h-[550px] max-h-[700px]">
+            <div className="lg:col-span-5 flex flex-col rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0E1422] shadow-card overflow-hidden min-h-[550px] max-h-[700px]">
               {/* Chat Header */}
-              <div className="p-4 border-b border-slate-100 bg-[#F5F8FC] flex items-center justify-between">
+              <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-[#F5F8FC] dark:bg-slate-800/40 flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-full bg-[#0070E0] flex items-center justify-center text-white font-extrabold text-xs">
                     <span className="italic">P</span>
                   </div>
                   <div>
-                    <h3 className="text-xs font-bold text-[#14213D] tracking-tight">
+                    <h3 className="text-xs font-bold text-[#14213D] dark:text-white tracking-tight">
                       Ask PayPilot About This Order
                     </h3>
-                    <p className="text-[10px] text-slate-500">Grounded in authoritative order telemetry</p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400">Grounded in authoritative order telemetry</p>
                   </div>
                 </div>
-                <span className="flex items-center gap-1.5 text-[11px] text-emerald-700 font-semibold bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                <span className="flex items-center gap-1.5 text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/40">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                   Online
                 </span>
               </div>
 
               {/* Chat Message Stream */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3 text-xs bg-white">
+              <div className="flex-1 overflow-y-auto p-4 space-y-3 text-xs bg-white dark:bg-[#090D16]">
                 {messages.length === 0 ? (
                   <div className="text-center py-8 px-4 text-slate-500">
                     <Sparkles className="w-7 h-7 mx-auto text-[#0070E0] mb-2" />
@@ -487,7 +487,7 @@ export default function OrderDetailPage() {
               </div>
 
               {/* Chat Input */}
-              <div className="p-3 border-t border-slate-100 bg-white">
+              <div className="p-3 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-[#0E1422]">
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
@@ -500,7 +500,7 @@ export default function OrderDetailPage() {
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     placeholder="Ask about this order (e.g. 'Why is it delayed?')..."
-                    className="flex-1 bg-[#F5F8FC] border border-slate-200 rounded-2xl px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0070E0] focus:bg-white focus:ring-2 focus:ring-[#0070E0]/10 transition-all"
+                    className="flex-1 bg-[#F5F8FC] dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-[#0070E0] dark:focus:border-[#38BDF8] focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-[#0070E0]/10 transition-all"
                   />
                   <button
                     type="submit"
