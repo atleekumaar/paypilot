@@ -32,21 +32,16 @@ PayPilot autonomously understands the request, searches product offerings, compa
 
 ---
 
-## Current Status & Roadmap
+## Core Features & Architecture
 
-- **Phase 1 — Foundation** ✅
-  - FastAPI backend & Next.js frontend scaffolded
-  - Health and root status endpoints
-  - Git repository & clean architecture established
-
-- **Phase 2 — AI Product Discovery** ✅
+- **Autonomous AI Product Discovery**
   - Natural-language intent extraction and normalization
   - Deterministic product search enforcing hard constraints (budget, category, in-stock)
   - Mathematical ranking engine (0–100 composite scoring)
   - Grounded, hallucination-free recommendation explanations
   - Interactive Next.js Shopping Workspace with progressive loading & product modals
 
-- **Phase 3 — PayPal Checkout & Purchase Flow** ✅
+- **PayPal Checkout & Verified Settlement**
   - Authoritative Purchase Plan formulation (zero client price manipulation)
   - Explicit Human-in-the-Loop approval gate
   - PayPal Sandbox OAuth 2.0 authentication and token management
@@ -55,7 +50,7 @@ PayPilot autonomously understands the request, searches product offerings, compa
   - Server-side order capture verification and idempotency protection
   - Verified receipt and payment success screen
 
-- **Phase 4 — Controlled Agentic Commerce** ✅
+- **Controlled Agentic Commerce Engine**
   - Multi-step tool-augmented AI agent (`UNDERSTAND -> PLAN -> USE TOOLS -> SEARCH -> COMPARE -> RECOMMEND -> CREATE PURCHASE PLAN -> REQUEST APPROVAL -> EXECUTE APPROVED PAYMENT`)
   - Tool Registry with 4 strict permission tiers (`READ`, `WRITE`, `APPROVAL_REQUIRED`, `PAYMENT`)
   - Policy Engine enforcing 6 deterministic safety rules ($0 autonomy threshold, no price tampering, out-of-stock guard, step limit)
@@ -63,7 +58,7 @@ PayPilot autonomously understands the request, searches product offerings, compa
   - Multi-turn conversational memory with pronoun/reference resolution ("buy the first one", "why NovaBook?")
   - 100% verified test suite (41/41 passing tests)
 
-- **Phase 5 — Post-Purchase Agent** ✅ *(ACTIVE & IMPLEMENTED)*
+- **Post-Purchase Operations & Proactive Support**
   - Authoritative Order & Shipment tracking models with strict user isolation (`order.user_id == current_user.id`)
   - Post-Purchase Agent with multi-turn order inquiry intents (`ORDER_STATUS`, `TRACK_ORDER`, `DELIVERY_ESTIMATE`, `PAYMENT_STATUS`, `DELIVERY_DELAY`)
   - Deterministic delivery delay detection and carrier telemetry parsing
@@ -71,7 +66,7 @@ PayPilot autonomously understands the request, searches product offerings, compa
   - Complete frontend Order Tracking Dashboard (`/orders`), Order Detail with milestone timeline (`/orders/[id]`), and Notification Center (`/notifications`)
   - 100% verified test suite (56/56 passing tests)
 
-- **Phase 6 — Hackathon Sponsor Integrations & Production Hardening** ✅ *(COMPLETED)*
+- **Sponsor Ecosystem & Enterprise Integrations**
   - **PayPal Orders v2 Sandbox**: Authoritative payment creation and capture against live `api-m.sandbox.paypal.com` with real Order ID verification (see [`docs/PAYPAL_SANDBOX_EVIDENCE.md`](docs/PAYPAL_SANDBOX_EVIDENCE.md)).
   - **Groq LLM**: Ultra-low latency inference for multi-turn conversational commerce using `openai/gpt-oss-20b`.
   - **Channel3**: Live cross-retailer product discovery across Samsung, Apple, Lenovo, Newegg, and Best Buy with normalized pricing and variant models.
@@ -85,7 +80,7 @@ PayPilot autonomously understands the request, searches product offerings, compa
   - **191/191 Passing Automated Tests** across all modules and 0 frontend TypeScript errors.
   - **Devpost Submission Package & 3-Minute Video Script**: Detailed field-by-field submission guide in [`docs/DEVPOST_SUBMISSION.md`](docs/DEVPOST_SUBMISSION.md).
 
-- **Phase 7 — Production Cloud Deployment & Live Verification** ✅ *(ACTIVE & LIVE)*
+- **Production Cloud Deployment & Reliability**
   - **Frontend Global Deployment (Vercel)**: Next.js 14 App Router deployed to [https://paypilot-lac.vercel.app](https://paypilot-lac.vercel.app/) with Edge CDN caching and responsive Dark/Light themes.
   - **Backend API Cloud Service (Render)**: Python 3 FastAPI service deployed to [https://paypilot-backend-sf0a.onrender.com](https://paypilot-backend-sf0a.onrender.com/) with automated health monitoring.
   - **Automated CI/CD Pipeline**: GitHub Actions (`.github/workflows/ci.yml`) triggers on every push to `main`, executing full pytest suite and automatically triggering zero-downtime redeployments.
@@ -93,7 +88,7 @@ PayPilot autonomously understands the request, searches product offerings, compa
 
 ---
 
-## Phase 5 Post-Purchase End-to-End Walkthrough
+## Post-Purchase End-to-End Walkthrough
 
 ```text
 1. Post-Purchase Inquiry:
