@@ -5,8 +5,9 @@
   "description": "PayPilot — AI-Powered Autonomous Commerce Platform",
   "scripts": {
     "dev": "npm --prefix frontend run dev",
-    "build": "npm --prefix frontend run build",
-    "start": "npm --prefix frontend run start",
+    "build": "cd frontend && npm install && npm run build",
+    "start": "cd frontend && npm run start -- -p $PORT",
     "lint": "npm --prefix frontend run lint"
   }
 }
+
