@@ -1,0 +1,145 @@
+{
+  "timestamp": "2026-11-11T11:26:30.582188+00:00",
+  "paypal_environment": "sandbox",
+  "endpoint": "https://api-m.sandbox.paypal.com/v2/checkout/orders/2R6259584E1668233/capture",
+  "paypal_order_id": "2R6259584E1668233",
+  "order_status": "COMPLETED",
+  "capture_id": "5VJ74328735124250",
+  "capture_status": "COMPLETED",
+  "amount": "1049.00",
+  "currency": "USD",
+  "payer": {
+    "name": {
+      "given_name": "John",
+      "surname": "Doe"
+    },
+    "email_address": "sb-dyylx53855709@personal.example.com",
+    "payer_id": "Z258J9KMRDQ7C",
+    "address": {
+      "country_code": "US"
+    }
+  },
+  "capture_verified": true,
+  "raw_capture_response": {
+    "id": "2R6259584E1668233",
+    "intent": "CAPTURE",
+    "status": "COMPLETED",
+    "payment_source": {
+      "paypal": {
+        "email_address": "sb-dyylx53855709@personal.example.com",
+        "account_id": "Z258J9KMRDQ7C",
+        "account_status": "VERIFIED",
+        "name": {
+          "given_name": "John",
+          "surname": "Doe"
+        },
+        "address": {
+          "country_code": "US"
+        }
+      }
+    },
+    "purchase_units": [
+      {
+        "reference_id": "PP-LIVE-1794387177",
+        "amount": {
+          "currency_code": "USD",
+          "value": "1049.00"
+        },
+        "payee": {
+          "email_address": "sb-wqndo53210848@business.example.com",
+          "merchant_id": "RJYR5ZFU7UDXY",
+          "display_data": {
+            "brand_name": "PayPilot"
+          }
+        },
+        "description": "PayPilot Purchase: NovaBook Pro 14",
+        "soft_descriptor": "PAYPAL *TEST STORE",
+        "shipping": {
+          "name": {
+            "full_name": "John Doe"
+          },
+          "address": {
+            "address_line_1": "2211 N First St",
+            "admin_area_2": "San Jose",
+            "admin_area_1": "CA",
+            "postal_code": "95131",
+            "country_code": "US"
+          }
+        },
+        "payments": {
+          "captures": [
+            {
+              "id": "5VJ74328735124250",
+              "status": "COMPLETED",
+              "amount": {
+                "currency_code": "USD",
+                "value": "1049.00"
+              },
+              "final_capture": true,
+              "seller_protection": {
+                "status": "ELIGIBLE",
+                "dispute_categories": [
+                  "ITEM_NOT_RECEIVED",
+                  "UNAUTHORIZED_TRANSACTION"
+                ]
+              },
+              "seller_receivable_breakdown": {
+                "gross_amount": {
+                  "currency_code": "USD",
+                  "value": "1049.00"
+                },
+                "paypal_fee": {
+                  "currency_code": "USD",
+                  "value": "48.63"
+                },
+                "net_amount": {
+                  "currency_code": "USD",
+                  "value": "1000.37"
+                }
+              },
+              "links": [
+                {
+                  "href": "https://api.sandbox.paypal.com/v2/payments/captures/5VJ74328735124250",
+                  "rel": "self",
+                  "method": "GET"
+                },
+                {
+                  "href": "https://api.sandbox.paypal.com/v2/payments/captures/5VJ74328735124250/refund",
+                  "rel": "refund",
+                  "method": "POST"
+                },
+                {
+                  "href": "https://api.sandbox.paypal.com/v2/checkout/orders/2R6259584E1668233",
+                  "rel": "up",
+                  "method": "GET"
+                }
+              ],
+              "create_time": "2026-11-11T11:26:31Z",
+              "update_time": "2026-11-11T11:26:31Z"
+            }
+          ]
+        }
+      }
+    ],
+    "payer": {
+      "name": {
+        "given_name": "John",
+        "surname": "Doe"
+      },
+      "email_address": "sb-dyylx53855709@personal.example.com",
+      "payer_id": "Z258J9KMRDQ7C",
+      "address": {
+        "country_code": "US"
+      }
+    },
+    "create_time": "2026-11-11T08:54:07Z",
+    "update_time": "2026-11-11T11:26:31Z",
+    "links": [
+      {
+        "href": "https://api.sandbox.paypal.com/v2/checkout/orders/2R6259584E1668233",
+        "rel": "self",
+        "method": "GET"
+      }
+    ]
+  }
+}

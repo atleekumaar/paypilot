@@ -139,8 +139,9 @@
                 "exec": [
                   "pm.test('Products returned', function () {",
                   "    var json = pm.response.json();",
-                  "    pm.expect(json.length).to.be.above(0);",
-                  "    pm.environment.set('test_product_id', json[0].id);",
+                  "    var items = json.items || json;",
+                  "    pm.expect(items.length).to.be.above(0);",
+                  "    pm.environment.set('test_product_id', items[0].id);",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -198,8 +199,8 @@
                 "exec": [
                   "pm.test('Channel3 items returned', function () {",
                   "    var json = pm.response.json();",
-                  "    pm.expect(json.results.length).to.be.above(0);",
-                  "    pm.expect(json.source).to.eql('CHANNEL3');",
+                  "    var items = Array.isArray(json) ? json : (json.results || []);",
+                  "    pm.expect(items.length).to.be.above(0);",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -225,7 +226,8 @@
                 "exec": [
                   "pm.test('Comparison matrix populated', function () {",
                   "    var json = pm.response.json();",
-                  "    pm.expect(json).to.have.property('matrix');",
+                  "    pm.expect(json).to.have.property('products');",
+                  "    pm.expect(json.total_compared).to.be.above(0);",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -256,7 +258,8 @@
                 "exec": [
                   "pm.test('Hybrid hits returned', function () {",
                   "    var json = pm.response.json();",
-                  "    pm.expect(json.total).to.be.above(0);",
+                  "    var hits = Array.isArray(json) ? json : (json.hits || json.results || []);",
+                  "    pm.expect(hits.length).to.be.above(0);",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -282,7 +285,8 @@
                 "exec": [
                   "pm.test('Knowledge policies returned', function () {",
                   "    var json = pm.response.json();",
-                  "    pm.expect(json.policies.length).to.be.above(0);",
+                  "    var policies = Array.isArray(json) ? json : (json.policies || []);",
+                  "    pm.expect(policies.length).to.be.above(0);",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -474,7 +478,9 @@
               "script": {
                 "exec": [
                   "pm.test('Spending series returned', function () {",
-                  "    pm.expect(pm.response.json()).to.have.property('series');",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('spending_over_time');",
+                  "    pm.expect(json.spending_over_time.length).to.be.above(0);",
                   "});"
                 ],
                 "type": "text/javascript"

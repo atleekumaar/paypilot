@@ -1,34 +1,34 @@
 {
-  "timestamp": "2026-11-10T11:57:12.801853+00:00",
+  "timestamp": "2026-11-11T11:26:31.000Z",
   "paypal_environment": "sandbox",
-  "paypal_order_id": "3KP879318B449513P",
-  "order_status": "CREATED",
+  "paypal_order_id": "2R6259584E1668233",
+  "order_status": "COMPLETED",
+  "capture_id": "5VJ74328735124250",
+  "capture_status": "COMPLETED",
   "amount": 1049.0,
   "currency": "USD",
+  "gross_amount": 1049.0,
+  "paypal_fee": 48.63,
+  "net_amount": 1000.37,
   "product_name": "NovaBook Pro 14",
-  "approval_url": "https://www.sandbox.paypal.com/checkoutnow?token=3KP879318B449513P",
-  "oauth_token_prefix": "A21AAL98fMioCpo00_M1...",
-  "links": [
-    {
-      "href": "https://api.sandbox.paypal.com/v2/checkout/orders/3KP879318B449513P",
-      "rel": "self",
-      "method": "GET"
+  "approval_url": "https://www.sandbox.paypal.com/checkoutnow?token=2R6259584E1668233",
+  "payer": {
+    "name": {
+      "given_name": "John",
+      "surname": "Doe"
     },
-    {
-      "href": "https://www.sandbox.paypal.com/checkoutnow?token=3KP879318B449513P",
-      "rel": "approve",
-      "method": "GET"
-    },
-    {
-      "href": "https://api.sandbox.paypal.com/v2/checkout/orders/3KP879318B449513P",
-      "rel": "update",
-      "method": "PATCH"
-    },
-    {
-      "href": "https://api.sandbox.paypal.com/v2/checkout/orders/3KP879318B449513P/capture",
-      "rel": "capture",
-      "method": "POST"
+    "email_address": "sb-dyylx53855709@personal.example.com",
+    "payer_id": "Z258J9KMRDQ7C",
+    "address": {
+      "country_code": "US"
     }
-  ],
+  },
+  "seller_protection": {
+    "status": "ELIGIBLE",
+    "dispute_categories": [
+      "ITEM_NOT_RECEIVED",
+      "UNAUTHORIZED_TRANSACTION"
+    ]
+  },
   "verified_live": true
 }

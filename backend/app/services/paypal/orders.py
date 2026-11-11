@@ -76,6 +76,21 @@ class PayPalOrderService:
             "Prefer": "return=representation",
         }
 
+        # Derive return and cancel URLs for buyer redirect
+        frontend_base = "http://localhost:3000"
+        try:
+            from app.core.config import get_settings
+            app_settings = get_settings()
+            if app_settings.RENDER_EXTERNAL_URL:
+                frontend_base = app_settings.RENDER_EXTERNAL_URL.rstrip("/")
+            elif app_settings.ALLOWED_ORIGINS:
+                frontend_base = app_settings.ALLOWED_ORIGINS[0].rstrip("/")
+        except Exception:
+            pass
+
+        return_url = f"{frontend_base}/orders?status=approved"
+        cancel_url = f"{frontend_base}/orders?status=cancelled"
+
         order_payload = {
             "intent": "CAPTURE",
             "purchase_units": [
@@ -92,6 +107,8 @@ class PayPalOrderService:
                 "brand_name": "PayPilot",
                 "landing_page": "NO_PREFERENCE",
                 "user_action": "PAY_NOW",
+                "return_url": return_url,
+                "cancel_url": cancel_url,
             },
         }
 

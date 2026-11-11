@@ -79,7 +79,8 @@ def verify_live_paypal_sandbox():
         "currency": plan.currency,
         "product_name": plan.product_name,
         "approval_url": approval_url,
-        "oauth_token_prefix": token[:20] + "...",
+        "token_type": "Bearer",
+        "token_authenticated": True,
         "links": order_res.get("links", []),
         "verified_live": True,
     }
@@ -97,3 +98,4 @@ def verify_live_paypal_sandbox():
 
 if __name__ == "__main__":
     verify_live_paypal_sandbox()
+

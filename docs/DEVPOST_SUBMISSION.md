@@ -11,7 +11,7 @@ This document contains the exact field-by-field answers, technology disclosure, 
 - **Public GitHub Repository:** [https://github.com/atleekumaar/paypilot](https://github.com/atleekumaar/paypilot)
 - **License:** MIT License (Open Source)
 - **Live Demo URL:** Local/Render deployment ([http://localhost:3000](http://localhost:3000))
-- **Live PayPal Sandbox Order ID:** `3KP879318B449513P`
+- **Live PayPal Sandbox Order ID:** `2R6259584E1668233` (Captured: `5VJ74328735124250` — `COMPLETED`)
 - **Video Demo Link:** Public YouTube video (see script below)
 
 ---
@@ -41,8 +41,8 @@ PayPilot guides buyers through the entire commerce lifecycle in four seamless st
 
 3. **PayPal Orders API v2 Sandbox Checkout**:
    - Upon buyer approval, initiates a real PayPal Orders v2 transaction (`intent: CAPTURE`).
-   - Obtains an authoritative PayPal Order ID (e.g. `3KP879318B449513P`) and generates a direct PayPal Sandbox Buyer Approval URL.
-   - Captures payments server-side via authenticated REST API, persisting verified payment receipts and capture IDs.
+   - Obtains an authoritative PayPal Order ID (e.g. `2R6259584E1668233`) and generates a direct PayPal Sandbox Buyer Approval URL.
+   - Captures payments server-side via authenticated REST API, persisting verified payment receipts and capture IDs (e.g. `5VJ74328735124250`).
 
 4. **Post-Purchase Intelligence & Operational Analytics**:
    - **Bryntum-Compatible Lifecycle Timeline**: Displays Gantt-style chronological lanes mapping orders from approval through courier transit to delivery.
@@ -121,3 +121,4 @@ Use this exact timing and narration script when recording your 2:50 demo video f
 | **1:55 - 2:25** | **Bryntum Timeline & Tracking**<br>Navigate to `/timeline`. Show Gantt-style chronological lanes (Approval -> Capture -> In Transit -> Delivery). Open `/orders/ORD-001` and ask the Post-Purchase Agent *"Where is my order?"*. | *"In post-purchase, our Bryntum-compatible scheduler maps the complete commerce lifecycle from payment authorization to carrier transit scans. The embedded post-purchase AI agent tracks shipments in real time and can even draft inquiry emails to merchants."* |
 | **2:25 - 2:45** | **AG Grid Intelligence Dashboard**<br>Navigate to `/insights`. Show KPI metrics ($5,793 total spend), Commerce Spending Timeline vertical bars, Category Distribution, and AG Grid table. | *"Finally, our Commerce Intelligence dashboard combines AG Grid with live analytics. We see spending over time, category breakdowns across laptops, phones, and audio, and complete audit records for every PayPal transaction."* |
 | **2:45 - 2:55** | **Summary & Call to Action**<br>Show GitHub repository with 191/191 tests passing and MIT license. | *"With 191 automated tests passing and full PayPal Sandbox compliance, PayPilot is the future of safe, agentic commerce. Thank you!"* |
+

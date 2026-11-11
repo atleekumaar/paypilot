@@ -286,6 +286,22 @@ To complete sandbox transactions, use the Sandbox personal buyer account provide
 
 ---
 
+## Sponsor Integrations & Technical Transparency Matrix
+
+In accordance with PayPal AI Hackathon guidelines and release engineering standards, all sponsor tool integrations are classified with complete technical transparency:
+
+| Technology / Sponsor | Category Label | Implementation & Evidence Details |
+| :--- | :--- | :--- |
+| **PayPal Developer Platform** | `LIVE VERIFIED` | Official Orders API v2 OAuth 2.0, authoritative order creation (`2R6259584E1668233`), buyer authorization, and server-side capture (`5VJ74328735124250`, `$1,049.00 USD`, `COMPLETED`). See [`docs/PAYPAL_SANDBOX_EVIDENCE.md`](docs/PAYPAL_SANDBOX_EVIDENCE.md). |
+| **Groq Cloud API** | `LIVE VERIFIED` | Ultra-low latency inference using Groq `openai/gpt-oss-20b` for multi-turn conversational reasoning and tool dispatch. |
+| **Channel3 API** | `LIVE VERIFIED` | Real-time cross-retailer product discovery and comparison across major merchant channels (`POST /api/channel3/search`). |
+| **Elasticsearch** | `SCHEMA & LOCAL HYBRID` | Real cluster REST connectivity with BM25 lexical retrieval; dense vector rankings compute deterministic 16-dim normalized MD5 token hashes for zero-dependency local execution. |
+| **Bryntum** | `SCHEMA COMPATIBLE` | Interactive commerce timeline (`/timeline`) matching Bryntum Scheduler Pro's `ResourceStore` and `EventStore` JSON schemas in custom React components. No commercial `@bryntum` package installed. |
+| **Kernel** | `SIMULATED FALLBACK` | Sub-30ms merchant page inspection protocol with replay URL generation (`https://app.onkernel.com`). Explicitly flags `is_simulated=true` when external API key is absent. |
+| **Zapier** | `SIMULATED FALLBACK` | Multi-app post-purchase workflow dispatcher and Model Context Protocol (MCP) server definitions (`status: SUCCESS_SIMULATED`). |
+
+---
+
 ## Local Development
 
 ### 1. Backend Setup

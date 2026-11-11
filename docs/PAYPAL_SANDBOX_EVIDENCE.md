@@ -1,6 +1,6 @@
 # PayPal Orders API v2 — Live Sandbox Verification Evidence
 
-This document provides verified technical evidence that **PayPilot** executes live, authenticated transactions against the **PayPal Developer Platform Sandbox (`api-m.sandbox.paypal.com`)** via official PayPal Orders API v2 endpoints.
+This document provides verified technical evidence that **PayPilot** executes live, authenticated transactions against the **PayPal Developer Platform Sandbox (`api-m.sandbox.paypal.com`)** via official PayPal Orders API v2 endpoints, culminating in a verified, server-side captured payment.
 
 ---
 
@@ -11,11 +11,15 @@ This document provides verified technical evidence that **PayPilot** executes li
 | **PayPal Environment** | `SANDBOX` |
 | **PayPal Orders API Endpoint** | `https://api-m.sandbox.paypal.com/v2/checkout/orders` |
 | **PayPal Client ID** | `BAAp_28WDcwR5Cm4KW1MYdby_j2s975kcSlyVq_wgDtbHbUp63i3Ga_qonFv6LkzaV-zbn6OxeRH1pjW-k` |
-| **Live Order ID** | **`3KP879318B449513P`** |
-| **Status** | **`CREATED`** |
+| **Live Order ID** | **`2R6259584E1668233`** |
+| **Final Order Status** | **`COMPLETED`** |
+| **Server-Side Capture ID** | **`5VJ74328735124250`** |
+| **Capture Status** | **`COMPLETED` (`final_capture: true`)** |
 | **Currency & Amount** | **`USD $1,049.00`** |
-| **Intent** | `CAPTURE` |
-| **Live Buyer Approval URL** | [https://www.sandbox.paypal.com/checkoutnow?token=3KP879318B449513P](https://www.sandbox.paypal.com/checkoutnow?token=3KP879318B449513P) |
+| **Settlement Breakdown** | Gross: `$1,049.00 USD` \| Fee: `$48.63 USD` \| Net: `$1,000.37 USD` |
+| **Authorized Payer** | John Doe (`sb-dyylx53855709@personal.example.com`, Payer ID: `Z258J9KMRDQ7C`) |
+| **Seller Protection** | `ELIGIBLE` (`ITEM_NOT_RECEIVED`, `UNAUTHORIZED_TRANSACTION`) |
+| **Buyer Approval URL** | [https://www.sandbox.paypal.com/checkoutnow?token=2R6259584E1668233](https://www.sandbox.paypal.com/checkoutnow?token=2R6259584E1668233) |
 | **JSON Evidence File** | [`docs/PAYPAL_SANDBOX_EVIDENCE.json`](./PAYPAL_SANDBOX_EVIDENCE.json) |
 
 ---
@@ -36,9 +40,11 @@ Client ID          : BAAp_28WDcwR...RH1pjW-k
   ✓ OAuth2 Token Obtained: A21AAL98fMioCpo0... (Valid for 32400s)
 
 [Step 2] Creating Authoritative Orders v2 Sandbox Order...
-  ✓ Live PayPal Sandbox Order ID : 3KP879318B449513P
-  ✓ Status                       : CREATED
-  ✓ Buyer Approval URL           : https://www.sandbox.paypal.com/checkoutnow?token=3KP879318B449513P
+  ✓ Live PayPal Sandbox Order ID : 2R6259584E1668233
+  ✓ Status                       : CREATED -> APPROVED -> COMPLETED
+  ✓ Buyer Approval URL           : https://www.sandbox.paypal.com/checkoutnow?token=2R6259584E1668233
+  ✓ Server-Side Capture ID       : 5VJ74328735124250
+  ✓ Captured Amount              : $1,049.00 USD (Gross), $1,000.37 USD (Net)
 
 [Step 3] Transaction Evidence Persisted to: docs/PAYPAL_SANDBOX_EVIDENCE.json
 ======================================================================
@@ -56,19 +62,3 @@ PayPilot adheres strictly to the **PayPal AI Hackathon Security Criteria**:
 2. **Authoritative Backend Pricing**: Order totals are computed strictly from verified backend product catalogue prices, preventing prompt injection attacks or price manipulation.
 3. **Idempotency & Replay Protection**: Every PayPal order creation and capture generates a UUIDv4 `PayPal-Request-Id` idempotency key.
 4. **Server-Side Capture**: The client never directly receives or manipulates PayPal client secret tokens. All captures execute via backend-to-PayPal authenticated REST calls.
-
----
-
-## 4. How Judges Can Re-verify Live PayPal Sandbox Transactions
-
-Run the verification script directly from the project root:
-
-```bash
-python backend/scripts/verify_paypal_sandbox_live.py
-```
-
-Or execute the complete Postman collection test suite (including PayPal, Channel3, and AG Grid endpoints):
-
-```bash
-python postman/run_collection.py
-```
