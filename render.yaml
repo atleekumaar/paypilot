@@ -59,7 +59,7 @@ services:
       - key: ZAPIER_WEBHOOK_URL
         sync: false
       - key: ALLOWED_ORIGINS
-        value: "https://paypilot-frontend.onrender.com,http://localhost:3000"
+        value: "https://paypilot-lac.vercel.app,https://paypilot-frontend.onrender.com,http://localhost:3000"
 
   # ---------------------------------------------------------------------------
   # 2. PayPilot Frontend Web Service (Next.js 14)
@@ -77,7 +77,7 @@ services:
       - key: NODE_VERSION
         value: 20.11.0
       - key: NEXT_PUBLIC_API_URL
-        value: https://paypilot-backend.onrender.com
+        value: https://paypilot-backend-sf0a.onrender.com
       - key: NEXT_PUBLIC_PAYPAL_CLIENT_ID
         sync: false
 
