@@ -66,22 +66,22 @@ export default function InsightsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#070a12] text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-[#F5F8FC]/50 dark:bg-[#070a12] text-[#14213D] dark:text-slate-100 flex flex-col transition-colors duration-200">
       <Navbar />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 space-y-8">
         {/* Page Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-slate-800">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-slate-200 dark:border-slate-800">
           <div>
             <div className="flex items-center gap-2.5">
               <div className="p-2 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/20 text-white font-bold">
                 <BarChart3 className="w-5 h-5" />
               </div>
-              <h1 className="text-2xl font-extrabold tracking-tight text-white">
+              <h1 className="text-2xl font-extrabold tracking-tight text-[#14213D] dark:text-white">
                 Commerce Intelligence & AG Studio
               </h1>
             </div>
-            <p className="text-xs text-slate-400 mt-1 max-w-2xl">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-2xl">
               Unified operational analytics combining AG Grid data tables, algorithmic product scoring,
               verified PayPal Sandbox transactions, and the AG Studio AI Dashboard Agent.
             </p>
@@ -91,13 +91,13 @@ export default function InsightsPage() {
             <button
               onClick={fetchAnalytics}
               disabled={loading}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-xs font-medium text-slate-300 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-700 dark:text-slate-300 transition-colors shadow-sm"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-cyan-400" : ""}`} />
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-cyan-500 dark:text-cyan-400" : ""}`} />
               <span>Refresh Metrics</span>
             </button>
-            <div className="px-3 py-1 rounded-xl bg-cyan-950/80 border border-cyan-800/80 text-[11px] font-semibold text-cyan-300 flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <div className="px-3 py-1 rounded-xl bg-cyan-50 dark:bg-cyan-950/80 border border-cyan-200 dark:border-cyan-800/80 text-[11px] font-semibold text-cyan-700 dark:text-cyan-300 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
               <span>PayPal Orders v2 Connected</span>
             </div>
           </div>
@@ -129,8 +129,8 @@ export default function InsightsPage() {
         {/* 4. Three Custom AG Studio Widgets */}
         <section className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold tracking-wider text-slate-300 uppercase flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-cyan-400" />
+            <h2 className="text-sm font-bold tracking-wider text-slate-700 dark:text-slate-300 uppercase flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-cyan-500 dark:text-cyan-400" />
               Custom Intelligence Widgets
             </h2>
             <span className="text-xs text-slate-500">Live Metric Aggregation</span>
@@ -157,44 +157,44 @@ export default function InsightsPage() {
 
         {/* 5. AG Grid Intelligence Grids (Tabbed) */}
         <section className="space-y-4">
-          <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
+          <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
             <button
               onClick={() => setActiveTab("products")}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
                 activeTab === "products"
-                  ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/30"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30 font-bold"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               <Sparkles className="w-4 h-4" />
               <span>Product Intelligence Grid</span>
-              <span className="px-1.5 py-0.2 rounded-full bg-slate-800 text-[10px] text-slate-400">{products.length}</span>
+              <span className="px-1.5 py-0.2 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-700 dark:text-slate-400">{products.length}</span>
             </button>
 
             <button
               onClick={() => setActiveTab("orders")}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
                 activeTab === "orders"
-                  ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/30"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30 font-bold"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               <Package className="w-4 h-4" />
               <span>Order Intelligence</span>
-              <span className="px-1.5 py-0.2 rounded-full bg-slate-800 text-[10px] text-slate-400">{orders.length}</span>
+              <span className="px-1.5 py-0.2 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-700 dark:text-slate-400">{orders.length}</span>
             </button>
 
             <button
               onClick={() => setActiveTab("payments")}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
                 activeTab === "payments"
-                  ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/30"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30 font-bold"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               <CreditCard className="w-4 h-4" />
               <span>Payment Intelligence</span>
-              <span className="px-1.5 py-0.2 rounded-full bg-slate-800 text-[10px] text-slate-400">{payments.length}</span>
+              <span className="px-1.5 py-0.2 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-700 dark:text-slate-400">{payments.length}</span>
             </button>
           </div>
 

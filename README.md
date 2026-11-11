@@ -76,7 +76,7 @@ PayPilot autonomously understands the request, searches product offerings, compa
   - **Bryntum**: Interactive Commerce Timeline (`/timeline`) built on the Bryntum Scheduler Pro Data Model (`ResourceStore` + `EventStore` JSON schema) with Gantt milestones (see [`docs/BRYNTUM_INTEGRATION.md`](docs/BRYNTUM_INTEGRATION.md)).
   - **AG Grid & AG Studio**: Enterprise commerce intelligence grids and AI-powered insights dashboard (`/insights`) with dark & sun theme toggle.
   - **Postman**: Complete Postman Collection v2.1.0 (`postman/PayPilot.postman_collection.json`) with automated test runner (`postman/run_collection.py` — **18/18 requests passed, 23/23 `pm.test` assertions verified**).
-  - **Render**: Infrastructure-as-Code multi-service cloud blueprint (`render.yaml`) deploying backend, frontend, worker, PostgreSQL, and Redis.
+  - **Render**: Infrastructure-as-Code cloud deployment (`render.yaml`) powering backend and frontend services.
   - **191/191 Passing Automated Tests** across all modules and 0 frontend TypeScript errors.
   - **Devpost Submission Package & 3-Minute Video Script**: Detailed field-by-field submission guide in [`docs/DEVPOST_SUBMISSION.md`](docs/DEVPOST_SUBMISSION.md).
 
@@ -253,7 +253,7 @@ flowchart TD
         end
 
         subgraph Persistence ["Authoritative Data Store"]
-            DB[("🗄️ SQLite / PostgreSQL Engine\n(Orders, Outbox & Audit Logs)")]
+            DB[("🗄️ SQLite Database Engine\n(Orders, Outbox & Audit Logs)")]
         end
     end
 

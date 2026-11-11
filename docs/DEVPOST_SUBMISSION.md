@@ -55,7 +55,7 @@ PayPilot guides buyers through the entire commerce lifecycle in four seamless st
 ---
 
 ### 2.3 How We Built It
-- **Backend Architecture**: FastAPI monolithic agent engine with Pydantic v2 schemas, SQLAlchemy transactional outbox, and SQLite/PostgreSQL persistence.
+- **Backend Architecture**: FastAPI monolithic agent engine with Pydantic v2 schemas, SQLAlchemy transactional outbox, and SQLite database persistence.
 - **Frontend Experience**: Next.js 14 App Router, TypeScript, Tailwind CSS, Lucide icons, anti-flash dark/light theme toggle, and AG Grid Community v32.
 - **PayPal Integration**: Official PayPal Orders API v2 (`/v2/checkout/orders` and `/v2/checkout/orders/{id}/capture`) with OAuth2 bearer token management and fail-closed credentials.
 - **Sponsor Integrations**:
@@ -105,7 +105,7 @@ PayPilot guides buyers through the entire commerce lifecycle in four seamless st
 PayPal Orders API v2, PayPal Sandbox, Groq LLM, Channel3 API, Elasticsearch,
 Kernel Cloud Browser, Zapier Webhooks & MCP, Bryntum Scheduler Pro Data Schema,
 AG Grid Community, FastAPI, Pydantic v2, Python 3.11, Next.js 14, React 18,
-TypeScript, Tailwind CSS, PostgreSQL, Redis, Render Cloud, Postman, Newman
+TypeScript, Tailwind CSS, SQLite, SQL Database Engine, Render Cloud, Postman, Newman
 ```
 
 ---

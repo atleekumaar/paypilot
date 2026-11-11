@@ -1,6 +1,6 @@
 # Render Infrastructure-as-Code Blueprint for PayPilot
 # Official Hackathon Partner: https://paypalaihackathon.devpost.com/details/render
-# Deploys FastAPI backend, Next.js frontend, background worker, PostgreSQL, and Redis.
+# Deploys FastAPI backend, Next.js frontend, and background worker services.
 
 services:
   # ---------------------------------------------------------------------------

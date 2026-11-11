@@ -58,7 +58,7 @@ export default function ProductIntelligenceGrid({
       filter: true,
       cellRenderer: (params: any) => (
         <div className="flex items-center gap-2 py-1">
-          <span className="font-semibold text-white truncate">{params.value}</span>
+          <span className="font-semibold text-[#14213D] dark:text-white truncate">{params.value}</span>
         </div>
       ),
     },
@@ -68,7 +68,7 @@ export default function ProductIntelligenceGrid({
       width: 120,
       filter: true,
       cellRenderer: (params: any) => (
-        <span className="text-cyan-400 font-medium">{params.value}</span>
+        <span className="text-cyan-600 dark:text-cyan-400 font-medium">{params.value}</span>
       ),
     },
     {
@@ -77,7 +77,7 @@ export default function ProductIntelligenceGrid({
       width: 120,
       filter: "agNumberColumnFilter",
       cellRenderer: (params: any) => (
-        <span className="font-bold text-emerald-400">
+        <span className="font-bold text-emerald-600 dark:text-emerald-400">
           ${Number(params.value).toFixed(2)}
         </span>
       ),
@@ -88,7 +88,7 @@ export default function ProductIntelligenceGrid({
       width: 130,
       filter: true,
       cellRenderer: (params: any) => (
-        <span className="px-2 py-0.5 rounded text-[11px] bg-slate-800 text-slate-300 border border-slate-700">
+        <span className="px-2 py-0.5 rounded text-[11px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
           {params.value}
         </span>
       ),
@@ -153,16 +153,16 @@ export default function ProductIntelligenceGrid({
   }), []);
 
   return (
-    <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-sm shadow-xl flex flex-col gap-4">
+    <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 backdrop-blur-sm shadow-sm dark:shadow-xl flex flex-col gap-4 transition-colors">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="text-base font-bold text-white tracking-wide">Product Intelligence Grid</h3>
-            <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded bg-cyan-950/80 text-cyan-400 border border-cyan-800/60">
+            <h3 className="text-base font-bold text-[#14213D] dark:text-white tracking-wide">Product Intelligence Grid</h3>
+            <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded bg-cyan-50 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800/60">
               AG Grid Powered
             </span>
           </div>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Verified commerce catalogue with hardware specifications, AI scoring, and live inventory.
           </p>
         </div>
@@ -175,14 +175,14 @@ export default function ProductIntelligenceGrid({
               placeholder="Search products, brands, specs..."
               value={quickFilter}
               onChange={(e) => setQuickFilter(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 bg-slate-800/80 border border-slate-700/80 rounded-xl text-xs text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500"
+              className="w-full pl-9 pr-3 py-1.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl text-xs text-[#14213D] dark:text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors"
             />
           </div>
         </div>
       </div>
 
-      {/* Grid container with modern dark quartz theme */}
-      <div className="ag-theme-quartz ag-theme-quartz-dark w-full h-[400px] rounded-xl overflow-hidden border border-slate-800 shadow-inner">
+      {/* Grid container with modern quartz theme */}
+      <div className="ag-theme-quartz w-full h-[400px] rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-inner">
         <AgGridReact
           ref={gridRef}
           rowData={filteredData}

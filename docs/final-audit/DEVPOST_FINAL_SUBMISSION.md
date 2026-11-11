@@ -36,7 +36,7 @@ PayPilot is an end-to-end agentic commerce orchestration platform featuring:
 - **Payment Gateway:** PayPal Orders API v2 (Sandbox), implementing OAuth 2.0 client credential exchange, order creation with `intent: CAPTURE`, approval URL redirection, server-side capture, and webhook validation.
 - **Frontend Experience:** Next.js 14 (App Router) + React 18 + TypeScript + Tailwind CSS. Features full dark/light theme switching, interactive chat UI, approval gates, and embedded PayPal JS SDK.
 - **Enterprise Analytics:** AG Grid Community for high-performance tabular manipulation across products, orders, and payment records.
-- **Persistence & Caching:** PostgreSQL for ACID transactions and relational integrity, Redis for session cache, and SQLite as a zero-dependency fallback.
+- **Persistence & Caching:** SQLite database engine for ACID transactions, relational integrity, outbox events, and zero-dependency persistence.
 
 ### Challenges We Ran Into
 1. **Enforcing Deterministic Payment Guardrails in Probabilistic Systems:** Preventing LLMs from hallucinating purchase approvals required building an immutable backend state machine that rejects capture calls unless a cryptographically signed approval session exists.
@@ -55,7 +55,7 @@ FinTech commerce agents cannot treat payments as standard LLM tool calls. Paymen
 ### What's Next for PayPilot
 - **PayPal Vaulting & Recurring Subscriptions:** Implementing PayPal Billing Agreements for scheduled consumable replenishment with budget caps.
 - **Multi-Agent Negotiation Protocols:** Enabling autonomous agent-to-agent price discovery between buyer agents and merchant agents.
-- **Full Production Deployment:** Transitioning the PostgreSQL and Redis cluster to high-availability multi-region cloud infrastructure.
+- **Full Production Deployment:** Scaling the persistent SQL database infrastructure across high-availability multi-region cloud tiers.
 
 ---
 
@@ -84,7 +84,7 @@ FinTech commerce agents cannot treat payments as standard LLM tool calls. Paymen
 - `Groq`
 - `Channel3`
 - `AG Grid`
-- `PostgreSQL`
+- `SQLite / SQL Database Engine`
 - `Redis`
 - `Tailwind CSS`
 - `Postman / Newman`

@@ -120,13 +120,13 @@ export default function PaymentIntelligenceGrid({ payments, loading }: PaymentIn
   }), []);
 
   return (
-    <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-sm shadow-xl flex flex-col gap-4">
+    <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 backdrop-blur-sm shadow-sm dark:shadow-xl flex flex-col gap-4 transition-colors">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div className="flex items-center gap-2">
-          <CreditCard className="w-5 h-5 text-indigo-400" />
+          <CreditCard className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
           <div>
-            <h3 className="text-base font-bold text-white tracking-wide">Payment Intelligence</h3>
-            <p className="text-xs text-slate-400">PayPal Orders API v2 capture tracking, verification audits, and refund ledger.</p>
+            <h3 className="text-base font-bold text-[#14213D] dark:text-white tracking-wide">Payment Intelligence</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">PayPal Orders API v2 capture tracking, verification audits, and refund ledger.</p>
           </div>
         </div>
 
@@ -137,12 +137,12 @@ export default function PaymentIntelligenceGrid({ payments, loading }: PaymentIn
             placeholder="Search payments, captures..."
             value={quickFilter}
             onChange={(e) => setQuickFilter(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 bg-slate-800/80 border border-slate-700/80 rounded-xl text-xs text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500"
+            className="w-full pl-9 pr-3 py-1.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl text-xs text-[#14213D] dark:text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors"
           />
         </div>
       </div>
 
-      <div className="ag-theme-quartz ag-theme-quartz-dark w-full h-[300px] rounded-xl overflow-hidden border border-slate-800 shadow-inner">
+      <div className="ag-theme-quartz w-full h-[300px] rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-inner">
         <AgGridReact
           ref={gridRef}
           rowData={payments}

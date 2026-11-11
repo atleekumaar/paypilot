@@ -4,7 +4,7 @@
 
 - **Python**: 3.11+ (Python 3.12 recommended)
 - **Node.js**: 18.x or 20.x
-- **Database**: PostgreSQL 15+ (Production) or SQLite (Local Dev / Automated CI)
+- **Database**: SQLite (SQLAlchemy ORM with Transactional Outbox & ACID Compliance)
 - **Payment Gateway**: PayPal Developer Account (Sandbox Credentials)
 
 ---
@@ -19,8 +19,8 @@ APP_NAME=PayPilot
 ENVIRONMENT=production
 DEBUG=false
 
-# Persistence (PostgreSQL)
-DATABASE_URL=postgresql://paypilot_user:secure_password@db.internal:5432/paypilot
+# Persistence (SQL Database)
+DATABASE_URL=sqlite:///./paypilot.db
 
 # Production Identity (JWKS)
 AUTH_MODE=jwt

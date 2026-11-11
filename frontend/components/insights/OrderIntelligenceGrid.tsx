@@ -52,8 +52,8 @@ export default function OrderIntelligenceGrid({ orders, loading }: OrderIntellig
       filter: true,
       cellRenderer: (params: any) => (
         <div>
-          <span className="font-medium text-white">{params.value}</span>
-          <span className="text-[11px] text-slate-400 block">{params.data.brand} (Qty: {params.data.quantity})</span>
+          <span className="font-medium text-[#14213D] dark:text-white">{params.value}</span>
+          <span className="text-[11px] text-slate-500 dark:text-slate-400 block">{params.data.brand} (Qty: {params.data.quantity})</span>
         </div>
       ),
     },
@@ -113,13 +113,13 @@ export default function OrderIntelligenceGrid({ orders, loading }: OrderIntellig
   }), []);
 
   return (
-    <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-sm shadow-xl flex flex-col gap-4">
+    <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 backdrop-blur-sm shadow-sm dark:shadow-xl flex flex-col gap-4 transition-colors">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div className="flex items-center gap-2">
-          <Package className="w-5 h-5 text-blue-400" />
+          <Package className="w-5 h-5 text-blue-600 dark:text-blue-400" />
           <div>
-            <h3 className="text-base font-bold text-white tracking-wide">Order Intelligence Grid</h3>
-            <p className="text-xs text-slate-400">Post-purchase order lifecycle, logistics tracking, and verified settlements.</p>
+            <h3 className="text-base font-bold text-[#14213D] dark:text-white tracking-wide">Order Intelligence Grid</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Post-purchase order lifecycle, logistics tracking, and verified settlements.</p>
           </div>
         </div>
 
@@ -130,12 +130,12 @@ export default function OrderIntelligenceGrid({ orders, loading }: OrderIntellig
             placeholder="Search orders, tracking..."
             value={quickFilter}
             onChange={(e) => setQuickFilter(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 bg-slate-800/80 border border-slate-700/80 rounded-xl text-xs text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500"
+            className="w-full pl-9 pr-3 py-1.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl text-xs text-[#14213D] dark:text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors"
           />
         </div>
       </div>
 
-      <div className="ag-theme-quartz ag-theme-quartz-dark w-full h-[320px] rounded-xl overflow-hidden border border-slate-800 shadow-inner">
+      <div className="ag-theme-quartz w-full h-[320px] rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-inner">
         <AgGridReact
           ref={gridRef}
           rowData={orders}

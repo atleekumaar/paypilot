@@ -93,3 +93,28 @@ body {
   color: #475569;
   font-weight: 500;
 }
+
+/* Dark Mode AG Grid Quartz overrides */
+.dark .ag-theme-quartz {
+  --ag-background-color: #0b1120;
+  --ag-foreground-color: #f1f5f9;
+  --ag-data-color: #f1f5f9;
+  --ag-header-background-color: #0f172a;
+  --ag-header-foreground-color: #94a3b8;
+  --ag-header-cell-hover-background-color: #1e293b;
+  --ag-border-color: #1e293b;
+  --ag-row-hover-color: #1e293b80;
+  --ag-selected-row-background-color: #1e293b;
+  --ag-odd-row-background-color: #0b1120;
+}
+
+.dark .ag-theme-quartz .ag-root-wrapper {
+  border-color: #1e293b;
+  background-color: #0b1120;
+}
+
+.dark .ag-theme-quartz .ag-paging-panel {
+  border-top: 1px solid #1e293b;
+  background-color: #0f172a;
+  color: #94a3b8;
+}
