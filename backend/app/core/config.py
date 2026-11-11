@@ -1,8 +1,9 @@
 """Configuration settings for PayPilot backend."""
 
 from functools import lru_cache
-from typing import List, Optional
-from pydantic import model_validator
+import json
+from typing import List, Optional, Union
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -16,12 +17,31 @@ class Settings(BaseSettings):
     DEBUG: bool = False
 
     # CORS Settings
-    ALLOWED_ORIGINS: List[str] = [
+    ALLOWED_ORIGINS: Union[List[str], str] = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "http://localhost:8000",
         "http://127.0.0.1:8000",
     ]
+
+    @field_validator("ALLOWED_ORIGINS", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
+        if isinstance(v, str):
+            v = v.strip()
+            if not v:
+                return []
+            if v.startswith("[") and v.endswith("]"):
+                try:
+                    parsed = json.loads(v)
+                    if isinstance(parsed, list):
+                        return [str(item).strip() for item in parsed if str(item).strip()]
+                except Exception:
+                    pass
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        elif isinstance(v, (list, tuple, set)):
+            return [str(item).strip() for item in v if str(item).strip()]
+        return v
 
     # Database (PostgreSQL-ready)
     DATABASE_URL: Optional[str] = None
@@ -32,9 +52,28 @@ class Settings(BaseSettings):
     AUTH_ISSUER: Optional[str] = None
     AUTH_AUDIENCE: Optional[str] = None
     AUTH_JWKS_URL: Optional[str] = None
-    AUTH_ALGORITHMS: List[str] = ["RS256"]
-    AUTH_REQUIRED_CLAIMS: List[str] = ["sub"]
+    AUTH_ALGORITHMS: Union[List[str], str] = ["RS256"]
+    AUTH_REQUIRED_CLAIMS: Union[List[str], str] = ["sub"]
     AUTH_CLOCK_SKEW_SECONDS: int = 60
+
+    @field_validator("AUTH_ALGORITHMS", "AUTH_REQUIRED_CLAIMS", mode="before")
+    @classmethod
+    def assemble_list_strings(cls, v: Union[str, List[str]]) -> List[str]:
+        if isinstance(v, str):
+            v = v.strip()
+            if not v:
+                return []
+            if v.startswith("[") and v.endswith("]"):
+                try:
+                    parsed = json.loads(v)
+                    if isinstance(parsed, list):
+                        return [str(item).strip() for item in parsed if str(item).strip()]
+                except Exception:
+                    pass
+            return [item.strip() for item in v.split(",") if item.strip()]
+        elif isinstance(v, (list, tuple, set)):
+            return [str(item).strip() for item in v if str(item).strip()]
+        return v
 
     # LLM & AI Agents
     LLM_API_KEY: Optional[str] = None
