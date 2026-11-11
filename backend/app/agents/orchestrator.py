@@ -421,6 +421,14 @@ class AgentOrchestrator:
                 top_pick = top_ranked[0]
                 state.selected_product = top_pick.product
                 state.log_action("recommend_product", f"Recommended {top_pick.product.name} (Score: {top_pick.score}/100)")
+                
+                # Attempt live Groq LLM dynamic conversational synthesis
+                llm_recommendation = self._generate_llm_recommendation(
+                    top_pick.product, state.user_query, len(state.candidate_products)
+                )
+                if llm_recommendation:
+                    return llm_recommendation
+
                 return (
                     f"I found {len(state.candidate_products)} matching options within your criteria. "
                     f"My top recommendation is the **{top_pick.product.name}** (${top_pick.product.price:,.2f}). "
@@ -428,3 +436,54 @@ class AgentOrchestrator:
                 )
 
         return "I couldn't find any products matching those constraints. Try adjusting your budget or relaxing some criteria."
+
+    def _generate_llm_recommendation(self, product: Any, query: str, total_count: int) -> Optional[str]:
+        """Generate a natural conversational recommendation via Groq LLM."""
+        try:
+            from app.core.config import get_settings
+            settings = get_settings()
+            api_key = settings.effective_llm_api_key
+            if not api_key or len(api_key) < 10 or api_key.startswith("your_"):
+                return None
+
+            import httpx
+            system_prompt = (
+                "You are PayPilot, an autonomous AI commerce assistant. "
+                "Synthesize a concise 2-sentence conversational recommendation grounded in the verified product data. "
+                "Highlight key hardware specifications matching the user request. "
+                "Do NOT invent discounts or modify prices."
+            )
+            features = getattr(product, "features", {}) or {}
+            feat_str = ", ".join(f"{k}: {v}" for k, v in features.items()) if features else ""
+            user_prompt = (
+                f"User request: '{query}'\n"
+                f"Top Verified Product: {product.name}\n"
+                f"Price: ${product.price:,.2f} {product.currency}\n"
+                f"Rating: {product.rating}★\n"
+                f"Specifications: {feat_str}\n"
+                f"Total matches found: {total_count}"
+            )
+
+            with httpx.Client(timeout=4.0) as client:
+                resp = client.post(
+                    "https://api.groq.com/openai/v1/chat/completions",
+                    headers={"Authorization": f"Bearer {api_key}"},
+                    json={
+                        "model": "openai/gpt-oss-20b",
+                        "messages": [
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": user_prompt},
+                        ],
+                        "max_tokens": 400,
+                        "temperature": 0.3,
+                    },
+                )
+                if resp.status_code == 200:
+                    content = resp.json()["choices"][0]["message"].get("content", "").strip()
+                    if content:
+                        if "recommend" not in content.lower() and "found" not in content.lower():
+                            content = f"I recommend the **{product.name}** (${product.price:,.2f}). {content}"
+                        return content
+        except Exception as exc:
+            logger.debug(f"Groq LLM synthesis skipped: {exc}")
+        return None

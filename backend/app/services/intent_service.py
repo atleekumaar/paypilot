@@ -51,6 +51,16 @@ class IntentService:
             try:
                 llm_intent = self._llm_extract(cleaned_query)
                 if llm_intent:
+                    # Enrich with deterministic baseline if LLM missed budget or category
+                    if not llm_intent.category and deterministic_intent.category:
+                        llm_intent.category = deterministic_intent.category
+                        llm_intent.hard_constraints.category = deterministic_intent.hard_constraints.category
+                    if not llm_intent.budget and deterministic_intent.budget:
+                        llm_intent.budget = deterministic_intent.budget
+                        llm_intent.hard_constraints.max_price = deterministic_intent.hard_constraints.max_price
+                        llm_intent.hard_constraints.min_price = deterministic_intent.hard_constraints.min_price
+                    if deterministic_intent.normalized_features:
+                        llm_intent.normalized_features.update(deterministic_intent.normalized_features)
                     return llm_intent
             except Exception as e:
                 logger.warning(f"LLM intent extraction failed, falling back to deterministic extractor: {e}")
@@ -186,7 +196,8 @@ class IntentService:
             "You are an AI commerce intent extractor for PayPilot. "
             "Extract structured search intent as JSON with keys: "
             "category (e.g. laptop, phone, headphones, keyboard, monitor, smartwatch, accessory), "
-            "max_budget (number or null), min_budget (number or null), "
+            "max_budget (numeric number in USD like 1200 or null, extract from 'under $1200', 'below 1k', etc.), "
+            "min_budget (numeric number in USD like 500 or null), "
             "use_case (string or null), requirements (list of strings), preferences (list of strings)."
         )
         try:
@@ -201,6 +212,7 @@ class IntentService:
                             {"role": "user", "content": query},
                         ],
                         "response_format": {"type": "json_object"},
+                        "max_tokens": 400,
                         "temperature": 0.1,
                     },
                 )
