@@ -25,6 +25,11 @@ class AgentChatRequest(BaseModel):
         description="Conversational session ID for multi-turn context",
         json_schema_extra={"example": "sess-alpha-1"},
     )
+    order_id: Optional[str] = Field(
+        default=None,
+        description="Explicit order ID context (e.g. from Order Detail tracking page)",
+        json_schema_extra={"example": "ORD-007"},
+    )
 
 
 class AgentChatResponse(BaseModel):
@@ -59,6 +64,7 @@ async def agent_chat(
             request.message,
             session_id=request.session_id,
             user_id=current_user.id,
+            order_id=request.order_id,
         )
         return AgentChatResponse(**result)
     except PermissionError as e:

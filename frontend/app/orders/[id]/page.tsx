@@ -129,6 +129,7 @@ export default function OrderDetailPage() {
         body: JSON.stringify({
           message: text,
           session_id: sessionId,
+          order_id: orderId,
         }),
       });
 

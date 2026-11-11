@@ -47,9 +47,12 @@ class AgentOrchestrator:
         message: str,
         session_id: Optional[str] = None,
         user_id: Optional[str] = None,
+        order_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Execute a conversational commerce turn with the autonomous agent."""
         state = self._sessions.get_or_create(session_id, user_id=user_id)
+        if order_id:
+            state.active_order_id = order_id
         if user_id and state.user_id and state.user_id != user_id and state.user_id != "guest_user":
             raise PermissionError(f"Access denied: Session '{state.session_id}' belongs to another user.")
         if user_id and (not state.user_id or state.user_id == "guest_user"):

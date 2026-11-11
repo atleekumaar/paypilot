@@ -260,6 +260,7 @@ export default function OrdersGrid({
         headerName: "Payment Status",
         field: "paypal_order_id",
         width: 170,
+        minWidth: 160,
         sortable: true,
         filter: "agTextColumnFilter",
         cellRenderer: (params: ICellRendererParams<OrderRow>) => {
@@ -283,10 +284,10 @@ export default function OrdersGrid({
       },
       {
         headerName: "Action",
-        width: 150,
+        width: 120,
+        minWidth: 110,
         sortable: false,
         filter: false,
-        pinned: "right",
         cellRenderer: (params: ICellRendererParams<OrderRow>) => {
           if (!params.data) return null;
           return (
