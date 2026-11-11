@@ -65,7 +65,11 @@ alembic -c alembic.ini current
 ### Backend Service (FastAPI)
 ```bash
 cd backend
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+# Local Development (fixed port 8000)
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+# Cloud PaaS / Render (Binds to dynamic $PORT)
+uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 4 --app-dir backend
 ```
 
 ### Frontend Service (Next.js)

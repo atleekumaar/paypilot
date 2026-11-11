@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
+import OrdersGrid, { OrderRow } from "@/components/OrdersGrid";
 import {
   Package,
   Truck,
@@ -14,63 +15,33 @@ import {
   MessageSquare,
   ShieldCheck,
   Search,
+  LayoutGrid,
+  Table as TableIcon,
+  AlertCircle,
 } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
 
-interface TimelineEvent {
-  title: string;
-  description: string;
-  timestamp: string;
-  completed: boolean;
-  current: boolean;
-}
-
-interface Shipment {
-  id: string;
-  order_id: string;
-  tracking_number: string;
-  carrier: string;
-  status: string;
-  estimated_delivery: string;
-  actual_delivery?: string | null;
-  last_location: string;
-  last_update: string;
-  timeline: TimelineEvent[];
-}
-
-interface Order {
-  id: string;
-  user_id: string;
-  purchase_plan_id: string;
-  paypal_order_id?: string;
-  payment_id?: string;
-  product_id: string;
-  product_name: string;
-  brand?: string;
-  quantity: number;
-  amount: number;
-  currency: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
-  shipment?: Shipment;
-}
-
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>("ALL");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [viewMode, setViewMode] = useState<"grid" | "cards">("grid");
 
   const fetchOrders = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch(`${API_BASE_URL}/api/orders?user_id=guest_user`);
-      if (res.ok) {
-        const data = await res.json();
-        setOrders(data);
+      if (!res.ok) {
+        throw new Error(`Failed to fetch orders (HTTP ${res.status})`);
       }
-    } catch (err) {
+      const data = await res.json();
+      setOrders(data);
+    } catch (err: any) {
       console.warn("Failed to fetch orders from backend:", err);
+      setError(err.message || "Unable to connect to order service.");
     } finally {
       setLoading(false);
     }
@@ -81,8 +52,16 @@ export default function OrdersPage() {
   }, []);
 
   const filteredOrders = orders.filter((o) => {
-    if (filter === "ALL") return true;
-    return o.status === filter;
+    const matchesFilter = filter === "ALL" || o.status === filter;
+    if (!matchesFilter) return false;
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      o.id.toLowerCase().includes(q) ||
+      o.product_name.toLowerCase().includes(q) ||
+      (o.brand && o.brand.toLowerCase().includes(q)) ||
+      (o.paypal_order_id && o.paypal_order_id.toLowerCase().includes(q))
+    );
   });
 
   const getStatusBadge = (status: string, lastUpdate?: string) => {
@@ -139,7 +118,7 @@ export default function OrdersPage() {
     <div className="flex flex-col min-h-screen bg-[#F5F8FC]/50 dark:bg-[#090D16] text-[#14213D] dark:text-slate-100 transition-colors duration-200">
       <Navbar />
 
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-8">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800 mb-6">
           <div>
@@ -151,41 +130,103 @@ export default function OrdersPage() {
               My Orders &amp; Shipment Tracking
             </h1>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">
-              Authoritative order records, real-time shipment scans, and grounded AI resolution.
+              Interactive AG Grid order ledger, authoritative PayPal records, and real-time shipment milestones.
             </p>
           </div>
 
-          <button
-            onClick={fetchOrders}
-            className="self-start sm:self-auto flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 shadow-xs transition-colors cursor-pointer"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 text-slate-500 dark:text-slate-400 ${loading ? "animate-spin" : ""}`} />
-            Refresh
-          </button>
-        </div>
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            {/* View Mode Toggle */}
+            <div className="flex items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-1 shadow-2xs">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  viewMode === "grid"
+                    ? "bg-[#0070E0] text-white shadow-xs"
+                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                }`}
+                title="Table View (AG Grid)"
+              >
+                <TableIcon className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">AG Grid</span>
+              </button>
+              <button
+                onClick={() => setViewMode("cards")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  viewMode === "cards"
+                    ? "bg-[#0070E0] text-white shadow-xs"
+                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                }`}
+                title="Card View"
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Cards</span>
+              </button>
+            </div>
 
-        {/* Filter Chips */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-4 text-xs">
-          {["ALL", "IN_TRANSIT", "PROCESSING", "DELIVERED"].map((f) => (
             <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-3.5 py-1.5 rounded-full font-bold transition-all whitespace-nowrap cursor-pointer ${
-                filter === f
-                  ? "bg-[#0070E0] text-white shadow-sm"
-                  : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700"
-              }`}
+              onClick={fetchOrders}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 shadow-2xs transition-colors cursor-pointer"
             >
-              {f.replace("_", " ")}
+              <RefreshCw className={`w-3.5 h-3.5 text-slate-500 dark:text-slate-400 ${loading ? "animate-spin" : ""}`} />
+              Refresh
             </button>
-          ))}
+          </div>
         </div>
 
-        {/* Orders List */}
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 text-slate-500 dark:text-slate-400">
+        {/* Filter & Search Bar */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-5">
+          {/* Status Filter Chips */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+            {["ALL", "IN_TRANSIT", "PROCESSING", "DELIVERED"].map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`px-3.5 py-1.5 rounded-full font-bold transition-all whitespace-nowrap cursor-pointer ${
+                  filter === f
+                    ? "bg-[#0070E0] text-white shadow-xs"
+                    : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700"
+                }`}
+              >
+                {f.replace("_", " ")}
+              </button>
+            ))}
+          </div>
+
+          {/* Quick Search */}
+          <div className="relative w-full sm:w-72">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search orders, products, brands..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070E0]/20 focus:border-[#0070E0] transition-all"
+            />
+          </div>
+        </div>
+
+        {/* Error State */}
+        {error && (
+          <div className="mb-6 p-4 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 flex items-center justify-between gap-3 text-red-800 dark:text-red-300 text-xs">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+              <span>{error}</span>
+            </div>
+            <button
+              onClick={fetchOrders}
+              className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold transition-colors shrink-0"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {/* Orders Content */}
+        {loading && orders.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-slate-500 dark:text-slate-400 bg-white dark:bg-[#0E1422] rounded-3xl border border-slate-200 dark:border-slate-800 shadow-subtle">
             <RefreshCw className="w-8 h-8 animate-spin text-[#0070E0] dark:text-[#38BDF8] mb-3" />
-            <p className="text-sm font-medium">Loading order history...</p>
+            <p className="text-sm font-bold text-slate-800 dark:text-slate-200">Loading order ledger...</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Connecting to authoritative order service</p>
           </div>
         ) : filteredOrders.length === 0 ? (
           <div className="text-center py-16 px-4 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0E1422] shadow-subtle">
@@ -198,16 +239,24 @@ export default function OrdersPage() {
             </p>
             <Link
               href="/"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#0070E0] text-white text-xs font-bold hover:bg-[#005bb5] transition-colors shadow-sm"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#0070E0] text-white text-xs font-bold hover:bg-[#005bb5] transition-colors shadow-xs"
             >
               Start Shopping with PayPilot
             </Link>
           </div>
+        ) : viewMode === "grid" ? (
+          /* AG Grid View */
+          <OrdersGrid
+            orders={filteredOrders}
+            loading={loading}
+            quickFilterText={searchQuery}
+          />
         ) : (
+          /* Card View (Fallback / Responsive Mobile) */
           <div className="grid grid-cols-1 gap-4">
             {filteredOrders.map((order) => {
               const shipment = order.shipment;
-              const isDelayed = shipment?.last_update.toLowerCase().includes("delay");
+              const isDelayed = shipment?.last_update?.toLowerCase().includes("delay");
 
               return (
                 <div
@@ -240,7 +289,7 @@ export default function OrdersPage() {
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                         Brand: <span className="text-slate-800 dark:text-slate-200 font-semibold">{order.brand || "Standard"}</span> &bull; Total:{" "}
                         <span className="text-[#003087] dark:text-[#38BDF8] font-black font-mono">
-                          ${order.amount.toFixed(2)} {order.currency}
+                          ${Number(order.amount).toFixed(2)} {order.currency}
                         </span>
                       </p>
 
@@ -263,10 +312,10 @@ export default function OrdersPage() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-2.5 shrink-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+                  <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-2.5 shrink-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800">
                     <Link
                       href={`/orders/${order.id}`}
-                      className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#0070E0] hover:bg-[#005bb5] text-white text-xs font-bold transition-all shadow-sm"
+                      className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#0070E0] hover:bg-[#005bb5] text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
                     >
                       <span>Track Order</span>
                       <ChevronRight className="w-3.5 h-3.5" />
@@ -274,7 +323,7 @@ export default function OrdersPage() {
 
                     <Link
                       href={`/?prompt=${encodeURIComponent(`Where is my order ${order.id}?`)}`}
-                      className="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-[#0070E0] font-medium transition-colors"
+                      className="inline-flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 hover:text-[#0070E0] dark:hover:text-[#38BDF8] font-medium transition-colors"
                     >
                       <MessageSquare className="w-3 h-3" />
                       <span>Ask PayPilot</span>

@@ -1,0 +1,10 @@
+{
+  "name": "context-matic",
+  "displayName": "APIMatic ContextMatic",
+  "version": "0.1.0",
+  "description": "SDK-native API context for PayPal and third-party APIs delivered directly into coding assistants via MCP.",
+  "author": {
+    "name": "APIMatic",
+    "homepage": "https://www.apimatic.io"
+  }
+}

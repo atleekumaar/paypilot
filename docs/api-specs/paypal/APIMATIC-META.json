@@ -1,0 +1,14 @@
+{
+  "ImportSettings": {
+    "PreferSwaggerOperationSummaryOverId": true,
+    "ImportMultipleAuthentication": false
+  },
+  "ExportSettings": {
+    "ExportExtensions": true
+  },
+  "CodeGenSettings": {
+    "GenerateInterfaces": true,
+    "PreserveParameterOrder": true,
+    "BaseNamespace": "PayPal.OrdersV2"
+  }
+}

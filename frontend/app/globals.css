@@ -36,6 +36,9 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+@import "ag-grid-community/styles/ag-grid.css";
+@import "ag-grid-community/styles/ag-theme-quartz.css";
+
 /* Custom scrollbar for chat and activity panels */
 ::-webkit-scrollbar {
   width: 6px;
@@ -54,4 +57,39 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+/* AG Grid PayPilot Quartz Theme Customization */
+.ag-theme-quartz {
+  --ag-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --ag-font-size: 13px;
+  --ag-grid-size: 8px;
+  --ag-header-background-color: #f8fafc;
+  --ag-header-foreground-color: #1e293b;
+  --ag-header-cell-hover-background-color: #f1f5f9;
+  --ag-border-color: #e2e8f0;
+  --ag-row-hover-color: #f8fafc;
+  --ag-selected-row-background-color: #eaf3ff;
+  --ag-range-selection-border-color: #0070e0;
+  --ag-active-color: #0070e0;
+  border-radius: 20px;
+}
+
+.ag-theme-quartz .ag-header-cell {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.ag-theme-quartz .ag-root-wrapper {
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.ag-theme-quartz .ag-paging-panel {
+  border-top: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  color: #475569;
+  font-weight: 500;
 }

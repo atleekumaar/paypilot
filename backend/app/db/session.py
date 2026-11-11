@@ -20,7 +20,16 @@ _SessionFactory: Optional[sessionmaker] = None
 
 def resolve_database_url(url: Optional[str] = None) -> str:
     """Normalize configured database URL for synchronous SQLAlchemy."""
-    raw_url = url or get_settings().DATABASE_URL or "sqlite:///./paypilot.db"
+    settings = get_settings()
+    configured_url = url or settings.DATABASE_URL
+    if not configured_url:
+        if settings.ENVIRONMENT.lower() == "production":
+            raise RuntimeError("CRITICAL: DATABASE_URL is missing in production environment. Refusing silent fallback to SQLite.")
+        configured_url = "sqlite:///./paypilot.db"
+    elif configured_url.lower().startswith("sqlite") and settings.ENVIRONMENT.lower() == "production":
+        raise RuntimeError("CRITICAL: SQLite cannot be used in production environment. A PostgreSQL DATABASE_URL is required.")
+
+    raw_url = configured_url
     if raw_url.startswith("sqlite+aiosqlite://"):
         return raw_url.replace("sqlite+aiosqlite://", "sqlite://", 1)
     if raw_url.startswith("postgres://"):

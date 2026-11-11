@@ -15,6 +15,15 @@ def test_health_endpoint():
     assert data["service"] == "paypilot-backend"
 
 
+def test_api_health_endpoint():
+    """Verify GET /api/health returns status 200 and expected payload."""
+    response = client.get("/api/health")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "ok"
+    assert data["service"] == "paypilot-backend"
+
+
 def test_root_endpoint():
     """Verify GET / returns application information."""
     response = client.get("/")

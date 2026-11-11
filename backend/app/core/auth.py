@@ -122,9 +122,12 @@ def get_current_user(
     # -------------------------------------------------------------
     # Local Demo Authentication Mode (Non-Production Only)
     # -------------------------------------------------------------
-    user_id: Optional[str] = None
+    # In demo mode, all users strictly receive a fixed least-privilege role: 'user'.
+    # Client headers (X-User-Role, X-User-Id) can NEVER grant admin privileges
+    # or override the authenticated identity.
+    user_id = "guest_user"
 
-    # 1. Authorization: Bearer <token_or_userid>
+    # Bearer token establishes demo session identity for multi-user isolation
     if authorization and authorization.startswith("Bearer "):
         token = authorization[7:].strip()
         if token:
@@ -132,20 +135,21 @@ def get_current_user(
             if user_id.startswith("token_"):
                 user_id = user_id[6:]
 
-    # 2. X-User-Id header (trusted API Gateway or demo header)
-    elif x_user_id and x_user_id.strip():
-        user_id = x_user_id.strip()
+    # Client X-User-Id header is strictly ignored (cannot override identity)
+    if x_user_id and x_user_id.strip() and x_user_id.strip() != user_id:
+        logger.warning(
+            f"Ignored client X-User-Id header '{x_user_id}' attempting identity override in demo mode. Using '{user_id}'."
+        )
 
-    # 3. Default fallback for anonymous / guest sessions
-    if not user_id:
-        user_id = "guest_user"
-
-    role = request.headers.get("X-User-Role") or ("admin" if user_id in ("admin", "admin_user") else "user")
+    # Client X-User-Role header is strictly ignored (cannot escalate privileges)
+    attempted_role = request.headers.get("X-User-Role")
+    if attempted_role and attempted_role.lower() == "admin":
+        logger.warning("Blocked client X-User-Role header attempting privilege escalation to admin in demo mode.")
 
     return AuthenticatedUser(
         id=user_id,
         username=f"User {user_id}",
-        role=role,
+        role="user",  # Fixed least-privilege role: NEVER admin in demo mode
         is_authenticated=True,
     )
 

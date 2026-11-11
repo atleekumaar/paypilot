@@ -1,0 +1,3852 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "PayPilot",
+    "description": "AI-powered commerce agent backend for PayPal AI Hackathon.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Health Check",
+        "description": "Return backend health status.",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products": {
+      "get": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "List Products",
+        "description": "Retrieve product catalogue with optional category and stock filtering.",
+        "operationId": "list_products_api_products_get",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by category (e.g. laptop, phone)",
+              "title": "Category"
+            },
+            "description": "Filter by category (e.g. laptop, phone)"
+          },
+          {
+            "name": "in_stock_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Filter only in-stock inventory",
+              "default": false,
+              "title": "In Stock Only"
+            },
+            "description": "Filter only in-stock inventory"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "description": "Items limit",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Items limit"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Items offset",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Items offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products/{product_id}": {
+      "get": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "Get Product",
+        "description": "Retrieve details for a specific product by SKU identifier.",
+        "operationId": "get_product_api_products__product_id__get",
+        "parameters": [
+          {
+            "name": "product_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Product Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/discovery/search": {
+      "post": {
+        "tags": [
+          "Discovery"
+        ],
+        "summary": "Natural Language AI Product Discovery",
+        "description": "Processes user intent, searches and filters catalogue, ranks candidates, and returns top explainable recommendations.",
+        "operationId": "discovery_search_api_discovery_search_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DiscoverySearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecommendationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchase-plans": {
+      "post": {
+        "tags": [
+          "Purchase Plans"
+        ],
+        "summary": "Create a new Purchase Plan",
+        "description": "Formulates an authoritative purchase plan derived from catalogue product price. Requires explicit user approval before payment creation.",
+        "operationId": "create_purchase_plan_api_purchase_plans_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-User-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchasePlanCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePlan"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchase-plans/{plan_id}": {
+      "get": {
+        "tags": [
+          "Purchase Plans"
+        ],
+        "summary": "Get Purchase Plan details",
+        "description": "Retrieve purchase plan details by ID.",
+        "operationId": "get_purchase_plan_api_purchase_plans__plan_id__get",
+        "parameters": [
+          {
+            "name": "plan_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plan Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-User-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePlan"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/purchase-plans/{plan_id}/approve": {
+      "post": {
+        "tags": [
+          "Purchase Plans"
+        ],
+        "summary": "Explicitly approve a Purchase Plan",
+        "description": "Transitions purchase plan to APPROVED status, enabling subsequent PayPal Sandbox checkout order creation.",
+        "operationId": "approve_purchase_plan_api_purchase_plans__plan_id__approve_post",
+        "parameters": [
+          {
+            "name": "plan_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plan Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-User-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasePlan"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payments/paypal/create-order": {
+      "post": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "Create PayPal Checkout Order",
+        "description": "Validates that the Purchase Plan is explicitly APPROVED and creates a PayPal Sandbox order using authoritative backend pricing.",
+        "operationId": "create_paypal_order_api_payments_paypal_create_order_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-User-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PayPalCreateOrderRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayPalCreateOrderResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payments/paypal/capture": {
+      "post": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "Capture PayPal Order Payment",
+        "description": "Verifies the PayPal Order ID matches the internal Purchase Plan, executes capture via PayPal API, and returns verified payment details.",
+        "operationId": "capture_paypal_payment_api_payments_paypal_capture_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-User-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PayPalCaptureRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Payment"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payments/{payment_id}": {
+      "get": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "Get Payment transaction details",
+        "description": "Retrieve payment record by ID.",
+        "operationId": "get_payment_api_payments__payment_id__get",
+        "parameters": [
+          {
+            "name": "payment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Payment Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-User-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Payment"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payments/by-plan/{plan_id}": {
+      "get": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "Get Payment transaction by Purchase Plan ID",
+        "description": "Retrieve payment record for a given purchase plan.",
+        "operationId": "get_payment_by_plan_api_payments_by_plan__plan_id__get",
+        "parameters": [
+          {
+            "name": "plan_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plan Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-User-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Payment"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payments/{payment_id}/refund": {
+      "post": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "Refund Completed Payment",
+        "description": "Processes a full or partial refund for a completed payment with authenticated ownership validation.",
+        "operationId": "refund_payment_api_payments__payment_id__refund_post",
+        "parameters": [
+          {
+            "name": "payment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Payment Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-User-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/PaymentRefundRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Request"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Payment"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payments/reconciliation/report": {
+      "get": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "Reconcile In-Flight or Pending Payments (Admin Only)",
+        "description": "Administrative endpoint scanning for payments stuck in CAPTURE_PENDING or RECONCILIATION_REQUIRED.",
+        "operationId": "reconcile_payments_api_payments_reconciliation_report_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-User-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "title": "Response Reconcile Payments Api Payments Reconciliation Report Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payments/paypal/webhook": {
+      "post": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "PayPal Webhook Event Receiver",
+        "description": "Idempotent receiver with replay prevention for incoming asynchronous PayPal notifications.",
+        "operationId": "paypal_webhook_api_payments_paypal_webhook_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Paypal Webhook Api Payments Paypal Webhook Post"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agent/chat": {
+      "post": {
+        "tags": [
+          "Agent"
+        ],
+        "summary": "Chat with Autonomous Commerce Agent",
+        "description": "Processes user intent, plans workflow, executes registered tools, enforces policy rules, and returns conversational response with activity tracking.",
+        "operationId": "agent_chat_api_agent_chat_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-User-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentChatRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentChatResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agent/{session_id}/approve": {
+      "post": {
+        "tags": [
+          "Agent"
+        ],
+        "summary": "Approve Purchase Plan within Agent Session",
+        "description": "Resumes paused agent execution upon explicit human approval, creating a PayPal Sandbox order.",
+        "operationId": "agent_approve_purchase_api_agent__session_id__approve_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-User-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Agent Approve Purchase Api Agent  Session Id  Approve Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agent/{session_id}/deny": {
+      "post": {
+        "tags": [
+          "Agent"
+        ],
+        "summary": "Deny Purchase Plan within Agent Session",
+        "description": "Halts purchasing workflow when user denies purchase approval.",
+        "operationId": "agent_deny_purchase_api_agent__session_id__deny_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-User-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Agent Deny Purchase Api Agent  Session Id  Deny Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agent/{session_id}/state": {
+      "get": {
+        "tags": [
+          "Agent"
+        ],
+        "summary": "Get Agent Session State",
+        "description": "Retrieve operational state for an agent session.",
+        "operationId": "get_agent_state_api_agent__session_id__state_get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-User-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentState"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agent/{session_id}/actions": {
+      "get": {
+        "tags": [
+          "Agent"
+        ],
+        "summary": "Get Agent Operational Activity Log",
+        "description": "Retrieve logged tool actions and execution steps for an agent session.",
+        "operationId": "get_agent_actions_api_agent__session_id__actions_get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-User-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AgentAction"
+                  },
+                  "title": "Response Get Agent Actions Api Agent  Session Id  Actions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agent/{session_id}/summary": {
+      "get": {
+        "tags": [
+          "Agent"
+        ],
+        "summary": "Get Agent Run Summary & Observability Metrics",
+        "description": "Retrieve run summary and tools telemetry for a session.",
+        "operationId": "get_agent_summary_api_agent__session_id__summary_get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-User-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Agent Summary Api Agent  Session Id  Summary Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/orders": {
+      "get": {
+        "tags": [
+          "Orders & Tracking"
+        ],
+        "summary": "List Orders",
+        "description": "Retrieve complete order history for the authenticated user with strict user isolation and pagination.",
+        "operationId": "list_orders_api_orders_get",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Identifier of the current user",
+              "title": "User Id"
+            },
+            "description": "Identifier of the current user"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Max records to return",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Max records to return"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Records offset",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Records offset"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-User-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OrderDetailResponse"
+                  },
+                  "title": "Response List Orders Api Orders Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/orders/{order_id}": {
+      "get": {
+        "tags": [
+          "Orders & Tracking"
+        ],
+        "summary": "Get Order Detail",
+        "description": "Retrieve single order detail with strict user isolation and shipment milestones.",
+        "operationId": "get_order_detail_api_orders__order_id__get",
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Order Id"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Identifier of the current user",
+              "title": "User Id"
+            },
+            "description": "Identifier of the current user"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-User-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderDetailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/orders/{order_id}/tracking": {
+      "get": {
+        "tags": [
+          "Orders & Tracking"
+        ],
+        "summary": "Get Order Tracking",
+        "description": "Fetch real-time tracking status, carrier information, and shipment timeline.",
+        "operationId": "get_order_tracking_api_orders__order_id__tracking_get",
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Order Id"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Identifier of the current user",
+              "title": "User Id"
+            },
+            "description": "Identifier of the current user"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-User-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/orders/{order_id}/issues": {
+      "get": {
+        "tags": [
+          "Orders & Tracking"
+        ],
+        "summary": "Check Order Issues",
+        "description": "Deterministic issue detector evaluating delivery delays, carrier notes, and milestones.",
+        "operationId": "check_order_issues_api_orders__order_id__issues_get",
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Order Id"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Identifier of the current user",
+              "title": "User Id"
+            },
+            "description": "Identifier of the current user"
+          },
+          {
+            "name": "reference_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional reference date (YYYY-MM-DD) for simulation",
+              "title": "Reference Date"
+            },
+            "description": "Optional reference date (YYYY-MM-DD) for simulation"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-User-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notifications": {
+      "get": {
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "List Notifications",
+        "description": "Retrieve all notifications for the user with pagination.",
+        "operationId": "list_notifications_api_notifications_get",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Identifier of the user",
+              "title": "User Id"
+            },
+            "description": "Identifier of the user"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Max notifications to return",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Max notifications to return"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Notifications offset",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Notifications offset"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-User-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Notification"
+                  },
+                  "title": "Response List Notifications Api Notifications Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notifications/{notification_id}/read": {
+      "post": {
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Mark Read",
+        "description": "Mark a notification as read.",
+        "operationId": "mark_read_api_notifications__notification_id__read_post",
+        "parameters": [
+          {
+            "name": "notification_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Notification Id"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Identifier of the user",
+              "title": "User Id"
+            },
+            "description": "Identifier of the user"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-User-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Notification"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "tags": [
+          "General"
+        ],
+        "summary": "Root",
+        "description": "Root endpoint identifying the PayPilot application.",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RootResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AgentAction": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "step": {
+            "type": "integer",
+            "title": "Step"
+          },
+          "tool": {
+            "type": "string",
+            "title": "Tool"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "completed | waiting | failed",
+            "default": "completed"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "step",
+          "tool",
+          "summary"
+        ],
+        "title": "AgentAction",
+        "description": "Operational action logged during agent workflow execution."
+      },
+      "AgentChatRequest": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "User natural-language request (e.g. 'Find me a laptop under $1200 and buy the best one.')",
+            "example": "Find me a laptop under $1200 for AI development and buy the best one."
+          },
+          "session_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Id",
+            "description": "Conversational session ID for multi-turn context",
+            "example": "sess-alpha-1"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "AgentChatRequest",
+        "description": "Payload to interact with the PayPilot autonomous commerce agent."
+      },
+      "AgentChatResponse": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "purchase_plan_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Plan Id"
+          },
+          "purchase_plan": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Plan"
+          },
+          "candidate_products": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Candidate Products"
+          },
+          "actions": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Actions"
+          },
+          "draft": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Draft"
+          },
+          "active_order": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active Order"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "status",
+          "message"
+        ],
+        "title": "AgentChatResponse",
+        "description": "Agent response envelope."
+      },
+      "AgentPlan": {
+        "properties": {
+          "goal": {
+            "type": "string",
+            "title": "Goal"
+          },
+          "steps": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Steps"
+          }
+        },
+        "type": "object",
+        "required": [
+          "goal"
+        ],
+        "title": "AgentPlan",
+        "description": "Structured action plan formulated by the agent."
+      },
+      "AgentState": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "user_query": {
+            "type": "string",
+            "title": "User Query",
+            "default": ""
+          },
+          "current_step": {
+            "type": "integer",
+            "title": "Current Step",
+            "default": 0
+          },
+          "max_steps": {
+            "type": "integer",
+            "title": "Max Steps",
+            "default": 12
+          },
+          "status": {
+            "$ref": "#/components/schemas/AgentStatus",
+            "default": "IDLE"
+          },
+          "plan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AgentPlan"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "candidate_products": {
+            "items": {
+              "$ref": "#/components/schemas/Product"
+            },
+            "type": "array",
+            "title": "Candidate Products"
+          },
+          "compared_products": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Compared Products"
+          },
+          "selected_product": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Product"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "recommendation_summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recommendation Summary"
+          },
+          "purchase_plan_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Plan Id"
+          },
+          "purchase_plan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PurchasePlan"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "approval_required": {
+            "type": "boolean",
+            "title": "Approval Required",
+            "default": false
+          },
+          "approval_status": {
+            "type": "string",
+            "title": "Approval Status",
+            "description": "NONE | PENDING | APPROVED | DENIED",
+            "default": "NONE"
+          },
+          "paypal_order_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paypal Order Id"
+          },
+          "payment_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Status"
+          },
+          "user_id": {
+            "type": "string",
+            "title": "User Id",
+            "description": "Authenticated user ID",
+            "default": "guest_user"
+          },
+          "active_order_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active Order Id"
+          },
+          "active_order": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active Order"
+          },
+          "active_shipment": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active Shipment"
+          },
+          "support_request_draft": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Support Request Draft"
+          },
+          "support_request_approved": {
+            "type": "boolean",
+            "title": "Support Request Approved",
+            "default": false
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version",
+            "description": "Optimistic locking version",
+            "default": 1
+          },
+          "actions": {
+            "items": {
+              "$ref": "#/components/schemas/AgentAction"
+            },
+            "type": "array",
+            "title": "Actions"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/ConversationMessage"
+            },
+            "type": "array",
+            "title": "Messages"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id"
+        ],
+        "title": "AgentState",
+        "description": "Operational state of the commerce agent for a given user session."
+      },
+      "AgentStatus": {
+        "type": "string",
+        "enum": [
+          "IDLE",
+          "UNDERSTANDING",
+          "PLANNING",
+          "SEARCHING",
+          "COMPARING",
+          "RECOMMENDING",
+          "WAITING_FOR_APPROVAL",
+          "EXECUTING",
+          "COMPLETED",
+          "FAILED"
+        ],
+        "title": "AgentStatus",
+        "description": "Operational lifecycle statuses for the autonomous commerce agent."
+      },
+      "BudgetConstraint": {
+        "properties": {
+          "max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max",
+            "description": "Maximum budget amount"
+          },
+          "min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min",
+            "description": "Minimum budget amount"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "Currency code",
+            "default": "USD"
+          }
+        },
+        "type": "object",
+        "title": "BudgetConstraint",
+        "description": "Budget constraints extracted from user query."
+      },
+      "ConversationMessage": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "title": "Role",
+            "description": "user | assistant | system"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role",
+          "content"
+        ],
+        "title": "ConversationMessage",
+        "description": "A conversational turn in multi-turn commerce."
+      },
+      "DiscoverySearchRequest": {
+        "properties": {
+          "query": {
+            "type": "string",
+            "title": "Query",
+            "description": "Natural language user request for product search",
+            "example": "Find me a laptop under $1200 for AI development with good battery life."
+          }
+        },
+        "type": "object",
+        "required": [
+          "query"
+        ],
+        "title": "DiscoverySearchRequest",
+        "description": "Payload for natural language product discovery request."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HardConstraints": {
+        "properties": {
+          "max_price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Price",
+            "description": "Hard upper bound on price"
+          },
+          "min_price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Price",
+            "description": "Hard lower bound on price"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category",
+            "description": "Strict category filter"
+          },
+          "in_stock": {
+            "type": "boolean",
+            "title": "In Stock",
+            "description": "Strict inventory requirement",
+            "default": true
+          },
+          "min_rating": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Rating",
+            "description": "Minimum rating required"
+          }
+        },
+        "type": "object",
+        "title": "HardConstraints",
+        "description": "Hard constraints that must strictly be satisfied."
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Current status of the backend service",
+            "default": "ok"
+          },
+          "service": {
+            "type": "string",
+            "title": "Service",
+            "description": "Service identifier",
+            "default": "paypilot-backend"
+          }
+        },
+        "type": "object",
+        "title": "HealthResponse",
+        "description": "Health check response schema."
+      },
+      "Notification": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique notification ID (e.g. NOTIF-001)"
+          },
+          "user_id": {
+            "type": "string",
+            "title": "User Id",
+            "description": "Target recipient user ID",
+            "default": "guest_user"
+          },
+          "order_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Id",
+            "description": "Related Order ID if applicable"
+          },
+          "type": {
+            "$ref": "#/components/schemas/NotificationType",
+            "description": "Notification event category"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Short notification subject"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Detailed message content"
+          },
+          "read": {
+            "type": "boolean",
+            "title": "Read",
+            "description": "Whether the user has viewed this notification",
+            "default": false
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "title",
+          "message"
+        ],
+        "title": "Notification",
+        "description": "Complete in-app notification item."
+      },
+      "NotificationType": {
+        "type": "string",
+        "enum": [
+          "ORDER_UPDATE",
+          "DELIVERY_DELAY",
+          "PAYMENT_COMPLETED",
+          "SUPPORT_UPDATE"
+        ],
+        "title": "NotificationType",
+        "description": "Notification event types."
+      },
+      "OrderDetailResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "purchase_plan_id": {
+            "type": "string",
+            "title": "Purchase Plan Id"
+          },
+          "paypal_order_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paypal Order Id"
+          },
+          "payment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Id"
+          },
+          "product_id": {
+            "type": "string",
+            "title": "Product Id"
+          },
+          "product_name": {
+            "type": "string",
+            "title": "Product Name"
+          },
+          "brand": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brand"
+          },
+          "quantity": {
+            "type": "integer",
+            "title": "Quantity"
+          },
+          "amount": {
+            "type": "number",
+            "title": "Amount"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "shipment": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Shipment"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "purchase_plan_id",
+          "product_id",
+          "product_name",
+          "quantity",
+          "amount",
+          "currency",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "OrderDetailResponse",
+        "description": "Rich order representation including shipment details and payment summary."
+      },
+      "PayPalCaptureRequest": {
+        "properties": {
+          "purchase_plan_id": {
+            "type": "string",
+            "title": "Purchase Plan Id",
+            "description": "Associated Purchase Plan ID",
+            "example": "PP-8F92A1"
+          },
+          "paypal_order_id": {
+            "type": "string",
+            "title": "Paypal Order Id",
+            "description": "PayPal Order ID approved by the buyer",
+            "example": "7AB12345XYZ"
+          }
+        },
+        "type": "object",
+        "required": [
+          "purchase_plan_id",
+          "paypal_order_id"
+        ],
+        "title": "PayPalCaptureRequest",
+        "description": "Request payload to capture an approved PayPal Order."
+      },
+      "PayPalCreateOrderRequest": {
+        "properties": {
+          "purchase_plan_id": {
+            "type": "string",
+            "title": "Purchase Plan Id",
+            "description": "ID of the approved Purchase Plan (e.g. PP-8F92A1)",
+            "example": "PP-8F92A1"
+          }
+        },
+        "type": "object",
+        "required": [
+          "purchase_plan_id"
+        ],
+        "title": "PayPalCreateOrderRequest",
+        "description": "Request payload to initiate a PayPal checkout order."
+      },
+      "PayPalCreateOrderResponse": {
+        "properties": {
+          "purchase_plan_id": {
+            "type": "string",
+            "title": "Purchase Plan Id"
+          },
+          "paypal_order_id": {
+            "type": "string",
+            "title": "Paypal Order Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "approval_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval Url",
+            "description": "Real PayPal buyer-approval URL for Sandbox authorization"
+          }
+        },
+        "type": "object",
+        "required": [
+          "purchase_plan_id",
+          "paypal_order_id",
+          "status"
+        ],
+        "title": "PayPalCreateOrderResponse",
+        "description": "Response payload containing generated PayPal Order ID and buyer approval URL."
+      },
+      "Payment": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique internal payment ID (e.g. PAY-...)"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id",
+            "description": "Authenticated user ID",
+            "default": "guest_user"
+          },
+          "purchase_plan_id": {
+            "type": "string",
+            "title": "Purchase Plan Id",
+            "description": "Associated Purchase Plan ID"
+          },
+          "provider": {
+            "$ref": "#/components/schemas/PaymentProvider",
+            "description": "Payment processor",
+            "default": "PAYPAL"
+          },
+          "provider_order_id": {
+            "type": "string",
+            "title": "Provider Order Id",
+            "description": "PayPal Order ID (e.g. 7AB12345XYZ)"
+          },
+          "amount": {
+            "type": "number",
+            "title": "Amount",
+            "description": "Authorized/captured transaction amount"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "Currency ISO code",
+            "default": "USD"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PaymentStatus",
+            "description": "Payment lifecycle status",
+            "default": "CREATED"
+          },
+          "capture_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capture Id",
+            "description": "PayPal Capture transaction ID"
+          },
+          "refund_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refund Id",
+            "description": "PayPal Refund transaction ID"
+          },
+          "refund_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refund Status",
+            "description": "Status of refund"
+          },
+          "refund_amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refund Amount",
+            "description": "Refunded amount"
+          },
+          "total_refunded": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Refunded",
+            "description": "Cumulative refunded amount",
+            "default": 0.0
+          },
+          "payer_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payer Email",
+            "description": "Buyer PayPal account email"
+          },
+          "payer_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payer Id",
+            "description": "Buyer PayPal account ID"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata",
+            "description": "Raw provider metadata"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "purchase_plan_id",
+          "provider_order_id",
+          "amount"
+        ],
+        "title": "Payment",
+        "description": "Authoritative Payment transaction record."
+      },
+      "PaymentProvider": {
+        "type": "string",
+        "enum": [
+          "PAYPAL"
+        ],
+        "title": "PaymentProvider",
+        "description": "Supported payment providers."
+      },
+      "PaymentRefundRequest": {
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount",
+            "description": "Optional partial refund amount in USD. If omitted, full amount is refunded.",
+            "example": 50.0
+          }
+        },
+        "type": "object",
+        "title": "PaymentRefundRequest",
+        "description": "Request payload to initiate a full or partial refund."
+      },
+      "PaymentStatus": {
+        "type": "string",
+        "enum": [
+          "CREATED",
+          "APPROVAL_PENDING",
+          "APPROVED",
+          "CAPTURE_PENDING",
+          "CAPTURED",
+          "COMPLETED",
+          "FAILED",
+          "CANCELLED",
+          "RECONCILIATION_REQUIRED",
+          "REFUNDED",
+          "PARTIALLY_REFUNDED"
+        ],
+        "title": "PaymentStatus",
+        "description": "Payment transaction states."
+      },
+      "Product": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique product SKU or identifier",
+            "example": "LAP-001"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Full product title",
+            "example": "NovaBook Pro 14"
+          },
+          "brand": {
+            "type": "string",
+            "title": "Brand",
+            "description": "Manufacturer brand",
+            "example": "Nova"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "description": "Product category",
+            "example": "laptop"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Detailed marketing & technical description"
+          },
+          "price": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Price",
+            "description": "Selling price",
+            "example": 1049.0
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "Currency ISO code",
+            "default": "USD",
+            "example": "USD"
+          },
+          "rating": {
+            "type": "number",
+            "maximum": 5.0,
+            "minimum": 0.0,
+            "title": "Rating",
+            "description": "Customer review rating (0.0 - 5.0)",
+            "default": 0.0,
+            "example": 4.7
+          },
+          "review_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Review Count",
+            "description": "Number of user reviews",
+            "default": 0,
+            "example": 842
+          },
+          "stock": {
+            "type": "boolean",
+            "title": "Stock",
+            "description": "Inventory availability flag",
+            "default": true
+          },
+          "seller": {
+            "type": "string",
+            "title": "Seller",
+            "description": "Merchant or vendor name",
+            "example": "Nova Direct"
+          },
+          "delivery_days": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Delivery Days",
+            "description": "Estimated delivery time in days",
+            "default": 3,
+            "example": 3
+          },
+          "features": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Features",
+            "description": "Arbitrary feature dictionary"
+          },
+          "image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Url",
+            "description": "Public image thumbnail URL"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "brand",
+          "category",
+          "description",
+          "price",
+          "seller"
+        ],
+        "title": "Product",
+        "description": "Complete product schema representing an item in catalogue or database."
+      },
+      "ProductListResponse": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Product"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "items"
+        ],
+        "title": "ProductListResponse",
+        "description": "Response envelope for product listings."
+      },
+      "ProductSearchIntent": {
+        "properties": {
+          "intent": {
+            "type": "string",
+            "title": "Intent",
+            "description": "Action intent type",
+            "default": "product_search"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category",
+            "description": "Identified product category"
+          },
+          "budget": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BudgetConstraint"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Extracted budget limits"
+          },
+          "use_case": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Use Case",
+            "description": "Identified intended use case"
+          },
+          "requirements": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Requirements",
+            "description": "Explicit stated requirements"
+          },
+          "preferences": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Preferences",
+            "description": "User soft preferences"
+          },
+          "hard_constraints": {
+            "$ref": "#/components/schemas/HardConstraints",
+            "description": "Strict deterministic filters"
+          },
+          "soft_preferences": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Soft Preferences",
+            "description": "Features to rank or prioritize"
+          },
+          "normalized_features": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Normalized Features",
+            "description": "Normalized feature thresholds (e.g. battery_hours_min, gpu_required)"
+          }
+        },
+        "type": "object",
+        "title": "ProductSearchIntent",
+        "description": "Structured representation of a natural language product search request."
+      },
+      "PurchasePlan": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique purchase plan ID (e.g. PP-8F92A1)"
+          },
+          "user_id": {
+            "type": "string",
+            "title": "User Id",
+            "description": "User ID"
+          },
+          "product_id": {
+            "type": "string",
+            "title": "Product Id",
+            "description": "Selected product ID"
+          },
+          "product_name": {
+            "type": "string",
+            "title": "Product Name",
+            "description": "Product title"
+          },
+          "brand": {
+            "type": "string",
+            "title": "Brand",
+            "description": "Product manufacturer"
+          },
+          "seller": {
+            "type": "string",
+            "title": "Seller",
+            "description": "Authoritative seller name"
+          },
+          "delivery_days": {
+            "type": "integer",
+            "title": "Delivery Days",
+            "description": "Estimated delivery window in days"
+          },
+          "quantity": {
+            "type": "integer",
+            "title": "Quantity",
+            "description": "Purchased quantity"
+          },
+          "unit_price": {
+            "type": "number",
+            "title": "Unit Price",
+            "description": "Authoritative unit price derived by backend"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "Currency ISO code",
+            "default": "USD"
+          },
+          "total_amount": {
+            "type": "number",
+            "title": "Total Amount",
+            "description": "Total amount calculated as unit_price * quantity"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PurchasePlanStatus",
+            "description": "Current lifecycle status",
+            "default": "AWAITING_APPROVAL"
+          },
+          "paypal_order_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paypal Order Id",
+            "description": "Associated PayPal Order ID once created"
+          },
+          "approval_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval Url",
+            "description": "PayPal buyer-approval URL for redirect"
+          },
+          "recommendation_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recommendation Reason",
+            "description": "AI grounded reason for this item"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score",
+            "description": "Discovery match score"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "product_id",
+          "product_name",
+          "brand",
+          "seller",
+          "delivery_days",
+          "quantity",
+          "unit_price",
+          "total_amount"
+        ],
+        "title": "PurchasePlan",
+        "description": "Complete Purchase Plan representation."
+      },
+      "PurchasePlanCreateRequest": {
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "title": "Product Id",
+            "description": "Unique product identifier (e.g. LAP-001)"
+          },
+          "quantity": {
+            "type": "integer",
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Quantity",
+            "description": "Quantity to purchase",
+            "default": 1
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id",
+            "description": "Identifier of the buyer"
+          },
+          "recommendation_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recommendation Reason",
+            "description": "Contextual explanation for why this product was chosen"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score",
+            "description": "PayPilot discovery score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "product_id"
+        ],
+        "title": "PurchasePlanCreateRequest",
+        "description": "Client request to formulate a Purchase Plan.\n\nNote: The client CANNOT specify unit_price or total_amount.\nThe backend looks up the authoritative price from the product catalogue."
+      },
+      "PurchasePlanStatus": {
+        "type": "string",
+        "enum": [
+          "DRAFT",
+          "AWAITING_APPROVAL",
+          "APPROVED",
+          "PAYPAL_ORDER_CREATED",
+          "PAYPAL_APPROVAL_PENDING",
+          "PAYPAL_APPROVED",
+          "CAPTURED",
+          "COMPLETED",
+          "CANCELLED",
+          "FAILED"
+        ],
+        "title": "PurchasePlanStatus",
+        "description": "Controlled lifecycle statuses for a Purchase Plan."
+      },
+      "RankedProduct": {
+        "properties": {
+          "product": {
+            "$ref": "#/components/schemas/Product"
+          },
+          "product_id": {
+            "type": "string",
+            "title": "Product Id"
+          },
+          "rank": {
+            "type": "integer",
+            "title": "Rank"
+          },
+          "score": {
+            "type": "number",
+            "title": "Score"
+          },
+          "breakdown": {
+            "$ref": "#/components/schemas/ScoreBreakdown"
+          },
+          "match_reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Match Reasons",
+            "description": "Specific grounded match points"
+          }
+        },
+        "type": "object",
+        "required": [
+          "product",
+          "product_id",
+          "rank",
+          "score",
+          "breakdown"
+        ],
+        "title": "RankedProduct",
+        "description": "Product evaluated and scored by the ranking engine."
+      },
+      "RecommendationResponse": {
+        "properties": {
+          "query": {
+            "type": "string",
+            "title": "Query"
+          },
+          "intent": {
+            "$ref": "#/components/schemas/ProductSearchIntent"
+          },
+          "recommendations": {
+            "items": {
+              "$ref": "#/components/schemas/RankedProduct"
+            },
+            "type": "array",
+            "title": "Recommendations"
+          },
+          "explanation": {
+            "type": "string",
+            "title": "Explanation"
+          },
+          "total_candidates": {
+            "type": "integer",
+            "title": "Total Candidates"
+          }
+        },
+        "type": "object",
+        "required": [
+          "query",
+          "intent",
+          "recommendations",
+          "explanation",
+          "total_candidates"
+        ],
+        "title": "RecommendationResponse",
+        "description": "Top recommendations returned to user with explanation."
+      },
+      "RootResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Application name"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "description": "Application version"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Application status",
+            "default": "running"
+          },
+          "environment": {
+            "type": "string",
+            "title": "Environment",
+            "description": "Running environment"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "version",
+          "environment"
+        ],
+        "title": "RootResponse",
+        "description": "Root endpoint response schema."
+      },
+      "ScoreBreakdown": {
+        "properties": {
+          "requirement_match": {
+            "type": "number",
+            "title": "Requirement Match",
+            "description": "Match against explicit requirements (35% weight)"
+          },
+          "price_fit": {
+            "type": "number",
+            "title": "Price Fit",
+            "description": "Fit within user budget (25% weight)"
+          },
+          "rating_score": {
+            "type": "number",
+            "title": "Rating Score",
+            "description": "Customer satisfaction rating score (15% weight)"
+          },
+          "delivery_score": {
+            "type": "number",
+            "title": "Delivery Score",
+            "description": "Speed of delivery (10% weight)"
+          },
+          "seller_score": {
+            "type": "number",
+            "title": "Seller Score",
+            "description": "Seller reputation and reliability (10% weight)"
+          },
+          "preference_score": {
+            "type": "number",
+            "title": "Preference Score",
+            "description": "Match against soft preferences (5% weight)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "requirement_match",
+          "price_fit",
+          "rating_score",
+          "delivery_score",
+          "seller_score",
+          "preference_score"
+        ],
+        "title": "ScoreBreakdown",
+        "description": "Detailed breakdown of deterministic score components (all 0-100)."
+      },
+      "Shipment": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique shipment ID (e.g. SHP-001)"
+          },
+          "order_id": {
+            "type": "string",
+            "title": "Order Id",
+            "description": "Associated Order ID"
+          },
+          "tracking_number": {
+            "type": "string",
+            "title": "Tracking Number",
+            "description": "Carrier tracking identifier (e.g. TRK-USPS-8842)"
+          },
+          "carrier": {
+            "type": "string",
+            "title": "Carrier",
+            "description": "Carrier name (e.g. FedEx, UPS, USPS)",
+            "default": "FastShip Logistics"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ShipmentStatus",
+            "description": "Current logistics status",
+            "default": "PROCESSING"
+          },
+          "estimated_delivery": {
+            "type": "string",
+            "title": "Estimated Delivery",
+            "description": "Promised or estimated arrival date (e.g. '2026-10-18')"
+          },
+          "actual_delivery": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Delivery",
+            "description": "Actual delivered date if reached"
+          },
+          "last_location": {
+            "type": "string",
+            "title": "Last Location",
+            "description": "Most recent facility or town",
+            "default": "Regional Logistics Hub"
+          },
+          "last_update": {
+            "type": "string",
+            "title": "Last Update",
+            "description": "Last verified status message from carrier"
+          },
+          "timeline": {
+            "items": {
+              "$ref": "#/components/schemas/ShipmentTimelineEvent"
+            },
+            "type": "array",
+            "title": "Timeline",
+            "description": "Milestone progression"
+          },
+          "is_demo": {
+            "type": "boolean",
+            "title": "Is Demo",
+            "description": "Indicates synthetic demo data for the hackathon",
+            "default": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "order_id",
+          "tracking_number",
+          "estimated_delivery",
+          "last_update"
+        ],
+        "title": "Shipment",
+        "description": "Complete Shipment representation."
+      },
+      "ShipmentStatus": {
+        "type": "string",
+        "enum": [
+          "PROCESSING",
+          "SHIPPED",
+          "IN_TRANSIT",
+          "OUT_FOR_DELIVERY",
+          "DELIVERED",
+          "DELAYED",
+          "CANCELLED"
+        ],
+        "title": "ShipmentStatus",
+        "description": "Controlled shipment and logistics states."
+      },
+      "ShipmentTimelineEvent": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Short milestone name (e.g. 'Order Confirmed', 'In Transit')"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Contextual logistics update"
+          },
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp",
+            "description": "Timestamp or human-readable date (e.g. 'Oct 16, 2026')"
+          },
+          "completed": {
+            "type": "boolean",
+            "title": "Completed",
+            "description": "Whether this stage has been passed",
+            "default": false
+          },
+          "current": {
+            "type": "boolean",
+            "title": "Current",
+            "description": "Whether this is the current active stage",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "description",
+          "timestamp"
+        ],
+        "title": "ShipmentTimelineEvent",
+        "description": "Discrete milestone in the shipment journey."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

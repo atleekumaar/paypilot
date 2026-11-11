@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "context-matic": {
+      "serverUrl": "https://chatbotapi.apimatic.io/mcp/plugins"
+    }
+  }
+}

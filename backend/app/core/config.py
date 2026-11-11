@@ -22,6 +22,7 @@ class Settings(BaseSettings):
         "http://127.0.0.1:3000",
         "http://localhost:8000",
         "http://127.0.0.1:8000",
+        "https://paypilot-lac.vercel.app",
     ]
 
     @field_validator("ALLOWED_ORIGINS", mode="before")
@@ -123,14 +124,16 @@ class Settings(BaseSettings):
                 raise ValueError("AUTH_ISSUER must be configured when ENVIRONMENT='production'")
             if not self.AUTH_JWKS_URL:
                 raise ValueError("AUTH_JWKS_URL must be configured when ENVIRONMENT='production'")
+            if not self.DATABASE_URL:
+                raise ValueError("DATABASE_URL must be configured when ENVIRONMENT='production'")
+            if self.DATABASE_URL.lower().startswith("sqlite"):
+                raise ValueError("SQLite is forbidden in production environment. A PostgreSQL DATABASE_URL is required.")
             if not self.PAYPAL_CLIENT_ID or self.PAYPAL_CLIENT_ID.startswith("your_"):
                 raise ValueError("PAYPAL_CLIENT_ID must be configured when ENVIRONMENT='production'")
             if not self.PAYPAL_CLIENT_SECRET or self.PAYPAL_CLIENT_SECRET.startswith("your_"):
                 raise ValueError("PAYPAL_CLIENT_SECRET must be configured when ENVIRONMENT='production'")
             if not self.PAYPAL_WEBHOOK_ID or self.PAYPAL_WEBHOOK_ID.startswith("your_"):
                 raise ValueError("PAYPAL_WEBHOOK_ID must be configured when ENVIRONMENT='production'")
-            if not self.DATABASE_URL or self.DATABASE_URL.startswith("sqlite"):
-                raise ValueError("Production environment requires a production PostgreSQL DATABASE_URL (SQLite is disallowed)")
             if not self.ALLOWED_ORIGINS or any("*" in o for o in self.ALLOWED_ORIGINS):
                 raise ValueError("ALLOWED_ORIGINS must be explicitly configured without wildcards in production")
         return self

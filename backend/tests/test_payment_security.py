@@ -23,6 +23,8 @@ client = TestClient(app)
 @pytest.fixture(autouse=True)
 def clean_repositories():
     """Reset repository state and mock orders before each test."""
+    from app.agents.state import get_session_store
+    get_session_store().clear()
     get_purchase_plan_repository().clear()
     get_payment_repository().clear()
     get_notification_service().reset_defaults()

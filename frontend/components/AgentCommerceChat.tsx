@@ -356,7 +356,9 @@ export default function AgentCommerceChat() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-500 dark:text-slate-400">Status:</span>
-                        <span className="text-emerald-700 dark:text-emerald-400 font-bold">COMPLETED</span>
+                        <span className="text-emerald-700 dark:text-emerald-400 font-bold">
+                          COMPLETED {msg.paymentReceipt.provider_order_id?.startsWith("MOCK-") ? "(Simulated Sandbox)" : ""}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-500 dark:text-slate-400">PayPal Order ID:</span>

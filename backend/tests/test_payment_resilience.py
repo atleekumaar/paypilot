@@ -111,7 +111,7 @@ def test_refund_lifecycle_and_cumulative_balance():
     repo = get_payment_repository()
     payment = Payment(
         id="PAY-REF-CUMULATIVE-1",
-        user_id="user_buyer_1",
+        user_id="guest_user",
         purchase_plan_id="PP-CUMULATIVE-1",
         provider=PaymentProvider.PAYPAL,
         provider_order_id="ORD-PP-CUM-1",
@@ -184,17 +184,29 @@ def test_refund_forged_unauthorized_access():
 # ---------------------------------------------------------------------------
 
 def test_reconciliation_role_authorization():
-    # Regular user attempting admin endpoint
-    res_user = client.get("/api/payments/reconciliation/report", headers={"X-User-Id": "regular_user"})
+    # Regular/demo user attempting admin endpoint
+    res_user = client.get("/api/payments/reconciliation/report")
     assert res_user.status_code == 403
 
-    # Admin user
-    res_admin = client.get(
+    # Client attempting privilege escalation via X-User-Role header MUST FAIL (Priority 1 fix)
+    res_spoof = client.get(
         "/api/payments/reconciliation/report",
         headers={"X-User-Id": "admin_user", "X-User-Role": "admin"},
     )
-    assert res_admin.status_code == 200
-    assert isinstance(res_admin.json(), list)
+    assert res_spoof.status_code == 403
+
+    # Legitimate admin access succeeds (via dependency override or verified token)
+    from app.main import app
+    from app.core.auth import get_current_user, AuthenticatedUser
+    app.dependency_overrides[get_current_user] = lambda: AuthenticatedUser(
+        id="admin_user", role="admin", is_authenticated=True
+    )
+    try:
+        res_admin = client.get("/api/payments/reconciliation/report")
+        assert res_admin.status_code == 200
+        assert isinstance(res_admin.json(), list)
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
 
 
 # ---------------------------------------------------------------------------
