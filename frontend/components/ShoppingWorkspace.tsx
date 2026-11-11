@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Search, Sparkles, Star, Truck, ShieldCheck, Loader2 } from "lucide-react";
 import ProductModal from "@/components/ProductModal";
 import PurchasePlanModal from "@/components/PurchasePlanModal";
-import { api } from "@/lib/api";
+import { api, API_BASE_URL } from "@/lib/api";
 
 interface Product {
   id: string;
@@ -144,7 +144,7 @@ export default function ShoppingWorkspace() {
       }
     } catch (err: any) {
       console.warn("Discovery API notice:", err);
-      setError("Backend service is offline or unreachable at http://127.0.0.1:8000. Please launch FastAPI to query live catalogue.");
+      setError(`Backend service is offline or unreachable at ${API_BASE_URL}. Please check server connectivity.`);
     } finally {
       setIsLoading(false);
     }

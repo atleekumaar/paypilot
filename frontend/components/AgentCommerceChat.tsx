@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import AgentActivityPanel, { AgentActionItem } from "@/components/AgentActivityPanel";
 import PurchaseApprovalCard from "@/components/PurchaseApprovalCard";
-import { api } from "@/lib/api";
+import { api, API_BASE_URL } from "@/lib/api";
 
 interface ChatMessage {
   id: string;
@@ -164,7 +164,7 @@ export default function AgentCommerceChat() {
         {
           id: `agent-${Date.now()}`,
           sender: "agent",
-          text: `I received your request: "${text}".\n\n(Backend Notice: Ensure the PayPilot FastAPI service is running at http://127.0.0.1:8000 to execute live database queries, policies, and PayPal Sandbox integrations.)`,
+          text: `I received your request: "${text}".\n\n(Backend Notice: Unable to reach PayPilot backend at ${API_BASE_URL}: ${err?.message || "Service temporarily offline"}. Please check server connectivity.)`,
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         },
       ]);

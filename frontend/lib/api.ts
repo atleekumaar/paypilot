@@ -3,8 +3,9 @@
  * Centralizes base URL configuration, headers, and error handling.
  */
 
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+export const API_BASE_URL = (
+  process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"
+).replace(/\/+$/, "");
 
 export class ApiError extends Error {
   status: number;
@@ -22,7 +23,8 @@ async function request<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const url = path.startsWith("http") ? path : `${API_BASE_URL}${path}`;
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const url = path.startsWith("http") ? path : `${API_BASE_URL}${normalizedPath}`;
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
