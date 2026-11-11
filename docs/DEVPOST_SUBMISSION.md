@@ -78,7 +78,7 @@ PayPilot guides buyers through the entire commerce lifecycle in four seamless st
 ---
 
 ### 2.5 Accomplishments We're Proud Of
-- **100% Automated Test Pass Rate**: 191/191 pytest unit and integration tests passing (`pytest backend/tests/`).
+- **100% Automated Test Pass Rate**: 207/207 pytest unit and integration tests passing (`pytest backend/tests/`).
 - **Postman Collection Verification**: 18/18 API requests passed with 23/23 `pm.test` assertions verified.
 - **Genuine Live PayPal Sandbox Transactions**: Verified live order creation (`3KP879318B449513P`) against `api-m.sandbox.paypal.com`.
 - **Zero-Error TypeScript**: Strict TypeScript compilation with 0 errors across the entire frontend.
@@ -122,5 +122,5 @@ Use this exact timing and narration script when recording your 2:50 demo video f
 | **1:20 - 1:55** | **PayPal Orders v2 Sandbox Checkout**<br>Click **"Approve & Pay with PayPal"**. Show live PayPal Sandbox popup/redirect with PayPal Order ID and server-side capture confirmation. | *"When I click 'Approve & Pay', PayPilot talks directly to PayPal Orders API v2 on api-m.sandbox.paypal.com. A genuine PayPal Sandbox Order is created, redirecting to PayPal's secure checkout. Once approved, the backend captures the transaction server-side and issues a verified receipt."* |
 | **1:55 - 2:25** | **Bryntum Timeline & Tracking**<br>Navigate to `/timeline`. Show Gantt-style chronological lanes (Approval -> Capture -> In Transit -> Delivery). Open `/orders/ORD-001` and ask the Post-Purchase Agent *"Where is my order?"*. | *"In post-purchase, our Bryntum-compatible scheduler maps the complete commerce lifecycle from payment authorization to carrier transit scans. The embedded post-purchase AI agent tracks shipments in real time and can even draft inquiry emails to merchants."* |
 | **2:25 - 2:45** | **AG Grid Intelligence Dashboard**<br>Navigate to `/insights`. Show KPI metrics ($5,793 total spend), Commerce Spending Timeline vertical bars, Category Distribution, and AG Grid table. | *"Finally, our Commerce Intelligence dashboard combines AG Grid with live analytics. We see spending over time, category breakdowns across laptops, phones, and audio, and complete audit records for every PayPal transaction."* |
-| **2:45 - 2:55** | **Summary & Call to Action**<br>Show GitHub repository with 191/191 tests passing and MIT license. | *"With 191 automated tests passing and full PayPal Sandbox compliance, PayPilot is the future of safe, agentic commerce. Thank you!"* |
+| **2:45 - 2:55** | **Summary & Call to Action**<br>Show GitHub repository with 207/207 tests passing and MIT license. | *"With 207 automated tests passing and full PayPal Sandbox compliance, PayPilot is the future of safe, agentic commerce. Thank you!"* |
 

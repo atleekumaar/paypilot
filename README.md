@@ -63,21 +63,22 @@ PayPilot autonomously understands the request, searches product offerings, compa
   - Post-Purchase Agent with multi-turn order inquiry intents (`ORDER_STATUS`, `TRACK_ORDER`, `DELIVERY_ESTIMATE`, `PAYMENT_STATUS`, `DELIVERY_DELAY`)
   - Deterministic delivery delay detection and carrier telemetry parsing
   - Consequential action safety gate: drafting support inquiries (`WRITE`) vs. dispatching to merchant (`APPROVAL_REQUIRED`)
-  - Complete frontend Order Tracking Dashboard (`/orders`), Order Detail with milestone timeline (`/orders/[id]`), and Notification Center (`/notifications`)
+  - Complete frontend Order Tracking Dashboard (`/orders`) with AG Grid interactive table and card views, Order Detail with milestone timeline (`/orders/[id]`), and Notification Center (`/notifications`)
   - 100% verified test suite (56/56 passing tests)
 
 - **Sponsor Ecosystem & Enterprise Integrations**
   - **PayPal Orders v2 Sandbox**: Authoritative payment creation and capture against live `api-m.sandbox.paypal.com` with real Order ID verification (see [`docs/PAYPAL_SANDBOX_EVIDENCE.md`](docs/PAYPAL_SANDBOX_EVIDENCE.md)).
   - **Groq LLM**: Ultra-low latency inference for multi-turn conversational commerce using `openai/gpt-oss-20b`.
+  - **AG Grid & AG Studio**: Enterprise commerce intelligence grids and AI-powered insights dashboard (`/insights`) as well as interactive Orders table (`/orders`) with column sorting, dynamic search filtering, and dark/sun theme toggle.
+  - **APIMatic**: Authoritative OpenAPI 3.0 specifications and ContextMatic agent toolchain under `docs/api-specs/` for type-safe PayPal Orders and Payments API integration.
   - **Channel3**: Live cross-retailer product discovery across Samsung, Apple, Lenovo, Newegg, and Best Buy with normalized pricing and variant models.
   - **Elasticsearch**: Live cluster REST & kNN vector search with Reciprocal Rank Fusion and local hybrid retrieval engine.
   - **Kernel**: Cloud browser agent infrastructure for merchant inspection with replay URLs (`https://app.onkernel.com`).
   - **Zapier**: Post-purchase multi-app automation (invoicing in QuickBooks, Google Sheets ledger, Gmail receipts, Slack support alerts) and Zapier MCP / AI Actions adapter.
   - **Bryntum**: Interactive Commerce Timeline (`/timeline`) built on the Bryntum Scheduler Pro Data Model (`ResourceStore` + `EventStore` JSON schema) with Gantt milestones (see [`docs/BRYNTUM_INTEGRATION.md`](docs/BRYNTUM_INTEGRATION.md)).
-  - **AG Grid & AG Studio**: Enterprise commerce intelligence grids and AI-powered insights dashboard (`/insights`) with dark & sun theme toggle.
   - **Postman**: Complete Postman Collection v2.1.0 (`postman/PayPilot.postman_collection.json`) with automated test runner (`postman/run_collection.py` — **18/18 requests passed, 23/23 `pm.test` assertions verified**).
   - **Render**: Infrastructure-as-Code cloud deployment (`render.yaml`) powering backend and frontend services.
-  - **191/191 Passing Automated Tests** across all modules and 0 frontend TypeScript errors.
+  - **207/207 Passing Automated Tests** across all modules and 0 frontend TypeScript errors.
   - **Devpost Submission Package & 3-Minute Video Script**: Detailed field-by-field submission guide in [`docs/DEVPOST_SUBMISSION.md`](docs/DEVPOST_SUBMISSION.md).
 
 - **Production Cloud Deployment & Reliability**
@@ -398,6 +399,8 @@ In accordance with PayPal AI Hackathon guidelines and release engineering standa
 | :--- | :--- | :--- |
 | **PayPal Developer Platform** | `LIVE VERIFIED` | Official Orders API v2 OAuth 2.0, authoritative order creation (`2R6259584E1668233`), buyer authorization, and server-side capture (`5VJ74328735124250`, `$1,049.00 USD`, `COMPLETED`). See [`docs/PAYPAL_SANDBOX_EVIDENCE.md`](docs/PAYPAL_SANDBOX_EVIDENCE.md). |
 | **Groq Cloud API** | `LIVE VERIFIED` | Ultra-low latency inference using Groq `openai/gpt-oss-20b` for multi-turn conversational reasoning and tool dispatch. |
+| **AG Grid** | `LIVE VERIFIED` | Enterprise data grids for both Order Management (`/orders`) and Multi-Tab Commerce Intelligence (`/insights`) with column sorting, dynamic search filtering, status tab filtering, and dark/sun theme toggle powered by `ag-grid-community` & `ag-grid-react`. |
+| **APIMatic** | `SPEC & TOOL INTEGRATED` | Authoritative OpenAPI 3.0 contracts and APIMatic metadata under `docs/api-specs/paypal/` for PayPal Orders v2 and Payments v2, plus ContextMatic MCP agent plugin (`.agents/plugins/context-matic/`) ensuring strict schema compliance. |
 | **Channel3 API** | `LIVE VERIFIED` | Real-time cross-retailer product discovery and comparison across major merchant channels (`POST /api/channel3/search`). |
 | **Elasticsearch** | `SCHEMA & LOCAL HYBRID` | Real cluster REST connectivity with BM25 lexical retrieval; dense vector rankings compute deterministic 16-dim normalized MD5 token hashes for zero-dependency local execution. |
 | **Bryntum** | `SCHEMA COMPATIBLE` | Interactive commerce timeline (`/timeline`) matching Bryntum Scheduler Pro's `ResourceStore` and `EventStore` JSON schemas in custom React components. No commercial `@bryntum` package installed. |
