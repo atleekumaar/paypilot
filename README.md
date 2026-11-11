@@ -4,6 +4,22 @@
 
 Built for the **[PayPal AI Hackathon](https://paypalaihackathon.devpost.com/)**.
 
+[![CI](https://github.com/atleekumaar/paypilot/actions/workflows/ci.yml/badge.svg)](https://github.com/atleekumaar/paypilot/actions/workflows/ci.yml)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Vercel-black?style=flat&logo=vercel)](https://paypilot-lac.vercel.app/)
+[![API Backend](https://img.shields.io/badge/API%20Backend-Render-46E3B7?style=flat&logo=render)](https://paypilot-backend-sf0a.onrender.com/docs)
+[![PayPal Sandbox](https://img.shields.io/badge/PayPal%20Sandbox-Verified-003087?style=flat&logo=paypal)](docs/PAYPAL_SANDBOX_EVIDENCE.md)
+
+---
+
+## 🌐 Live Deployments
+
+| Component | Platform | Live URL | Status |
+| :--- | :--- | :--- | :--- |
+| **Frontend Web App** | **Vercel** | [https://paypilot-lac.vercel.app](https://paypilot-lac.vercel.app/) | ✅ `Active / Deployed` |
+| **Backend API Service** | **Render** | [https://paypilot-backend-sf0a.onrender.com](https://paypilot-backend-sf0a.onrender.com/) | ✅ `Active / Deployed` |
+| **Interactive API Docs** | **Swagger UI** | [https://paypilot-backend-sf0a.onrender.com/docs](https://paypilot-backend-sf0a.onrender.com/docs) | ✅ `Active / Deployed` |
+| **System Health Check** | **FastAPI** | [https://paypilot-backend-sf0a.onrender.com/health](https://paypilot-backend-sf0a.onrender.com/health) | ✅ `200 OK` |
+
 ---
 
 ## Vision
@@ -68,6 +84,12 @@ PayPilot autonomously understands the request, searches product offerings, compa
   - **Render**: Infrastructure-as-Code multi-service cloud blueprint (`render.yaml`) deploying backend, frontend, worker, PostgreSQL, and Redis.
   - **191/191 Passing Automated Tests** across all modules and 0 frontend TypeScript errors.
   - **Devpost Submission Package & 3-Minute Video Script**: Detailed field-by-field submission guide in [`docs/DEVPOST_SUBMISSION.md`](docs/DEVPOST_SUBMISSION.md).
+
+- **Phase 7 — Production Cloud Deployment & Live Verification** ✅ *(ACTIVE & LIVE)*
+  - **Frontend Global Deployment (Vercel)**: Next.js 14 App Router deployed to [https://paypilot-lac.vercel.app](https://paypilot-lac.vercel.app/) with Edge CDN caching and responsive Dark/Light themes.
+  - **Backend API Cloud Service (Render)**: Python 3 FastAPI service deployed to [https://paypilot-backend-sf0a.onrender.com](https://paypilot-backend-sf0a.onrender.com/) with automated health monitoring.
+  - **Automated CI/CD Pipeline**: GitHub Actions (`.github/workflows/ci.yml`) triggers on every push to `main`, executing full pytest suite and automatically triggering zero-downtime redeployments.
+  - **Live End-to-End CORS & Security**: Strict production CORS allowlisting, trailing-slash resilience, and environment-driven configurations.
 
 ---
 

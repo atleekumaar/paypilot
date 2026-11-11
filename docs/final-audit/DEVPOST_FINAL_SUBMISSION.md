@@ -5,6 +5,9 @@
 - **Project Title:** PayPilot
 - **Tagline:** Deterministic Agentic Commerce with Human-in-the-Loop PayPal Orders v2 Sandbox Protection
 - **Repository URL:** https://github.com/atleekumaar/paypilot
+- **Live Frontend URL:** https://paypilot-lac.vercel.app/
+- **Live Backend API URL:** https://paypilot-backend-sf0a.onrender.com/
+- **Interactive Swagger Docs:** https://paypilot-backend-sf0a.onrender.com/docs
 - **License:** MIT License (Open Source)
 - **Demo Video URL (Placeholder):** `https://youtu.be/REPLACE_WITH_ACTUAL_DEMO_URL`
 - **Track / Category:** PayPal AI Hackathon 2026

@@ -10,7 +10,9 @@ This document contains the exact field-by-field answers, technology disclosure, 
 - **Short Tagline:** *Autonomous AI Commerce Assistant with Human-in-the-Loop PayPal Orders v2 Sandbox Checkout & Post-Purchase Intelligence*
 - **Public GitHub Repository:** [https://github.com/atleekumaar/paypilot](https://github.com/atleekumaar/paypilot)
 - **License:** MIT License (Open Source)
-- **Live Demo URL:** Local/Render deployment ([http://localhost:3000](http://localhost:3000))
+- **Live Demo URL (Frontend):** [https://paypilot-lac.vercel.app](https://paypilot-lac.vercel.app/)
+- **Live API Backend URL:** [https://paypilot-backend-sf0a.onrender.com](https://paypilot-backend-sf0a.onrender.com/)
+- **Live API Swagger Documentation:** [https://paypilot-backend-sf0a.onrender.com/docs](https://paypilot-backend-sf0a.onrender.com/docs)
 - **Live PayPal Sandbox Order ID:** `2R6259584E1668233` (Captured: `5VJ74328735124250` — `COMPLETED`)
 - **Video Demo Link:** Public YouTube video (see script below)
 
