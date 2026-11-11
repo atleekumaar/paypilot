@@ -223,40 +223,127 @@ To complete sandbox transactions, use the Sandbox personal buyer account provide
 
 ---
 
-## Architecture Flow
+## System Architecture & Data Flow
 
-```text
-                 USER
-                   │
-                   ▼
-              NEXT.JS UI
-                   │
-                   ▼
-          DISCOVERY API (POST /api/discovery/search)
-                   │
-                   ▼
-           PRODUCT SELECTED
-                   │
-                   ▼
-          PURCHASE PLAN (POST /api/purchase-plans)
-                   │
-                   ▼
-        EXPLICIT USER APPROVAL (POST /api/purchase-plans/{id}/approve)
-                   │
-                   ▼
-         PAYPAL ORDER SERVICE (POST /api/payments/paypal/create-order)
-                   │
-                   ▼
-            PAYPAL SANDBOX
-                   │
-                   ▼
-             CAPTURE (POST /api/payments/paypal/capture)
-                   │
-                   ▼
-         PAYMENT VERIFICATION (status == "COMPLETED")
-                   │
-                   ▼
-          SUCCESS CONFIRMATION RECEIPT
+### 1. High-Level System Architecture
+
+```mermaid
+flowchart TD
+    subgraph Client ["Client Canvas — Next.js 14 (Vercel CDN)"]
+        User(["👤 Buyer"])
+        UI_Chat["💬 Conversational AI Workspace"]
+        UI_Approval["🛡️ Interactive Purchase Approval Card\n(Human-in-the-Loop Gate)"]
+        UI_Timeline["📊 Bryntum Commerce Timeline\n& Milestone Telemetry"]
+        UI_Dashboard["📈 AG Grid Intelligence Dashboard"]
+    end
+
+    subgraph Backend ["PayPilot Backend Core — FastAPI (Render Cloud)"]
+        API_Gateway["⚡ FastAPI API Gateway & CORS Security"]
+        
+        subgraph AgenticCore ["Deterministic Agentic Orchestrator"]
+            Agent["🤖 Commerce Agent\n(Groq LLM Engine)"]
+            PolicyEngine["🔒 Astropods Policy Engine\n($0 Autonomy Threshold)"]
+            ToolRegistry["🧰 Strict Tool Permission Registry\n(READ | WRITE | APPROVAL | PAYMENT)"]
+        end
+
+        subgraph CommerceEngines ["Commerce & Intelligence Services"]
+            DiscoveryEngine["🔍 Product Discovery & Hybrid Ranking"]
+            PlanService["📋 Authoritative Purchase Plan Service\n(Zero Client Price Tampering)"]
+            OrderService["📦 Post-Purchase Order & Tracking Manager"]
+        end
+
+        subgraph Persistence ["Authoritative Data Store"]
+            DB[("🗄️ SQLite / PostgreSQL Engine\n(Orders, Outbox & Audit Logs)")]
+        end
+    end
+
+    subgraph Integrations ["External Ecosystem & Payment Rails"]
+        PayPal["💳 PayPal Sandbox Orders v2 API\n(OAuth 2.0 -> Create -> Capture)"]
+        Channel3["🌐 Channel3 Universal Product Graph\n(25,000+ Merchants)"]
+        Elasticsearch["⚡ Elasticsearch Cluster\n(BM25 Lexical + Vector Retrieval)"]
+        Zapier["⚡ Zapier Post-Purchase Automations\n(Accounting, Sheets & Alerts)"]
+    end
+
+    %% User interactions
+    User <-->|"Natural Language Prompt"| UI_Chat
+    User -->|"Explicit Human Approval"| UI_Approval
+
+    %% Frontend to Backend
+    UI_Chat -->|"POST /api/agent/chat"| API_Gateway
+    UI_Approval -->|"POST /api/agent/{id}/approve"| API_Gateway
+    UI_Timeline -->|"GET /api/timeline"| API_Gateway
+    UI_Dashboard -->|"GET /api/orders"| API_Gateway
+
+    %% Gateway to Agent
+    API_Gateway --> Agent
+    Agent <--> PolicyEngine
+    PolicyEngine --> ToolRegistry
+
+    %% Tools to Services
+    ToolRegistry --> DiscoveryEngine
+    ToolRegistry --> PlanService
+    ToolRegistry --> OrderService
+
+    %% Services to Storage & External
+    DiscoveryEngine <--> Channel3
+    DiscoveryEngine <--> Elasticsearch
+    DiscoveryEngine <--> DB
+    PlanService <--> DB
+    OrderService <--> DB
+
+    %% Payment Rails
+    PlanService -->|"Authorized Execution"| PayPal
+    PayPal -->|"Authoritative Capture ID"| PlanService
+    OrderService -->|"Post-Purchase Webhooks"| Zapier
+```
+
+---
+
+### 2. End-to-End Human-in-the-Loop Commerce Sequence
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as 👤 Buyer
+    participant UI as 🖥️ Next.js 14 Frontend (Vercel)
+    participant Agent as 🤖 Agent Orchestrator (Groq)
+    participant Policy as 🔒 Policy Engine
+    participant Backend as ⚙️ FastAPI Backend (Render)
+    participant PayPal as 💳 PayPal Sandbox v2 API
+
+    User->>UI: "I want a laptop for AI/ML under $1,200"
+    UI->>Agent: POST /api/agent/chat
+    Agent->>Policy: Request tool: search_products
+    Policy-->>Agent: ALLOW (Permission: READ)
+    Agent->>Backend: Query normalized catalogue & benchmarks
+    Backend-->>Agent: Candidate items (MacStudio, NovaBook, etc.)
+    Agent-->>UI: Top recommendation & comparative trade-offs
+
+    User->>UI: "Let's purchase the top recommendation"
+    UI->>Agent: POST /api/agent/chat ("buy pick #1")
+    Agent->>Backend: Formulate authoritative Purchase Plan ($1,049.00)
+    Agent->>Policy: Attempt tool: create_paypal_order
+    Note over Policy: $0 Autonomy Threshold Enforced!<br/>Payment execution halted.
+    Policy-->>Agent: REQUIRE_APPROVAL
+    Agent-->>UI: Emit Purchase Approval Gate
+
+    Note over User,UI: 🛡️ Explicit Human-in-the-Loop Approval
+    User->>UI: Review price breakdown & Click [Approve Purchase]
+    UI->>Backend: POST /api/agent/{id}/approve
+    Backend->>Policy: Record cryptographic user consent
+    Policy-->>Backend: ALLOW payment execution
+
+    Backend->>PayPal: POST /v2/checkout/orders (Intent: CAPTURE)
+    PayPal-->>Backend: Return PayPal Order ID (e.g. 2R6259584E1668233)
+    Backend-->>UI: Launch PayPal Sandbox Modal
+    User->>PayPal: Authorize in PayPal Sandbox
+    PayPal-->>UI: Authorization approved
+
+    UI->>Backend: POST /api/payments/paypal/capture
+    Backend->>PayPal: POST /v2/checkout/orders/{id}/capture
+    PayPal-->>Backend: Status: COMPLETED, Capture ID: 5VJ74328735124250
+    Backend-->>UI: Verified Payment Receipt & Start Tracking Telemetry
+    UI-->>User: Display green confirmation receipt & order tracking
 ```
 
 ---
